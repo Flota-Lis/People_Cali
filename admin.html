@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal People - Panel de Administración</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+ <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #edf1f4; padding: 20px; color: #1c2430; }
+    
+    .admin-container { max-width: 1200px; margin: 0 auto; width: 100%; }
+    
+    /* 🎯 Encabezado con el Azul Logística y línea base Verde Esmeralda */
+    .header { background: #206987; color: #fff; padding: 15px 22px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; border-bottom: 4px solid #3cbcae; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+    .header-left-block { display: flex; align-items: center; gap: 15px; }
+    .logo-admin-img { height: 42px; width: auto; object-fit: contain; background: rgba(255, 255, 255, 0.9); padding: 4px 8px; border-radius: 8px; }
+    .header h1 { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; letter-spacing: 0.02em; }
+    
+    /* 🚀 Botón Cerrar Sesión con Amarillo Corporativo */
+    .btn-logout { background: #ffc404; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; color: #1c2430; cursor: pointer; transition: all 0.2s ease; letter-spacing: 0.03em; }
+    .btn-logout:hover { background: #e0ab00; transform: translateY(-1px); }
+    
+    .grid-layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    @media(min-width: 992px) {
+      .grid-layout { grid-template-columns: 1fr 1fr; }
+      .full-width { grid-column: 1 / -1; }
+    }
+    
+    /* Tarjetas con detalles de color de marca */
+    .card { background: #fff; border-radius: 12px; padding: 20px; border: 1.5px solid #cdd5db; box-shadow: 0 6px 16px rgba(0,0,0,0.03); }
+    .card-title { font-size: 15px; font-weight: 700; color: #206987; margin-bottom: 15px; border-bottom: 2px solid #3cbcae; padding-bottom: 8px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.03em; }
+    
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-size: 11px; font-weight: 700; color: #206987; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.03em; }
+    input, select, textarea { width: 100%; padding: 11px; border: 1.5px solid #dde3e7; border-radius: 8px; font-size: 14px; background: #f8fafb; outline: none; color: #1c2430; transition: all 0.2s ease; }
+    input:focus, select:focus, textarea:focus { border-color: #3cbcae; background: #fff; box-shadow: 0 0 0 3px rgba(60, 188, 174, 0.12); }
+    
+    .btn { padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; transition: all 0.2s ease; }
+    .btn-primary { background: #206987; color: #fff; }
+    .btn-primary:hover { background: #164f67; }
+    .btn-danger { background: #a32d2d; color: #fff; }
+    .btn-danger:hover { background: #822323; }
+    
+    /* Tablas dinámicas estilizadas */
+    .table-container { width: 100%; overflow-x: auto; margin-top: 15px; border-radius: 8px; border: 1px solid #eef1f3; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+    th, td { padding: 12px 14px; border-bottom: 1px solid #eef1f3; }
+    th { background: #f8fafb; color: #206987; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.04em; }
+    td { color: #2e3a4e; }
+    
+    .tag { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 12px; display: inline-block; }
+    .tag-green { background: #e1f5ee; color: #0f6e56; }
+    .tag-red { background: #fdecea; color: #a32d2d; }
+  </style>
+</head>
+<body>
+
+<div class="admin-container">
+  <div class="header">
+    <div class="header-left-block">
+      <img src="logo.png" alt="Logística Logo" class="logo-admin-img">
+      <h1>Panel Administrativo</h1>
+    </div>
+    
+    <div style="font-size: 13px; font-weight: 600; color: #fff; background: rgba(255,255,255,0.12); padding: 7px 14px; border-radius: 8px; border: 0.5px solid rgba(255,255,255,0.2);">
+      Bienvenido, <span id="adminName" style="color: #ffc404; font-weight: 700;">Cargando...</span>
+    </div>
+
+    <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+  </div>
+
+  <div class="grid-layout">
+
+    <div style="background: #fff; border-radius: 14px; padding: 20px; margin-top: 20px; border: 0.5px solid #dde3e7; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+  <div style="font-weight: bold; color: #1e6e7e; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+    <span style="font-size: 18px;">🎁</span> GESTIÓN DE BENEFICIOS Y COMPENSACIÓN POR CARGO
+  </div>
+  
+  <p style="font-size: 12px; color: #7a8f99; margin-bottom: 15px;">
+    Configura y asigna paquetes de beneficios específicos para cada cargo del sistema. Los empleados verán estos datos actualizados en su app.
+  </p>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 15px;">
+    <div>
+      <label style="display:block; font-size:10px; font-weight:700; color:#1e6e7e; margin-bottom:4px;">CARGO LABORAL</label>
+      <input type="text" id="benCargo" placeholder="Ej: Conductor, Auxiliar bodega" style="width:100%; padding:8px; border:1px solid #dde3e7; border-radius:8px; font-size:12px;">
+    </div>
+    <div>
+      <label style="display:block; font-size:10px; font-weight:700; color:#1e6e7e; margin-bottom:4px;">CONCEPTO / BENEFICIO</label>
+      <input type="text" id="benConcepto" placeholder="Ej: Compensación Variable, Bono" style="width:100%; padding:8px; border:1px solid #dde3e7; border-radius:8px; font-size:12px;">
+    </div>
+    <div>
+      <label style="display:block; font-size:10px; font-weight:700; color:#1e6e7e; margin-bottom:4px;">VALOR ECONÓMICO ($)</label>
+      <input type="number" id="benValor" placeholder="Ej: 400000" style="width:100%; padding:8px; border:1px solid #dde3e7; border-radius:8px; font-size:12px;">
+    </div>
+    <div>
+      <label style="display:block; font-size:10px; font-weight:700; color:#1e6e7e; margin-bottom:4px;">REQUISITO / INDICADOR</label>
+      <input type="text" id="benIndicador" placeholder="Ej: Cero ausentismos" style="width:100%; padding:8px; border:1px solid #dde3e7; border-radius:8px; font-size:12px;">
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+    <button onclick="guardarBeneficio()" style="background:#1e6e7e; color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:600; font-size:12px; cursor:pointer;">
+      💾 Guardar / Actualizar Beneficio
+    </button>
+    <button onclick="limpiarFormularioBeneficio()" style="background:#7a8f99; color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:600; font-size:12px; cursor:pointer;">
+      🔄 Limpiar Campos
+    </button>
+  </div>
+
+  <div style="border: 1px solid #dde3e7; border-radius: 10px; overflow: hidden;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+      <thead style="background: #f7fafb; color: #1e6e7e; border-bottom: 1px solid #dde3e7;">
+        <tr>
+          <th style="padding: 10px;">Cargo</th>
+          <th style="padding: 10px;">Concepto</th>
+          <th style="padding: 10px;">Valor</th>
+          <th style="padding: 10px;">Indicador Metas</th>
+          <th style="padding: 10px; text-align: center;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tablaBeneficiosBody">
+        <tr>
+          <td colspan="5" style="padding: 15px; text-align: center; color: #7a8f99;">Cargando lista de beneficios...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+    
+    <div class="card full-width">
+      <div class="card-title"><i class="ti ti-users"></i> Gestión y Carga Masiva de Empleados</div>
+      
+      <div style="background: #f7fafb; padding: 15px; border-radius: 8px; border: 1px dashed #1e6e7e; margin-bottom: 20px;">
+        <label style="color:#1e6e7e;"><strong>Carga Masiva de Personal (.xlsx / .xls / .csv)</strong></label>
+        <p style="font-size: 11px; color:#7a8f99; margin-bottom: 10px;">Columnas requeridas en la primera hoja: <strong>cedula, nombre, cargo, region, rol</strong></p>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+          <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" style="flex: 1; min-width: 200px; background:transparent; border:none; padding:0;">
+          <button class="btn btn-primary" onclick="cargarExcel()"><i class="ti ti-upload"></i> Importar Archivo</button>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr auto; gap: 15px; align-items: flex-end; margin-bottom: 15px;">
+        <div class="form-group" style="margin:0;">
+          <label>Buscar o Registrar por Número de Cédula</label>
+          <input type="text" id="searchCedula" placeholder="Ingresa la cédula del empleado">
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-primary" onclick="buscarEmpleado()"><i class="ti ti-search"></i> Buscar</button>
+          <button class="btn" style="background:#7a8f99; color:white;" onclick="limpiarFormularioCRUD()"><i class="ti ti-refresh"></i> Limpiar</button>
+        </div>
+      </div>
+
+      <div id="crudForm" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; background: #f7fafb; padding: 15px; border-radius: 8px;">
+        <div class="form-group">
+          <label>Nombre del Empleado</label>
+          <input type="text" id="crudNombre" placeholder="Nombre completo">
+        </div>
+        <div class="form-group">
+          <label>Cargo Laboral</label>
+          <input type="text" id="crudCargo" placeholder="Ej: Conductor, Warehouse, etc.">
+        </div>
+        <div class="form-group">
+          <label>Región Geográfica</label>
+          <input type="text" id="crudRegion" placeholder="Ej: Sur, Norte, Cali">
+        </div>
+        <div class="form-group">
+          <label>Rol del Sistema</label>
+          <select id="crudRol">
+            <option value="empleado">Empleado</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <div style="grid-column: 1 / -1; display: flex; gap: 10px; margin-top: 5px;">
+          <button class="btn btn-primary" style="background:#0f6e56;" onclick="guardarEmpleado()"><i class="ti ti-device-floppy"></i> Guardar / Actualizar Datos</button>
+          <button class="btn btn-danger" onclick="eliminarEmpleado()"><i class="ti ti-user-x"></i> Eliminar Registro</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><i class="ti ti-calendar-plus"></i> Programar Tarea de Capacitación</div>
+      
+      <div class="form-group">
+        <label>Cédula del Trabajador Asignado</label>
+        <input type="text" id="targetCedula" placeholder="Asigna la cédula">
+      </div>
+      <div class="form-group">
+        <label>Título de la Capacitación</label>
+        <input type="text" id="capTitulo" placeholder="Ej: Safety 360°, Manejo Seguro">
+      </div>
+      <div class="form-group">
+        <label>Enlace Completo de la Presentación (SharePoint o Google Drive)</label>
+        <input type="url" id="capDriveId" placeholder="Pega el enlace web completo de la presentación" required>
+      </div>
+      <div class="form-group">
+        <label>Enlace Web de la Evaluación (Formulario / Link QR)</label>
+        <input type="url" id="capQrUrl" placeholder="Pega el enlace del formulario de evaluación">
+      </div>
+      <div class="form-group">
+        <label>Fecha Límite de Ejecución</label>
+        <input type="date" id="capFechaLimite">
+      </div>
+      
+      <button class="btn btn-primary" onclick="publicarCapacitacion()"><i class="ti ti-cloud-upload"></i> Publicar en Cronograma</button>
+    </div>
+
+    <div class="card">
+  <div class="card-title"><i class="ti ti-chart-bar"></i> Auditoría Detallada de Avance Real</div>
+  
+  <div class="form-group">
+    <label>Consultar Avance de Cédula</label>
+    <input type="text" id="auditCedula" placeholder="Digita el documento a auditar">
+  </div>
+
+  <div class="form-group" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom: 15px;">
+    <div>
+      <label>Desde (Fecha límite)</label>
+      <input type="date" id="filterDesde" value="2026-01-01">
+    </div>
+    <div>
+      <label>Hasta (Fecha límite)</label>
+      <input type="date" id="filterHasta" value="2026-12-31">
+    </div>
+  </div>
+
+  <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="auditarAvanceReal()"><i class="ti ti-eye"></i> Consultar Historial y Progreso</button>
+
+  <div id="auditResultPanel" style="margin-top: 20px; display: none;">
+    <div style="display: flex; gap: 15px; margin-bottom: 15px; background: #f7fafb; padding: 12px; border-radius: 8px;">
+      <div style="flex: 1; text-align: center;">
+        <div style="font-size: 11px; color: #7a8f99; font-weight: 600;">PORCENTAJE REAL</div>
+        <div id="auditPctText" style="font-size: 24px; font-weight: 700; color: #1e6e7e;">0%</div>
+      </div>
+      <div style="flex: 1; text-align: center; border-left: 1px solid #dde3e7;">
+        <div style="font-size: 11px; color: #7a8f99; font-weight: 600;">EVALUACIONES</div>
+        <div id="auditCountText" style="font-size: 24px; font-weight: 700; color: #1a3540;">0 / 0</div>
+      </div>
+    </div>
+
+    <label><strong>Listado de capacitaciones asignadas:</strong></label>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Capacitación</th>
+            <th>Límite</th>
+            <th>¿Abrió PPT?</th>
+            <th>Evaluación</th>
+          </tr>
+        </thead>
+        <tbody id="auditTableBody">
+          </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+       
+      </div>
+    </div>
+
+  </div>
+
+
+  <div style="text-align: center; padding: 25px 15px 40px 15px; margin-top: 20px;">
+  <div style="font-size: 11px; font-weight: 600; color: #7a8f99; letter-spacing: 0.03em;">
+    © 2026 Todos los derechos reservados
+  </div>
+  <div style="font-size: 10px; font-weight: 700; color: #1e6e7e; letter-spacing: 0.05em; margin-top: 2px; text-transform: uppercase;">
+    Anderson Alexander Devs
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script src="config.js"></script>
+
+<script>
+ 
+
+ const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  // 1. Validación de seguridad de Administrador
+  if(localStorage.getItem('usuario_rol') !== 'admin') {
+    window.location.href = 'login.html';
+  } else {
+    // 🚀 NUEVO: Recuperamos la cédula del logueado y activamos la función de inmediato
+    const cedulaAdminLogueado = localStorage.getItem('usuario_cedula');
+    cargarPerfilAdmin(cedulaAdminLogueado);
+  }
+
+  // Tu función se queda exactamente igual abajo:
+  async function cargarPerfilAdmin(cedulaAdminLogueado) {
+    try {
+      const snapshot = await db.collection('empleados')
+        .where('cedula', '==', String(cedulaAdminLogueado))
+        .limit(1)
+        .get();
+
+      if (!snapshot.empty) {
+        const adminData = snapshot.docs[0].data();
+        document.getElementById('adminName').textContent = adminData.nombre;
+      } else {
+        document.getElementById('adminName').textContent = "Administrador";
+      }
+    } catch (error) {
+      console.error("Error al cargar perfil del admin:", error);
+      document.getElementById('adminName').textContent = "Administrador";
+    }
+  }
+
+// Recuerda mandar a llamar la función pasándole la cédula del que se logueó:
+// cargarPerfilAdmin(cedulaGuardada);
+
+  // --- SECCIÓN CRUD Y CARGA MASIVA (EXCEL) ---
+
+ function cargarExcel() {
+  const fileInput = document.getElementById('excelFile');
+  if (!fileInput || !fileInput.files.length) return alert("Por favor, selecciona un archivo de Excel primero.");
+
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      
+      // Convertimos el Excel a JSON puro
+      const listaEmpleados = XLSX.utils.sheet_to_json(worksheet);
+      
+      if (listaEmpleados.length === 0) {
+        return alert("El archivo de Excel está vacío o no se pudo procesar correctamente.");
+      }
+
+      let procesados = 0;
+
+      listaEmpleados.forEach(async (emp) => {
+        // Normalizamos las llaves del objeto para que no importe si en el Excel dice "CEDULA", "Cedula" o "cedula"
+        const registroNormalizado = {};
+        Object.keys(emp).forEach(key => {
+          registroNormalizado[key.toLowerCase().trim()] = emp[key];
+        });
+
+        // Extraemos los campos usando la versión normalizada en minúsculas
+        const cedulaExcel = registroNormalizado['cedula'];
+        const nombreExcel = registroNormalizado['nombre'];
+        const cargoExcel = registroNormalizado['cargo'];
+        const regionExcel = registroNormalizado['region'];
+        const rolExcel = registroNormalizado['rol'];
+
+        // Solo guardamos si el registro cuenta con una cédula válida
+        if (cedulaExcel !== undefined && cedulaExcel !== null && cedulaExcel !== '') {
+          
+          // Estandarizamos guardando la cédula estrictamente como un TEXTO (String)
+          await db.collection('empleados').add({
+            cedula: String(cedulaExcel).trim(),
+            nombre: nombreExcel ? String(nombreExcel).trim() : "Sin Nombre",
+            cargo: cargoExcel ? String(cargoExcel).trim() : "Operativo",
+            region: regionExcel ? String(regionExcel).trim() : "General",
+            rol: rolExcel ? String(rolExcel).toLowerCase().trim() : "empleado"
+          });
+          procesados++;
+        }
+      });
+
+      alert(`¡Sincronización Exitosa! Se leyeron y cargaron ${listaEmpleados.length} filas del archivo Excel a Firebase.`);
+      fileInput.value = ''; // Limpiamos el selector de archivos
+
+    } catch (error) {
+      console.error("Error crítico procesando el archivo Excel:", error);
+      alert("Hubo un problema al abrir el Excel. Asegúrate de que no esté protegido o dañado.");
+    }
+  };
+  
+  reader.readAsArrayBuffer(file);
+}
+
+  // 1. CORRECCIÓN BUSCAR: Busca de forma inteligente (como texto o número)
+async function buscarEmpleado() {
+  const inputCedula = document.getElementById('searchCedula');
+  if(!inputCedula) return alert("No se encontró el input 'searchCedula' en el HTML.");
+  
+  const cedulaBuscada = inputCedula.value.trim();
+  if(!cedulaBuscada) return alert("Digita el número de cédula para realizar la búsqueda.");
+
+  try {
+    // Intentamos buscar primero considerando la cédula como TEXTO
+    let snapshot = await db.collection('empleados').where('cedula', '==', cedulaBuscada).limit(1).get();
+    
+    // Si no la encuentra, intentamos transformarla a NÚMERO por el formato que genera Excel
+    if(snapshot.empty && !isNaN(cedulaBuscada)) {
+      snapshot = await db.collection('empleados').where('cedula', '==', Number(cedulaBuscada)).limit(1).get();
+    }
+
+    if(!snapshot.empty) {
+      const emp = snapshot.docs[0].data();
+      
+      // Rellenamos los campos visuales del formulario CRUD
+      document.getElementById('crudNombre').value = emp.nombre || '';
+      document.getElementById('crudCargo').value = emp.cargo || '';
+      document.getElementById('crudRegion').value = emp.region || '';
+      document.getElementById('crudRol').value = emp.rol || 'empleado';
+      
+      // Sincronizamos de una vez la cédula en los otros módulos inferiores para ahorrarte trabajo
+      if(document.getElementById('targetCedula')) document.getElementById('targetCedula').value = cedulaBuscada;
+      if(document.getElementById('auditCedula')) {
+        document.getElementById('auditCedula').value = cedulaBuscada;
+        // Si la función de auditoría detallada existe, la ejecuta de inmediato
+        if (typeof auditarAvanceReal === "function") auditarAvanceReal();
+      }
+    } else {
+      alert("La cédula no está registrada. Si completas los campos abajo y presionas 'Guardar', se creará un registro nuevo.");
+    }
+  } catch(err) { 
+    console.error("Error al buscar empleado:", err); 
+    alert("Error al consultar en la base de datos.");
+  }
+}
+
+  // 2. CORRECCIÓN GUARDAR/ACTUALIZAR: Evita duplicar registros si cambia el tipo de dato
+async function guardarEmpleado() {
+  const cedula = document.getElementById('searchCedula').value.trim();
+  const nombre = document.getElementById('crudNombre').value.trim();
+  const cargo = document.getElementById('crudCargo').value.trim();
+  const region = document.getElementById('crudRegion').value.trim();
+  const rol = document.getElementById('crudRol').value;
+
+  if(!cedula || !nombre) return alert("Los campos de Cédula y Nombre son completamente obligatorios.");
+
+  try {
+    // Validamos en ambas modalidades para saber si ya existe previamente
+    let snapshot = await db.collection('empleados').where('cedula', '==', cedula).limit(1).get();
+    if(snapshot.empty && !isNaN(cedula)) {
+      snapshot = await db.collection('empleados').where('cedula', '==', Number(cedula)).limit(1).get();
+    }
+
+    if(!snapshot.empty) {
+      // Si ya existía, actualizamos el documento manteniendo la cédula como Texto para estandarizar
+      await db.collection('empleados').doc(snapshot.docs[0].id).update({
+        cedula: String(cedula),
+        nombre,
+        cargo,
+        region,
+        rol
+      });
+      alert("¡Registro del empleado modificado con éxito!");
+    } else {
+      // Si es nuevo, lo registramos de forma limpia
+      await db.collection('empleados').add({
+        cedula: String(cedula),
+        nombre,
+        cargo,
+        region,
+        rol
+      });
+      alert("¡Nuevo empleado incorporado al sistema!");
+    }
+    limpiarFormularioCRUD();
+  } catch(err) { console.error("Error al guardar:", err); }
+}
+
+  async function eliminarEmpleado() {
+  const cedula = document.getElementById('searchCedula').value.trim();
+  if(!cedula) return alert("Requiere especificar la cédula del usuario que desea eliminar.");
+
+  if(!confirm("¿Está completamente seguro de eliminar a este empleado de la plataforma?")) return;
+
+  try {
+    let snapshot = await db.collection('empleados').where('cedula', '==', cedula).limit(1).get();
+    if(snapshot.empty && !isNaN(cedula)) {
+      snapshot = await db.collection('empleados').where('cedula', '==', Number(cedula)).limit(1).get();
+    }
+
+    if(!snapshot.empty) {
+      await db.collection('empleados').doc(snapshot.docs[0].id).delete();
+      alert("Empleado borrado del sistema correctamente.");
+      limpiarFormularioCRUD();
+    } else {
+      alert("No se encontró el registro especificado en la base de datos.");
+    }
+  } catch(err) { console.error("Error al eliminar:", err); }
+}
+
+  function limpiarFormularioCRUD() {
+    document.getElementById('searchCedula').value = '';
+    document.getElementById('crudNombre').value = '';
+    document.getElementById('crudCargo').value = '';
+    document.getElementById('crudRegion').value = '';
+    document.getElementById('crudRol').value = 'empleado';
+  }
+
+  // --- SECCIÓN PROGRAMAR CRONOGRAMA ---
+
+  async function publicarCapacitacion() {
+    const empleadoId = document.getElementById('targetCedula').value.trim();
+    const titulo = document.getElementById('capTitulo').value.trim();
+    const pptDriveId = document.getElementById('capDriveId').value.trim();
+    const qrUrl = document.getElementById('capQrUrl').value.trim();
+    const fechaLimite = document.getElementById('capFechaLimite').value;
+
+    if(!empleadoId || !titulo || !pptDriveId || !qrUrl || !fechaLimite) {
+      return alert("Todos los campos del bloque de programación de tareas son obligatorios.");
+    }
+
+    try {
+      await db.collection('items_cronograma').add({
+        empleado_id: empleadoId,
+        titulo: titulo,
+        ppt_drive_id: pptDriveId,
+        qr_url: qrUrl,
+        fecha_limite: fechaLimite,
+        completado: false,
+        visto_ppt: false, // Control inicial para asegurar bloqueo preventivo
+        fecha_completado: ""
+      });
+
+      alert("¡Capacitación guardada! Alerta generada de forma automática para el empleado.");
+      
+      document.getElementById('capTitulo').value = '';
+      document.getElementById('capDriveId').value = '';
+      document.getElementById('capQrUrl').value = '';
+      document.getElementById('capFechaLimite').value = '';
+      
+      if(document.getElementById('auditCedula').value.trim() === empleadoId) {
+        auditarAvanceReal();
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  // --- SECCIÓN AUDITORÍA DETALLADA DE AVANCE REAL ---
+async function auditarAvanceReal() {
+  const cedula = document.getElementById('auditCedula').value.trim();
+  const desde = document.getElementById('filterDesde').value;
+  const hasta = document.getElementById('filterHasta').value;
+
+  if(!cedula) return alert("Especifica un número de cédula para auditar.");
+
+  try {
+    // Traemos los cursos del empleado (esta consulta no requiere índices complejos)
+    const snapshot = await db.collection('items_cronograma')
+      .where('empleado_id', '==', cedula)
+      .get();
+      
+    const tbody = document.getElementById('auditTableBody');
+    tbody.innerHTML = '';
+
+    let asignadas = 0;
+    let hechas = 0;
+
+    snapshot.forEach(doc => {
+      const item = doc.data();
+      
+      // Filtramos dinámicamente las fechas usando el código del navegador
+      if (item.fecha_limite >= desde && item.fecha_limite <= hasta) {
+        asignadas++;
+        if(item.completado) hechas++;
+
+        const stringPPT = item.visto_ppt ? '<span class="tag tag-green">✓ Sí Abrió</span>' : '<span class="tag tag-red">✗ No ha visto</span>';
+        const stringEval = item.completado ? `<span class="tag tag-green">✓ Hecho (${item.fecha_completado})</span>` : '<span class="tag tag-red">✗ Pendiente</span>';
+
+        const fila = `
+          <tr>
+            <td><strong>${item.titulo}</strong></td>
+            <td>${item.fecha_limite}</td>
+            <td>${stringPPT}</td>
+            <td>${stringEval}</td>
+          </tr>
+        `;
+        tbody.innerHTML += fila;
+      }
+    });
+
+    if(asignadas === 0) {
+      document.getElementById('auditPctText').textContent = "0%";
+      document.getElementById('auditCountText').textContent = "0 / 0";
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#7a8f99;">El empleado no registra capacitaciones programadas en el rango de meses seleccionado.</td></tr>';
+      document.getElementById('auditResultPanel').style.display = 'block';
+      return;
+    }
+
+    const pct = Math.round((hechas / asignadas) * 100);
+    document.getElementById('auditPctText').textContent = pct + "%";
+    document.getElementById('auditCountText').textContent = `${hechas} / ${asignadas}`;
+    document.getElementById('auditResultPanel').style.display = 'block';
+
+  } catch(err) { console.error(err); }
+}
+
+// ==========================================
+// CONTROLADOR DE BENEFICIOS POR CARGO (CRUD)
+// ==========================================
+
+// 1. Escuchar y listar beneficios en tiempo real al cargar la página
+db.collection('beneficios').onSnapshot((snapshot) => {
+  const tbody = document.getElementById('tablaBeneficiosBody');
+  if (!tbody) return;
+  
+  if (snapshot.empty) {
+    tbody.innerHTML = `<tr><td colspan="5" style="padding: 15px; text-align: center; color: #7a8f99;">No hay beneficios creados en el sistema aún.</td></tr>`;
+    return;
+  }
+
+  let html = '';
+  snapshot.forEach((doc) => {
+    const b = doc.data();
+    // Formateamos el valor numérico a moneda ($400.000)
+    const valorFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(b.valor || 0);
+    
+    html += `
+      <tr style="border-bottom: 1px solid #eef1f3;">
+        <td style="padding: 10px; font-weight: 600; color: #1a3540;">${b.cargo}</td>
+        <td style="padding: 10px; color: #3a5a68;">${b.concepto}</td>
+        <td style="padding: 10px; font-weight: 700; color: #1e6e7e;">${valorFormateado}</td>
+        <td style="padding: 10px;"><span style="background:#e1f5ee; color:#0f6e56; padding:2px 8px; border-radius:12px; font-size:11px;">🎯 ${b.indicador || 'General'}</span></td>
+        <td style="padding: 10px; text-align: center; display: flex; gap: 6px; justify-content: center;">
+          <button onclick="cargarBeneficioForm('${doc.id}', '${b.cargo}', '${b.concepto}', ${b.valor}, '${b.indicador || ''}')" style="background:#fff8e1; color:#8a6e00; border:1px solid #c89b00; padding:3px 8px; border-radius:5px; cursor:pointer; font-size:11px;">✏️ Editar</button>
+          <button onclick="eliminarBeneficio('${doc.id}')" style="background:#fdecea; color:#a32d2d; border:1px solid #a32d2d; padding:3px 8px; border-radius:5px; cursor:pointer; font-size:11px;">🗑️ Borrar</button>
+        </td>
+      </tr>
+    `;
+  });
+  tbody.innerHTML = html;
+});
+
+// Variable global para rastrear si estamos editando un beneficio existente
+let idBeneficioEdicion = null;
+
+// 2. Guardar o Actualizar un beneficio
+async function guardarBeneficio() {
+  const cargo = document.getElementById('benCargo').value.trim();
+  const concepto = document.getElementById('benConcepto').value.trim();
+  const valor = document.getElementById('benValor').value.trim();
+  const indicador = document.getElementById('benIndicador').value.trim();
+
+  if (!cargo || !concepto || !valor) {
+    return alert("Los campos de Cargo, Concepto y Valor son totalmente obligatorios.");
+  }
+
+  const datos = {
+    cargo: cargo, // Guardamos con el formato idéntico para que coincida con los empleados
+    concepto: concepto,
+    valor: Number(valor),
+    indicador: indicador || "Cumplimiento general"
+  };
+
+  try {
+    if (idBeneficioEdicion) {
+      // Si hay un ID guardado en memoria, actualiza el registro existente
+      await db.collection('beneficios').doc(idBeneficioEdicion).update(datos);
+      alert("¡Beneficio actualizado con éxito!");
+    } else {
+      // Si no, crea un beneficio completamente nuevo
+      await db.collection('beneficios').add(datos);
+      alert("¡Nuevo beneficio registrado e incorporado!");
+    }
+    limpiarFormularioBeneficio();
+  } catch (error) {
+    console.error("Error al gestionar el beneficio:", error);
+    alert("Ocurrió un error al intentar conectarse a la base de datos.");
+  }
+}
+
+// 3. Cargar datos de la tabla al formulario superior para editar
+function cargarBeneficioForm(id, cargo, concepto, valor, indicador) {
+  idBeneficioEdicion = id;
+  document.getElementById('benCargo').value = cargo;
+  document.getElementById('benConcepto').value = concepto;
+  document.getElementById('benValor').value = valor;
+  document.getElementById('benIndicador').value = indicador;
+  
+  // Cambiamos sutilmente el color del botón para indicar edición
+  document.querySelector("button[onclick='guardarBeneficio()']").innerHTML = "🔄 Actualizar Cambios del Beneficio";
+}
+
+// 4. Eliminar un beneficio
+async function eliminarBeneficio(id) {
+  if (!confirm("¿Estás seguro de que deseas eliminar permanentemente este beneficio del cargo asignado?")) return;
+  try {
+    await db.collection('beneficios').doc(id).delete();
+    alert("Beneficio removido del sistema.");
+  } catch (error) {
+    console.error("Error al eliminar beneficio:", error);
+  }
+}
+
+// 5. Limpiar formulario
+function limpiarFormularioBeneficio() {
+  idBeneficioEdicion = null;
+  document.getElementById('benCargo').value = '';
+  document.getElementById('benConcepto').value = '';
+  document.getElementById('benValor').value = '';
+  document.getElementById('benIndicador').value = '';
+  document.querySelector("button[onclick='guardarBeneficio()']").innerHTML = "💾 Guardar / Actualizar Beneficio";
+}
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = 'login.html';
+  }
+
+</script>
+</body>
+</html>

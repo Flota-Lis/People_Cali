@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal People - Login</title>
+ <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #eef2f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 15px; color: #1c2430; }
+    
+    /* 💳 Tarjeta de Login estilizada con tu marca */
+    .login-card { background: #fff; width: 100%; max-width: 380px; padding: 35px 30px; border-radius: 20px; box-shadow: 0 12px 40px rgba(0,0,0,0.06); border: 1.5px solid #cdd5db; border-top: 5px solid #206987; text-align: center; position: relative; overflow: hidden; }
+    
+    /* Pequeña línea decorativa verde esmeralda debajo del borde superior */
+    .login-card::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: #3cbcae; }
+
+    /* 🎯 Contenedor del Logo */
+    .logo-area { margin-bottom: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .logo-img-login { max-width: 240px; height: auto; object-fit: contain; margin-bottom: 5px; }
+    
+    .form-group { margin-bottom: 22px; text-align: left; }
+    label { display: block; font-size: 11px; color: #206987; font-weight: 700; margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.05em; }
+    input { width: 100%; padding: 13px; border: 1.5px solid #dde3e7; border-radius: 10px; font-size: 15px; color: #1c2430; background: #f8fafb; outline: none; transition: all 0.2s ease; }
+    
+    /* Efecto de foco con tu color Verde Esmeralda */
+    input:focus { border-color: #3cbcae; background: #fff; box-shadow: 0 0 0 3px rgba(60, 188, 174, 0.15); }
+    
+    /* 🚀 Botón con el Azul Logística */
+    .btn-login { width: 100%; padding: 14px; background: #206987; border: none; border-radius: 10px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; transition: all .2s ease; letter-spacing: 0.03em; }
+    
+    /* Efecto Hover que oscurece el azul e ilumina con un toque de borde amarillo */
+    .btn-login:hover { background: #164f67; border-bottom: 2px solid #ffc404; padding-bottom: 12px; }
+    
+    .error-msg { color: #a32d2d; font-size: 13px; margin-top: 14px; display: none; font-weight: 600; background: #fdf2f2; padding: 8px; border-radius: 8px; border: 0.5px solid #f5c6c6; }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <div class="logo-area">
+      <img src="logo.png" alt="Logística Conectamos Más" class="logo-img-login">
+    </div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="cedula">Número de Cédula</label>
+        <input type="text" id="cedula" placeholder="Ingresa tu documento" required autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input type="password" id="password" placeholder="Tu cédula es tu contraseña" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn-login">Ingresar al Portal</button>
+      <div id="errorMsg" class="error-msg"></div>
+    </form>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script src="config.js"></script>
+
+  <script>
+   
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const cedulaInput = document.getElementById('cedula').value.trim();
+      const passwordInput = document.getElementById('password').value.trim();
+      const errorMsg = document.getElementById('errorMsg');
+      
+      errorMsg.style.display = 'none';
+
+      if (cedulaInput !== passwordInput) {
+        errorMsg.textContent = "La contraseña no coincide con el documento.";
+        errorMsg.style.display = 'block';
+        return;
+      }
+
+      try {
+        const snapshot = await db.collection('empleados')
+          .where('cedula', '==', cedulaInput)
+          .limit(1)
+          .get();
+
+        if (!snapshot.empty) {
+          const docSnap = snapshot.docs[0];
+          const datosUsuario = docSnap.data();
+          
+          localStorage.setItem('usuario_cedula', cedulaInput);
+          localStorage.setItem('usuario_rol', datosUsuario.rol || 'empleado');
+          
+          if (datosUsuario.rol === 'admin') {
+            alert('¡Bienvenido Administrador!');
+            window.location.href = 'admin.html';
+          } else {
+            alert('¡Bienvenido al Portal ' + datosUsuario.nombre + '!');
+            window.location.href = 'index.html';
+          }
+        } else {
+          errorMsg.textContent = "Usuario no registrado en la base de datos.";
+          errorMsg.style.display = 'block';
+        }
+      } catch (error) {
+        console.error("Error en el login:", error);
+        errorMsg.textContent = "Error de conexión.";
+        errorMsg.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
