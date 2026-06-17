@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portal People - Login</title>
- <style>
+  <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: sans-serif; background: #eef2f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 15px; color: #1c2430; }
     
@@ -61,8 +61,6 @@
   <script src="config.js"></script>
 
   <script>
-   
-
     const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
@@ -90,17 +88,30 @@
         if (!snapshot.empty) {
           const docSnap = snapshot.docs[0];
           const datosUsuario = docSnap.data();
+          const rolUsuario = datosUsuario.rol ? String(datosUsuario.rol).toLowerCase().trim() : 'empleado';
           
           localStorage.setItem('usuario_cedula', cedulaInput);
-          localStorage.setItem('usuario_rol', datosUsuario.rol || 'empleado');
+          localStorage.setItem('usuario_rol', rolUsuario);
           
-          if (datosUsuario.rol === 'admin') {
-            alert('¡Bienvenido Administrador!');
+          alert('¡Bienvenido al Portal, ' + datosUsuario.nombre + '!');
+
+          // =========================================================================
+          // 🎯 ENRUTAMIENTO RE-CALIBRADO DE RUTAS OPERATIVAS (SEGMENTACIÓN DE ACCESOS)
+          // =========================================================================
+          if (rolUsuario === 'admin') {
+            // El administrador entra a la raíz del panel maestro general
             window.location.href = 'admin.html';
+            
+          } else if (rolUsuario === 'people' || rolUsuario === 'lider' || rolUsuario === 'jefe' || rolUsuario === 'padrino') {
+            // 🚀 PERFIL OPERATIVO: El Auditor de People, el Líder, el Jefe y el Padrino 
+            // entran directamente a la suite de control del Plan Padrino (donde ejecutan su respectiva vista)
+            window.location.href = 'admin_padrino.html';
+            
           } else {
-            alert('¡Bienvenido al Portal ' + datosUsuario.nombre + '!');
+            // Únicamente el colaborador apadrinado o empleado común de a pie se va al index móvil de tareas
             window.location.href = 'index.html';
           }
+
         } else {
           errorMsg.textContent = "Usuario no registrado en la base de datos.";
           errorMsg.style.display = 'block';

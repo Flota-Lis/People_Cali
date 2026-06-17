@@ -6,115 +6,110 @@
   <title>Portal People - Inicio</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
   <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: sans-serif; background: #eef2f5; min-height: 100vh; color: #1c2430; }
-.header { background: #206987; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; height: 62px; border-bottom: 3px solid #3cbcae; }
-.logo-img { height: 38px; width: auto; object-fit: contain; display: block; }
-.header-badge { background: #ffc404; color: #1c2430; font-size: 9.5px; font-weight: 700; padding: 4px 9px; border-radius: 20px; white-space: nowrap; }
-.tab.active { color: #206987; border-bottom-color: #206987; }
-.avance-global { background: #206987; border-radius: 14px; padding: 14px; margin-bottom: 10px; border-bottom: 4px solid #3cbcae; }
-.avance-fill { height: 100%; background: #ffc404; border-radius: 6px; width: 0%; transition: width 0.5s ease; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; background: #eef2f5; min-height: 100vh; color: #1c2430; }
 
-  .app-shell {
-    width: 100%;
-    max-width: 100%;
-    margin: 0 auto;
-    background: #f0f4f6;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-  }
-
-  @media (min-width: 768px) {
     .app-shell {
-      max-width: 1024px;
-      margin: 20px auto;
-      border-radius: 14px;
-      border: 1.5px solid #cdd5db;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-      min-height: calc(100vh - 40px);
-      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
+      background: #f0f4f6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
     }
-  }
 
-  .header { background: #1e6e7e; padding: 0 18px; display: flex; align-items: center; gap: 10px; height: 58px; }
-  .logo-block { display: flex; align-items: center; gap: 7px; }
-  .logo-text { font-size: 10px; font-weight: 700; color: #fff; line-height: 1.15; letter-spacing: 0.04em; }
-  .logo-sub { font-size: 7.5px; font-weight: 400; color: #a8d8e0; letter-spacing: 0.06em; }
-  .divider-v { width: 1px; height: 28px; background: rgba(255,255,255,0.25); margin: 0 4px; }
-  .header-title { font-size: 11.5px; font-weight: 700; color: #fff; letter-spacing: 0.03em; flex: 1; text-align: center; }
-  .header-badge { background: #F9C234; color: #1e3a3a; font-size: 9px; font-weight: 700; padding: 3px 7px; border-radius: 20px; white-space: nowrap; }
-  .notif-btn { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    @media (min-width: 768px) {
+      .app-shell {
+        max-width: 1024px;
+        margin: 20px auto;
+        border-radius: 14px;
+        border: 1.5px solid #cdd5db;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        min-height: calc(100vh - 40px);
+        overflow: hidden;
+      }
+    }
 
-  .tab-bar { display: flex; background: #fff; border-bottom: 0.5px solid #dde3e7; }
-  .tab { flex: 1; padding: 11px 6px 9px; text-align: center; font-size: 9.5px; font-weight: 500; color: #7a8f99; cursor: pointer; border-bottom: 2.5px solid transparent; transition: all .2s; display: flex; flex-direction: column; align-items: center; gap: 3px; }
-  .tab.active { color: #1e6e7e; border-bottom-color: #1e6e7e; }
+    .header { background: #206987; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; height: 62px; border-bottom: 3px solid #3cbcae; }
+    .logo-img { height: 38px; width: auto; object-fit: contain; display: block; }
+    .header-badge { background: #ffc404; color: #1c2430; font-size: 9.5px; font-weight: 700; padding: 4px 9px; border-radius: 20px; white-space: nowrap; }
+    .notif-btn { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-  .screen { display: none; padding: 14px 14px 20px; flex: 1; pointer-events: none; }
-  .screen.active { display: flex; flex-direction: column; pointer-events: auto; }
+    .tab-bar { display: flex; background: #fff; border-bottom: 0.5px solid #dde3e7; }
+    .tab { flex: 1; padding: 11px 6px 9px; text-align: center; font-size: 9.5px; font-weight: 500; color: #7a8f99; cursor: pointer; border-bottom: 2.5px solid transparent; transition: all .2s; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .tab.active { color: #206987; border-bottom-color: #206987; }
 
-  .section-title { font-size: 10px; font-weight: 700; color: #1e6e7e; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; margin-top: 14px; }
-  .card { background: #fff; border-radius: 14px; padding: 14px; margin-bottom: 10px; border: 0.5px solid #dde3e7; }
-  .card-header { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
-  .card-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-  .card-icon.teal { background: #e1f5ee; }
-  .card-icon.yellow { background: #fff8e1; }
-  .card-icon i { font-size: 20px; }
-  .card-icon.teal i { color: #1e6e7e; }
-  .card-icon.yellow i { color: #c89b00; }
-  .card-title { font-size: 13px; font-weight: 600; color: #1a3540; }
-  .card-sub { font-size: 10px; color: #7a8f99; }
+    .screen { display: none; padding: 14px 14px 20px; flex: 1; pointer-events: none; }
+    .screen.active { display: flex; flex-direction: column; pointer-events: auto; }
 
-  .benefit-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 0.5px solid #eef1f3; }
-  .benefit-row:last-child { border-bottom: none; }
-  .benefit-label { font-size: 11px; color: #3a5a68; }
-  .benefit-amount { font-size: 12px; font-weight: 700; color: #1e6e7e; }
+    .section-title { font-size: 10px; font-weight: 700; color: #206987; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; margin-top: 14px; }
+    .card { background: #fff; border-radius: 14px; padding: 14px; margin-bottom: 10px; border: 0.5px solid #dde3e7; }
+    .card-header { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+    
+    .card-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+    .card-icon.teal { background: #e1f5ee; }
+    .card-icon.yellow { background: #fff8e1; }
+    .card-icon i { font-size: 20px; }
+    .card-icon.teal i { color: #206987; }
+    .card-icon.yellow i { color: #c89b00; }
+    .card-title { font-size: 13px; font-weight: 600; color: #1a3540; }
+    .card-sub { font-size: 10px; color: #7a8f99; }
 
-  .tag { font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 20px; }
-  .tag.green { background: #e1f5ee; color: #0f6e56; }
-  .tag.yellow { background: #fef9e7; color: #8a6e00; }
+    .benefit-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 0.5px solid #eef1f3; }
+    .benefit-row:last-child { border-bottom: none; }
+    .benefit-label { font-size: 11px; color: #3a5a68; }
+    .benefit-amount { font-size: 12px; font-weight: 700; color: #206987; }
 
-  .alert-card { background: #fff8e6; border: 0.5px solid #F9C234; border-radius: 12px; padding: 10px 12px; display: flex; gap: 9px; align-items: flex-start; margin-bottom: 8px; }
-  .alert-card i { color: #c89b00; font-size: 18px; margin-top: 1px; }
-  .alert-text { font-size: 10.5px; color: #5a4200; line-height: 1.45; }
-  .alert-time { font-size: 9px; color: #a08030; margin-top: 2px; }
+    .tag { font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 20px; }
+    .tag.green { background: #e1f5ee; color: #0f6e56; }
+    .tag.yellow { background: #fef9e7; color: #8a6e00; }
 
-  .cap-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid #eef1f3; }
-  .cap-item:last-child { border-bottom: none; }
-  .cap-num { width: 26px; height: 26px; border-radius: 50%; background: #e1f5ee; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #1e6e7e; flex-shrink: 0; }
-  .cap-num.done { background: #1e6e7e; color: #fff; }
-  .cap-info { flex: 1; }
-  .cap-title { font-size: 11px; font-weight: 600; color: #1a3540; }
-  .cap-date { font-size: 9.5px; color: #7a8f99; margin-top: 1px; }
-  .cap-actions { display: flex; gap: 5px; align-items: center; }
+    .alert-card { background: #fff8e6; border: 0.5px solid #ffc404; border-radius: 12px; padding: 10px 12px; display: flex; gap: 9px; align-items: flex-start; margin-bottom: 8px; }
+    .alert-card i { color: #c89b00; font-size: 18px; margin-top: 1px; }
+    .alert-text { font-size: 10.5px; color: #5a4200; line-height: 1.45; }
+    .alert-time { font-size: 9px; color: #a08030; margin-top: 2px; }
 
-  .btn-ppt { font-size: 9px; padding: 6px 10px; border-radius: 7px; background: #e1f5ee; color: #0f6e56; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; gap: 3px; }
-  .btn-qr { font-size: 9px; padding: 6px 10px; border-radius: 7px; background: #fff8e1; color: #8a6e00; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; gap: 3px; }
-  .btn-qr:disabled { background: #f1efe8; color: #9da3a6; cursor: not-allowed; opacity: 0.6; }
+    .cap-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid #eef1f3; }
+    .cap-item:last-child { border-bottom: none; }
+    .cap-num { width: 26px; height: 26px; border-radius: 50%; background: #e1f5ee; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #206987; flex-shrink: 0; }
+    .cap-num.done { background: #206987; color: #fff; }
+    .cap-info { flex: 1; }
+    .cap-title { font-size: 11px; font-weight: 600; color: #1a3540; }
+    .cap-date { font-size: 9.5px; color: #7a8f99; margin-top: 1px; }
+    .cap-actions { display: flex; gap: 5px; align-items: center; }
 
-  .avance-global { background: #1e6e7e; border-radius: 14px; padding: 14px; margin-bottom: 10px; }
-  .avance-label { font-size: 10px; color: #a8d8e0; font-weight: 600; margin-bottom: 2px; }
-  .avance-pct { font-size: 28px; font-weight: 700; color: #fff; }
-  .avance-sub { font-size: 10px; color: #a8d8e0; margin-top: 2px; }
-  .avance-bar { height: 8px; background: rgba(255,255,255,0.18); border-radius: 6px; overflow: hidden; margin-top: 10px; }
-  .avance-fill { height: 100%; background: #F9C234; border-radius: 6px; width: 0%; transition: width 0.5s ease; }
+    .btn-ppt { font-size: 9px; padding: 6px 10px; border-radius: 7px; background: #e1f5ee; color: #0f6e56; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; gap: 3px; }
+    .btn-ppt:hover { opacity: 0.9; }
+    .btn-qr { font-size: 9px; padding: 6px 10px; border-radius: 7px; background: #fff8e1; color: #8a6e00; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; gap: 3px; }
+    .btn-qr:disabled { background: #f1efe8; color: #9da3a6; cursor: not-allowed; opacity: 0.6; }
 
-  .profile-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #fff; margin-bottom: 10px; border-radius: 14px; border: 0.5px solid #dde3e7; }
-  .avatar { width: 42px; height: 42px; border-radius: 50%; background: #1e6e7e; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #fff; flex-shrink: 0; }
-  .profile-info .name { font-size: 13px; font-weight: 600; color: #1a3540; }
-  .profile-info .cargo { font-size: 10.5px; color: #7a8f99; }
-  .btn-logout { background: none; border: none; color: #a32d2d; font-size: 11px; cursor: pointer; font-weight: 600; margin-top: 5px; }
-</style>
+    .avance-global { background: #206987; border-radius: 14px; padding: 14px; margin-bottom: 10px; border-bottom: 4px solid #3cbcae; }
+    .avance-label { font-size: 10px; color: #a8d8e0; font-weight: 600; margin-bottom: 2px; }
+    .avance-pct { font-size: 28px; font-weight: 700; color: #fff; }
+    .avance-sub { font-size: 10px; color: #a8d8e0; margin-top: 2px; }
+    .avance-bar { height: 8px; background: rgba(255,255,255,0.18); border-radius: 6px; overflow: hidden; margin-top: 10px; }
+    .avance-fill { height: 100%; background: #ffc404; border-radius: 6px; width: 0%; transition: width 0.5s ease; }
+
+    .profile-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #fff; margin-bottom: 10px; border-radius: 14px; border: 0.5px solid #dde3e7; }
+    .avatar { width: 42px; height: 42px; border-radius: 50%; background: #206987; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #fff; flex-shrink: 0; overflow: hidden; }
+    .profile-info .name { font-size: 13px; font-weight: 600; color: #1a3540; }
+    .profile-info .cargo { font-size: 10.5px; color: #7a8f99; }
+    .btn-logout { background: none; border: none; color: #a32d2d; font-size: 11px; cursor: pointer; font-weight: 600; margin-top: 5px; }
+
+    /* Estilos de las etiquetas de habilidades del Padrino */
+    .tag-skill { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 10.5px; font-weight: 600; }
+    .tag-tecnica { background: #e1f5ee; color: #0f6e56; border: 1px solid #3cbcae; }
+    .tag-blanda { background: #fff8e1; color: #8a6e00; border: 1px solid #ffc404; }
+  </style>
 </head>
 <body>
 
- 
-
- <div class="app-shell">
+<div class="app-shell">
+  
   <div class="header">
     <img src="logo.png" alt="Logística Conectamos Más" class="logo-img">
-    
     <div style="display: flex; align-items: center; gap: 8px;">
       <div id="headerRegion" class="header-badge">---</div>
       <div class="notif-btn" onclick="showTab('notif')">
@@ -128,6 +123,7 @@
     <div class="tab" id="tab-beneficios" onclick="showTab('beneficios')"><i class="ti ti-gift"></i><span>Beneficios</span></div>
     <div class="tab" id="tab-capacitaciones" onclick="showTab('capacitaciones')"><i class="ti ti-school"></i><span>Capacitaciones</span></div>
     <div class="tab" id="tab-notif" onclick="showTab('notif')"><i class="ti ti-bell"></i><span>Alertas</span></div>
+    <div class="tab" id="tab-padrino" onclick="showTab('padrino')" style="display: none;"><i class="ti ti-users"></i><span>Mi Padrino</span></div>
   </div>
 
   <div class="screen active" id="screen-home">
@@ -152,36 +148,22 @@
     <div class="section-title">Accesos rápidos</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
       <div class="card" style="cursor:pointer;padding:12px;" onclick="showTab('beneficios')">
-        <i class="ti ti-gift" style="font-size:22px;color:#F9C234;display:block;margin-bottom:5px;"></i>
+        <i class="ti ti-gift" style="font-size:22px;color:#ffc404;display:block;margin-bottom:5px;"></i>
         <div style="font-size:11px;font-weight:600;color:#1a3540;">Mis Beneficios</div>
       </div>
       <div class="card" style="cursor:pointer;padding:12px;" onclick="showTab('capacitaciones')">
-        <i class="ti ti-school" style="font-size:22px;color:#1e6e7e;display:block;margin-bottom:5px;"></i>
+        <i class="ti ti-school" style="font-size:22px;color:#206987;display:block;margin-bottom:5px;"></i>
         <div style="font-size:11px;font-weight:600;color:#1a3540;">Capacitaciones</div>
       </div>
     </div>
   </div>
 
-<div class="screen" id="screen-beneficios">
-  <div class="section-title" style="margin-top:10px;">Beneficios &amp; compensación por cargo</div>
-  <div class="card">
-    <div class="card-header">
-      <div class="card-icon yellow"><i class="ti ti-coin"></i></div>
-      <div>
-        <div id="benefitTitle" class="card-title">Cargando...</div>
-        <div id="benefitSubtitle" class="card-sub">Por favor espera...</div>
-      </div>
-    </div>
-    <div class="benefit-row">
-      <span class="benefit-label">Bono por tu cargo asignado:</span>
-      <span id="benefitAmount" class="benefit-amount">$0</span>
-    </div>
-    <div class="benefit-row" style="border-top: 1px dashed #eef1f3; padding-top: 8px; margin-top: 8px;">
-      <span class="benefit-label" style="font-size: 11px; color: #7a8f99;">Requisito de Meta:</span>
-      <span id="benefitIndicador" class="tag yellow" style="font-size: 10px;">---</span>
+  <div class="screen" id="screen-beneficios">
+    <div class="section-title" style="margin-top:10px;">Beneficios &amp; compensación por cargo</div>
+    <div id="contenedor-beneficios-lista">
+      <div style="text-align:center; padding:20px; color:#7a8f99; font-size:12px;">Cargando tus beneficios asignados...</div>
     </div>
   </div>
-</div>
 
   <div class="screen" id="screen-capacitaciones">
     <div class="section-title" style="margin-top:10px;">Mi plan de entrenamiento</div>
@@ -197,24 +179,111 @@
     </div>
   </div>
 
+  <div class="screen" id="screen-padrino">
+    
+    <div id="padrinoHeaderFicha" style="background: #206987; color: white; padding: 20px; border-radius: 14px; text-align: center; margin-bottom: 15px; border-bottom: 4px solid #3cbcae;">
+      <div style="font-size: 16px; font-weight: 700;" id="padrinoFichaNombre">---</div>
+      <div style="font-size: 11px; color: #e1f5ee; margin-top: 2px;" id="padrinoFichaCargo">---</div>
+      <div style="display: flex; gap: 6px; justify-content: center; margin-top: 10px;">
+        <span class="tag" style="background: rgba(255,255,255,0.2); color: white; font-weight:700;" id="padrinoFichaEtapa">---</span>
+        <span class="tag" style="background: #ffc404; color: #1c2430; font-weight:700;">Apadrinado(a)</span>
+      </div>
+    </div>
+
+    <div class="section-title">📋 Información Básica de Ingreso</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px;">
+      <div class="card" style="padding: 10px; margin: 0;">
+        <div style="font-size: 9px; color: #7a8f99; font-weight: 700;">EMPRESA ANTERIOR</div>
+        <div style="font-size: 12px; font-weight: 600;" id="padrinoFichaEmpresaAnt">---</div>
+      </div>
+      <div class="card" style="padding: 10px; margin: 0;">
+        <div style="font-size: 9px; color: #7a8f99; font-weight: 700;">TIEMPO EN LA COMPAÑÍA</div>
+        <div style="font-size: 12px; font-weight: 600;" id="padrinoFichaTiempoTranscurrido">Calculando...</div>
+      </div>
+    </div>
+
+    <div class="section-title">🚀 Progreso y Calificaciones de Maduración</div>
+    <div class="card" style="padding: 15px;">
+      
+      <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px dashed #eef1f3;">
+        <div style="width: 28px; height: 28px; border-radius: 50%; background: #206987; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px;">📅</div>
+        <div>
+          <div style="font-size: 12px; font-weight: 700; color: #1c2430;">Fecha de Contratación</div>
+          <div style="font-size: 10px; color: #7a8f99;" id="hitoFechaContrato">---</div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px dashed #eef1f3;">
+        <div style="width: 28px; height: 28px; border-radius: 50%; background: #ffc404; color: #1c2430; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;">Día 7</div>
+        <div style="flex: 1;">
+          <div style="font-size: 12px; font-weight: 700; color: #1c2430;">Evaluación Técnico</div>
+          <div style="font-size: 10px; color: #7a8f99;">Fase de Inducción Inicial</div>
+        </div>
+        <div style="width: 52px; height: 32px; border-radius: 20px; border: 2px solid #ffc404; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: #8a6e00; background:#fff8e1;" id="hitoNotaTecnico">0/100</div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px dashed #eef1f3;">
+        <div style="width: 28px; height: 28px; border-radius: 50%; background: #3cbcae; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">Día 30</div>
+        <div style="flex: 1;">
+          <div style="font-size: 12px; font-weight: 700; color: #1c2430;">Evaluación Funcional</div>
+          <div style="font-size: 10px; color: #7a8f99;">Prácticas en la Operación Logística</div>
+        </div>
+        <div style="width: 52px; height: 32px; border-radius: 20px; border: 2px solid #3cbcae; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: #0f6e56; background:#e1f5ee;" id="hitoNotaFuncional">0/100</div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0;">
+        <div style="width: 28px; height: 28px; border-radius: 50%; background: #206987; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">Día 90</div>
+        <div style="flex: 1;">
+          <div style="font-size: 12px; font-weight: 700; color: #1c2430;">Evaluación Autónomo</div>
+          <div style="font-size: 10px; color: #7a8f99;">Monitoreo y Desempeño Libre</div>
+        </div>
+        <div style="width: 52px; height: 32px; border-radius: 20px; border: 2px solid #206987; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: #206987; background:#e1f0f5;" id="hitoNotaAutonomo">0/100</div>
+      </div>
+    </div>
+
+    <div class="section-title">🤝 Mi Padrino Certificado Asignado</div>
+    <div class="card" style="background: #fff; border: 1.5px solid #dde3e7; padding: 0; overflow:hidden; border-radius:14px; box-shadow: 0 4px 12px rgba(0,0,0,0.01);">
+      
+      <div style="background: #206987; color: white; padding: 15px; display: flex; align-items: center; gap: 15px; border-bottom: 3px solid #3cbcae;">
+        <div id="avatarPadrinoAsignado" style="width: 58px; height: 58px; border-radius: 50%; overflow: hidden; background: rgba(255,255,255,0.2); border: 2px solid white; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight:700;">--</div>
+        <div>
+          <div style="font-size: 14px; font-weight: 700; color: #fff;" id="nombrePadrinoAsignado">Buscando tutor...</div>
+          <div style="font-size: 11px; color: #e1f5ee; margin-top: 2px;" id="cargoPadrinoAsignado">Cargando competencias...</div>
+        </div>
+      </div>
+
+      <div style="padding: 15px; display: flex; flex-direction: column; gap: 12px; background: #f8fafb;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 8px; font-size: 11px;">
+          <div><span style="color:#7a8f99; display:block; font-size:8.5px; font-weight:700;">EMPRESA</span><strong id="padFichaEmpresa">---</strong></div>
+          <div><span style="color:#7a8f99; display:block; font-size:8.5px; font-weight:700;">ANTIGÜEDAD</span><strong id="padFichaTiempo">---</strong></div>
+          <div><span style="color:#0f6e56; display:block; font-size:8.5px; font-weight:700;">CORREO DE CONTACTO</span><strong id="padFichaCorreo" style="word-break:break-all; font-size:10.5px;">---</strong></div>
+        </div>
+        
+        <div>
+          <span style="color:#7a8f99; display:block; font-size:8.5px; font-weight:700; margin-bottom: 4px;">FORTALEZAS TÉCNICAS</span>
+          <div id="padFichaTecnicas" style="display:flex; flex-wrap:wrap; gap:4px;">---</div>
+        </div>
+
+        <div>
+          <span style="color:#7a8f99; display:block; font-size:8.5px; font-weight:700; margin-bottom: 4px;">HABILIDADES BLANDAS</span>
+          <div id="padFichaBlandas" style="display:flex; flex-wrap:wrap; gap:4px;">---</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div style="text-align: center; padding: 25px 15px 40px 15px; margin-top: 20px;">
-  <div style="font-size: 11px; font-weight: 600; color: #7a8f99; letter-spacing: 0.03em;">
-    © 2026 Todos los derechos reservados
+    <div style="font-size: 11px; font-weight: 600; color: #7a8f99; letter-spacing: 0.03em;">© 2026 Todos los derechos reservados</div>
+    <div style="font-size: 10px; font-weight: 700; color: #206987; letter-spacing: 0.05em; margin-top: 2px; text-transform: uppercase;">Anderson Alexander Devs</div>
   </div>
-  <div style="font-size: 10px; font-weight: 700; color: #1e6e7e; letter-spacing: 0.05em; margin-top: 2px; text-transform: uppercase;">
-    Anderson Alexander Devs
-  </div>
-</div>
+
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
 <script src="config.js"></script>
 
 <script>
- 
-
   const app = firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
@@ -224,190 +293,228 @@
   }
 
   window.addEventListener('DOMContentLoaded', () => {
-    cargarDatosEmpleado();
+    inicializarEscuchadorEmpleadoRealtime();
     cargarCronogramaYProgreso();
     cargarMensajesAlertaAutomaticas();
   });
 
- async function cargarDatosEmpleado() {
-  try {
-    // 1. Buscamos al empleado por su cédula para conocer su cargo
-    const snapshot = await db.collection('empleados')
-      .where('cedula', '==', cedulaLogueada)
-      .limit(1)
-      .get();
+  // 🌟 ESCUCHADOR MAESTRO EN TIEMPO REAL CON INYECCIÓN DE FOTO Y CORREO DEL TUTOR
+  function inicializarEscuchadorEmpleadoRealtime() {
+    db.collection('empleados')
+      .where('cedula', '==', String(cedulaLogueada))
+      .onSnapshot(async (snapshot) => {
+        if (snapshot.empty) return;
 
-    if (!snapshot.empty) {
-      const usuario = snapshot.docs[0].data();
-      const cargoEmpleado = usuario.cargo; // Ej: "Conductor"
+        const docSnap = snapshot.docs[0];
+        const usuario = docSnap.data();
+        const cargoEmpleado = usuario.cargo || "Operativo";
 
-      // Pintamos los datos del perfil en la cabecera e Inicio
-      document.getElementById('userName').textContent = usuario.nombre;
-      document.getElementById('userCargo').textContent = cargoEmpleado + " · Región " + usuario.region;
-      document.getElementById('headerRegion').textContent = "Región " + usuario.region;
-      document.getElementById('userAvatar').textContent = usuario.nombre.substring(0,2).toUpperCase();
+        // Llenamos el perfil básico de la cabecera
+        document.getElementById('userName').textContent = usuario.nombre;
+        document.getElementById('userCargo').textContent = cargoEmpleado + " · Región " + (usuario.region || "General");
+        document.getElementById('headerRegion').textContent = "Región " + (usuario.region || "General");
+        document.getElementById('userAvatar').textContent = usuario.nombre.substring(0,2).toUpperCase();
 
-      // 2. CONEXIÓN DINÁMICA: Vamos a buscar el beneficio real creado por el Admin
-      const beneficioSnapshot = await db.collection('beneficios')
-        .where('cargo', '==', cargoEmpleado)
-        .limit(1)
-        .get();
+        // =========================================================
+        // 🤝 SECCIÓN DE MONITOREO Y RENDIMIENTO DEL PLAN PADRINO
+        // =========================================================
+        if (usuario.es_apadrinado === true || usuario.padrino_id) {
+          if(document.getElementById('tab-padrino')) document.getElementById('tab-padrino').style.display = 'flex';
 
-      if (!beneficioSnapshot.empty) {
-        const beneficioReal = beneficioSnapshot.docs[0].data();
+          // Cálculo informativo de días transcurridos desde su ingreso real
+          const fechaIngreso = new Date(usuario.fecha_ingreso + 'T00:00:00');
+          const hoy = new Date('2026-06-08T00:00:00'); 
+          const diferenciaMilisegundos = hoy - fechaIngreso;
+          const diasTranscurridos = Math.floor(diferenciaMilisegundos / (1000 * 60 * 60 * 24));
 
-        // Formateamos el número del valor a formato moneda de forma limpia ($400.000)
-        const valorFormateado = new Intl.NumberFormat('es-CO', { 
-          style: 'currency', 
-          currency: 'COP', 
-          maximumFractionDigits: 0 
-        }).format(beneficioReal.valor || 0);
+          // Pintamos los datos consolidados en la pantalla
+          document.getElementById('padrinoFichaNombre').textContent = usuario.nombre;
+          document.getElementById('padrinoFichaCargo').textContent = cargoEmpleado;
+          document.getElementById('padrinoFichaEtapa').textContent = usuario.etapa_actual || "Etapa Técnico";
+          document.getElementById('padrinoFichaEmpresaAnt').textContent = usuario.empresa_anterior || "Ninguna";
+          document.getElementById('padrinoFichaTiempoTranscurrido').textContent = diasTranscurridos + " días activos";
 
-        // Inyectamos los datos de Firebase directamente en tus IDs existentes
-        document.getElementById('benefitTitle').textContent = beneficioReal.concepto || "Compensación";
-        document.getElementById('benefitSubtitle').textContent = "Cargo: " + cargoEmpleado;
-        document.getElementById('benefitAmount').textContent = valorFormateado;
-        
-        // Pintamos el requisito en la fila nueva que agregamos
-        if(document.getElementById('benefitIndicador')) {
-          document.getElementById('benefitIndicador').textContent = "🎯 " + (beneficioReal.indicador || "Cumplimiento general");
+          // 🧮 INYECCIÓN DINÁMICA DE NOTAS PROCESADAS POR EL CONSOLIDADOR QR DEL FORMS
+          if (usuario.hitos) {
+            document.getElementById('hitoFechaContrato').textContent = usuario.fecha_income || usuario.fecha_ingreso || "---";
+            document.getElementById('hitoNotaTecnico').textContent = (usuario.hitos.eval_tecnico_nota !== undefined ? usuario.hitos.eval_tecnico_nota : 0) + "/100";
+            document.getElementById('hitoNotaFuncional').textContent = (usuario.hitos.eval_funcional_nota !== undefined ? usuario.hitos.eval_funcional_nota : 0) + "/100";
+            document.getElementById('hitoNotaAutonomo').textContent = (usuario.hitos.eval_autonomo_nota !== undefined ? usuario.hitos.eval_autonomo_nota : 0) + "/100";
+          }
+
+          // 🔍 BÚSQUEDA CRUZADA: Hoja de vida extendida del Padrino (CON FOTO BASE64 Y CORREO)
+          if (usuario.padrino_id) {
+            const tutorSnapshot = await db.collection('empleados').where('cedula', '==', String(usuario.padrino_id)).limit(1).get();
+            
+            if (!tutorSnapshot.empty) {
+              const tData = tutorSnapshot.docs[0].data();
+              const boxAvatar = document.getElementById('avatarPadrinoAsignado');
+              
+              document.getElementById('nombrePadrinoAsignado').textContent = tData.nombre;
+              document.getElementById('cargoPadrinoAsignado').textContent = tData.cargo || "Supervisor Logístico";
+              document.getElementById('padFichaEmpresa').textContent = tData.empresa_padrino || "Bavaria AB InBev";
+              document.getElementById('padFichaTiempo').textContent = tData.tiempo_compania || "9 meses";
+
+              // 📧 NUEVO: Inyección dinámica del correo electrónico de alertas en la tarjeta
+              if(document.getElementById('padFichaCorreo')) {
+                document.getElementById('padFichaCorreo').textContent = tData.correo || "Sin correo registrado";
+              }
+
+              // 📸 RE-CALIBRACIÓN DE FOTO: Renderiza Base64 guardado dinámicamente, conserva compatibilidad con michel.png
+              if (boxAvatar) {
+                if (tData.foto_url && tData.foto_url.trim() !== "") {
+                  boxAvatar.innerHTML = `<img src="${tData.foto_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                } else if (tData.nombre.toLowerCase().includes("michel")) {
+                  boxAvatar.innerHTML = `<img src="michel.png" style="width:100%; height:100%; object-fit:cover;">`;
+                } else {
+                  boxAvatar.innerHTML = `<div style="font-weight:bold; font-size:16px; color:#fff;">${tData.nombre.substring(0,2).toUpperCase()}</div>`;
+                }
+              }
+
+              // Inyectamos habilidades técnicas en burbujas esmeralda
+              const boxTecnicas = document.getElementById('padFichaTecnicas');
+              if (boxTecnicas) {
+                boxTecnicas.innerHTML = '';
+                if (tData.habilidades_tecnicas && tData.habilidades_tecnicas.length > 0) {
+                  tData.habilidades_tecnicas.forEach(h => { boxTecnicas.innerHTML += `<span class="tag-skill tag-tecnica">${h}</span>`; });
+                } else { boxTecnicas.innerHTML = '<span style="color:#7a8f99;">Ninguna</span>'; }
+              }
+
+              // Inyectamos habilidades blandas en burbujas amarillas
+              const boxBlandas = document.getElementById('padFichaBlandas');
+              if (boxBlandas) {
+                boxBlandas.innerHTML = '';
+                if (tData.habilidades_blandas && tData.habilidades_blandas.length > 0) {
+                  tData.habilidades_blandas.forEach(h => { boxBlandas.innerHTML += `<span class="tag-skill tag-blanda">${h}</span>`; });
+                } else { boxBlandas.innerHTML = '<span style="color:#7a8f99;">Ninguna</span>'; }
+              }
+            } else {
+              document.getElementById('nombrePadrinoAsignado').textContent = "Padrino asignado no disponible";
+            }
+          }
         }
-      } else {
-        // Si el admin no ha creado un beneficio para este cargo en Firebase
-        document.getElementById('benefitTitle').textContent = "Sin incentivos";
-        document.getElementById('benefitSubtitle').textContent = cargoEmpleado;
-        document.getElementById('benefitAmount').textContent = "$0";
-        if(document.getElementById('benefitIndicador')) {
-          document.getElementById('benefitIndicador').textContent = "No asignado por el admin";
+
+        // 🎁 RECEPTOR DINÁMICO DE BENEFICIOS ASIGNADOS POR CARGO
+        const beneficioSnapshot = await db.collection('beneficios').where('cargo', '==', cargoEmpleado).get();
+        const listaContainer = document.getElementById('contenedor-beneficios-lista');
+        if (listaContainer) {
+          listaContainer.innerHTML = '';
+          if (!beneficioSnapshot.empty) {
+            beneficioSnapshot.forEach((doc) => {
+              const bReal = doc.data();
+              const valorFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(bReal.valor || 0);
+              listaContainer.innerHTML += `
+                <div class="card" style="margin-bottom: 15px;">
+                  <div class="card-header">
+                    <div class="card-icon yellow"><i class="ti ti-coin"></i></div>
+                    <div>
+                      <div class="card-title" style="color: #206987; font-weight: 700;">${bReal.concepto || "Compensación"}</div>
+                      <div class="card-sub">Cargo: ${cargoEmpleado}</div>
+                    </div>
+                  </div>
+                  <div class="benefit-row">
+                    <span class="benefit-label">Monto asignado para tu perfil:</span>
+                    <span class="benefit-amount" style="color: #206987; font-weight: 700;">${valorFormateado}</span>
+                  </div>
+                </div>`;
+            });
+          } else {
+            listaContainer.innerHTML = `<div style="text-align:center; padding:20px; color:#7a8f99;">No hay beneficios para este cargo.</div>`;
+          }
         }
-      }
-    }
-  } catch (e) { 
-    console.error("Error cargando perfil o beneficios dinámicos:", e); 
+      }, (error) => {
+        console.error("Error en el canal en tiempo real del colaborador:", error);
+      });
   }
-}
 
   function cargarCronogramaYProgreso() {
-    db.collection('items_cronograma')
-      .where('empleado_id', '==', cedulaLogueada)
-      .onSnapshot((snapshot) => {
-        const listContainer = document.getElementById('cap-list');
-        listContainer.innerHTML = '';
+    db.collection('items_cronograma').where('empleado_id', '==', cedulaLogueada).onSnapshot((snapshot) => {
+      const listContainer = document.getElementById('cap-list');
+      if(!listContainer) return;
+      listContainer.innerHTML = '';
 
-        let total = 0;
-        let completadas = 0;
+      let total = 0; let completadas = 0;
+      if (snapshot.empty) {
+        listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#7a8f99; font-size:12px;">No tienes capacitaciones programadas.</div>';
+        actualizarBarraProgreso(0, 0);
+        return;
+      }
 
-        if (snapshot.empty) {
-          listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#7a8f99; font-size:12px;">No tienes capacitaciones programadas en este período.</div>';
-          actualizarBarraProgreso(0, 0);
-          return;
-        }
+      snapshot.forEach((doc) => {
+        total++;
+        const item = doc.data();
+        const itemId = doc.id;
+        if (item.completado) completadas++;
 
-        snapshot.forEach((doc) => {
-          total++;
-          const item = doc.data();
-          const itemId = doc.id;
-          if (item.completado) completadas++;
+        const habilitarEval = item.visto_ppt ? '' : 'disabled';
+        const iconoCandado = item.visto_ppt ? '<i class="ti ti-qrcode"></i> Eval' : '<i class="ti ti-lock"></i> Bloqueado';
 
-          // El botón de evaluación inicia deshabilitado a menos que 'visto_ppt' ya sea true en la base de datos
-          const habilitarEval = item.visto_ppt ? '' : 'disabled';
-          const iconoCandado = item.visto_ppt ? '<i class="ti ti-qrcode"></i> Eval' : '<i class="ti ti-lock"></i> Bloqueado';
-
-          const itemHtml = `
-            <div class="cap-item">
-              <div class="cap-num ${item.completado ? 'done' : ''}">${total}</div>
-              <div class="cap-info">
-                <div class="cap-title">${item.titulo}</div>
-                <div class="cap-date">Límite: ${item.fecha_limite} ${item.completado ? '· ✓ Hecho' : ''}</div>
-              </div>
-              <div class="cap-actions">
-                ${!item.completado ? `
-                  <button class="btn-ppt" onclick="abrirPPT('${itemId}', '${item.ppt_drive_id}')"><i class="ti ti-presentation"></i> PPT</button>
-                  <button class="btn-qr" id="btn-eval-${itemId}" ${habilitarEval} onclick="completarEvaluacion('${itemId}', '${item.qr_url}')">${iconoCandado}</button>
-                ` : '<span class="tag green">Aprobado</span>'}
-              </div>
+        listContainer.innerHTML += `
+          <div class="cap-item">
+            <div class="cap-num ${item.completado ? 'done' : ''}">${total}</div>
+            <div class="cap-info">
+              <div class="cap-title">${item.titulo}</div>
+              <div class="cap-date">Límite: ${item.fecha_limite}</div>
             </div>
-          `;
-          listContainer.innerHTML += itemHtml;
-        });
-
-        actualizarBarraProgreso(completadas, total);
+            <div class="cap-actions">
+              ${!item.completado ? `
+                <button class="btn-ppt" onclick="abrirPPT('${itemId}', '${item.ppt_drive_id}')"><i class="ti ti-presentation"></i> PPT</button>
+                <button class="btn-qr" id="btn-eval-${itemId}" ${habilitarEval} onclick="completarEvaluacion('${itemId}', '${item.qr_url}')">${iconoCandado}</button>
+              ` : '<span class="tag green">Aprobado</span>'}
+            </div>
+          </div>`;
       });
+      actualizarBarraProgreso(completadas, total);
+    });
   }
 
- function actualizarBarraProgreso(hechas, totales) {
+  function actualizarBarraProgreso(hechas, totales) {
     const pct = totales > 0 ? Math.round((hechas / totales) * 100) : 0;
-    
-    const txtPct = document.getElementById('homeAvancePct');
-    const txtSub = document.getElementById('homeAvanceSub');
-    const barFill = document.getElementById('homeAvanceBar');
-
-    if(txtPct) txtPct.textContent = pct + "%";
-    if(txtSub) txtSub.textContent = `${hechas} de ${totales} evaluaciones completadas`;
-    if(barFill) barFill.style.width = pct + "%";
+    if(document.getElementById('homeAvancePct')) document.getElementById('homeAvancePct').textContent = pct + "%";
+    if(document.getElementById('homeAvanceSub')) document.getElementById('homeAvanceSub').textContent = `${hechas} de ${totales} evaluaciones completadas`;
+    if(document.getElementById('homeAvanceBar')) document.getElementById('homeAvanceBar').style.width = pct + "%";
   }
+
   async function abrirPPT(itemId, urlCompleta) {
     window.open(urlCompleta, '_blank');
-    try {
-      // Marcamos en Firebase que el usuario abrió la presentación. Esto quita el candado inmediatamente.
-      await db.collection('items_cronograma').doc(itemId).update({
-        visto_ppt: true
-      });
-    } catch(e) { console.error("Error al registrar visualización de PPT:", e); }
+    try { await db.collection('items_cronograma').doc(itemId).update({ visto_ppt: true }); } catch(e) { console.error(e); }
   }
 
   async function completarEvaluacion(itemId, urlQr) {
     window.open(urlQr, '_blank');
-    try {
-      await db.collection('items_cronograma').doc(itemId).update({
-        completado: true,
-        fecha_completado: new Date().toISOString().split('T')[0]
-      });
-    } catch(e) { console.error(e); }
+    try { await db.collection('items_cronograma').doc(itemId).update({ completado: true, fecha_completado: new Date().toISOString().split('T')[0] }); } catch(e) { console.error(e); }
   }
 
   function cargarMensajesAlertaAutomaticas() {
-    // Alertas reactivas automáticas basadas en sus cursos asignados pendientes
-    db.collection('items_cronograma')
-      .where('empleado_id', '==', cedulaLogueada)
-      .onSnapshot((snapshot) => {
-        const container = document.getElementById('alert-list');
-        let alertasHtml = '';
-        
-        snapshot.forEach(doc => {
-          const item = doc.data();
-          if(!item.completado) {
-            alertasHtml += `
-              <div class="alert-card">
-                <i class="ti ti-alert-circle"></i>
-                <div>
-                  <div class="alert-text">Nueva capacitación asignada: Tienes pendiente estudiar el tema <strong>"${item.titulo}"</strong> antes de la fecha límite: ${item.fecha_limite}.</div>
-                  <div class="alert-time">Asignación automática</div>
-                </div>
+    db.collection('items_cronograma').where('empleado_id', '==', cedulaLogueada).onSnapshot((snapshot) => {
+      const container = document.getElementById('alert-list');
+      if(!container) return;
+      let alertasHtml = '';
+      
+      snapshot.forEach(doc => {
+        const item = doc.data();
+        if(!item.completado) {
+          alertasHtml += `
+            <div class="alert-card">
+              <i class="ti ti-alert-circle"></i>
+              <div>
+                <div class="alert-text">Nueva capacitación asignada: Tienes pendiente estudiar el tema <strong>"${item.titulo}"</strong> antes del ${item.fecha_limite}.</div>
               </div>
-            `;
-          }
-        });
-
-        if(alertasHtml !== '') {
-          container.innerHTML = alertasHtml;
-        } else {
-          container.innerHTML = '<div style="text-align:center; padding:20px; color:#7a8f99; font-size:12px;">✓ Al día. No tienes alertas de capacitaciones pendientes.</div>';
+            </div>`;
         }
       });
+      container.innerHTML = alertasHtml || '<div style="text-align:center; padding:20px; color:#7a8f99;">✓ Al día. Sin alertas pendientes.</div>';
+    });
   }
 
   function showTab(name) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('screen-' + name).classList.add('active');
-    document.getElementById('tab-' + name).classList.add('active');
+    if(document.getElementById('screen-' + name)) document.getElementById('screen-' + name).classList.add('active');
+    if(document.getElementById('tab-' + name)) document.getElementById('tab-' + name).classList.add('active');
   }
 
-  function logout() {
-    localStorage.clear();
-    window.location.href = 'login.html';
-  }
+  function logout() { localStorage.clear(); window.location.href = 'login.html'; }
 </script>
 </body>
 </html>
