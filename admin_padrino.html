@@ -106,7 +106,7 @@
     /* Listas desplegables de criterios */
     .toggle-detail { font-size: 11px; color: #206987; cursor: pointer; margin-top: 8px; display: inline-flex; align-items: center; gap: 4px; border: none; background: none; font-weight: 700; outline: none; }
     .detail-panel { display: none; margin-top: 10px; border-top: 1px dashed var(--border); padding-top: 10px; }
-    .detail-panel.open { display: block; }
+    .detail-panel.open { display: block !important; }
     .detail-item { display: flex; align-items: flex-start; gap: 6px; font-size: 11px; color: #4a5568; margin-bottom: 4px; line-height: 1.4; }
 
     .onboard-row { display: flex; align-items: center; justify-content: space-between; background: #f8fafb; padding: 12px 16px; border-radius: 10px; border: 1px solid #dde3e7; margin-bottom: 8px; flex-wrap: wrap; gap: 12px; }
@@ -117,6 +117,9 @@
     .tag-skill { display: inline-block; padding: 5px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; text-align: center; }
     .tag-tecnica { background: #e1f5ee; color: #0f6e56; border: 1px solid #3cbcae; }
     .tag-blanda { background: #fff8e1; color: #8a6e00; border: 1px solid #ffc404; }
+
+    /* Componentes del monitor de reprobados interactivo */
+    .reprobado-row-item { display: flex; justify-content: space-between; align-items: center; background: #fdf2f2; border: 1px solid #f5c2c2; padding: 10px; border-radius: 8px; margin-bottom: 6px; }
   </style>
 </head>
 <body>
@@ -176,6 +179,20 @@
       </div>
     </div>
 
+    <!-- ✅ NUEVA TARJETA DINÁMICA: MONITOR DE CRÍTICOS REPROBADOS -->
+    <div class="dash-card" style="border: 1.5px solid #f09595; background: #fffdfd; display: flex; flex-direction: column; align-items: stretch; justify-content: space-between; gap: 8px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+        <div class="dash-label" style="color: #a32d2d; font-weight: 800;"><i class="ti ti-user-exclamation"></i> Reprobados Onb.</div>
+        <div class="dash-num" id="dashTotalReprobados" style="color: #a32d2d; background: #FCEBEB; font-size: 15px; padding: 2px 10px; border-radius: 20px; font-weight: 800;">0</div>
+      </div>
+      <div style="font-size: 9px; color: var(--text2); margin-top: -4px;">Evaluados: <strong id="dashEvaluadosOnboarding" style="color:var(--text);">0</strong> aspirantes</div>
+      
+      <button type="button" style="width: 100%; border: 1px solid #dde3e7; background: #fff; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; color: #206987; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="document.getElementById('lista-desplegable-reprobados').classList.toggle('open')">
+        <span>🔍 Ver Alertas</span>
+        <i class="ti ti-chevron-down"></i>
+      </button>
+    </div>
+
     <div class="dash-card" style="display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px;">
       <div style="font-size: 8px; font-weight: 800; color: #7a8f99; letter-spacing: 0.05em; text-transform: uppercase;">Auditoría de Exámenes</div>
       <div style="font-size: 11px; font-weight: 700; color: #1c2430;"><span style="color:#0f6e56;">✅ Realizadas:</span> <strong id="countEvalRealizadas">0</strong></div>
@@ -200,6 +217,11 @@
         <div class="bar-container"><div class="bar-fill" id="fill90Dias" style="background:#a32d2d;"></div></div>
       </div>
     </div>
+  </div>
+
+  <!-- ✅ PANEL CRÍTICO DESPLEGABLE DE REPROBADOS INYECTADO AUTOMÁTICAMENTE -->
+  <div id="lista-desplegable-reprobados" class="detail-panel card" style="margin-bottom: 20px; max-height: 280px; overflow-y: auto; display: none; padding: 15px; border-left: 5px solid #a32d2d; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+    <!-- Los elementos en falla se pintarán en tiempo real por medio de Firestore -->
   </div>
 
   <div class="grid-padrino">
@@ -357,7 +379,7 @@
   </div>
 
   <div class="card full-width" style="margin-bottom: 20px;">
-    <div class="card-title" style="color: #206987; border-bottom: 2px solid #206987;"><i class="ti ti-adjustments-horizontal"></i> 2.5 Monitor de Cumplimiento Onboarding (Día 1 &amp; Día 2)</div>
+    <div class="card-title" style="color: #206987; border-bottom: 2px solid #3cbcae;"><i class="ti ti-adjustments-horizontal"></i> 2.5 Monitor de Cumplimiento Onboarding (Día 1 &amp; Día 2)</div>
     <p style="font-size: 12px; color: #7a8f99; margin-bottom: 15px;">
       Controla y cambia el estado de avance de las inducciones básicas del personal nuevo.
     </p>
@@ -369,6 +391,8 @@
   <div class="card full-width" style="margin-bottom: 20px;">
     <div class="card-title" style="color: #206987; border-bottom: 2px solid #ffc404;"><i class="ti ti-clipboard-check"></i> 2.7 Carga Masiva y Monitor Detallado por Ítems (Microsoft Forms)</div>
     
+  
+
     <div style="border: 2px dashed #3cbcae; background: #f4fbf9; padding: 22px; text-align: center; margin-bottom: 20px; border-radius: 12px;">
       <i class="ti ti-file-spreadsheet" style="font-size: 34px; color: #0f6e56; display: block; margin-bottom: 8px;"></i>
       <span style="font-size: 13px; font-weight: 700; color: #206987; display: block; margin-bottom: 4px;">RECONOCIMIENTO AUTOMÁTICO EXCEL</span>
@@ -385,9 +409,6 @@
     <p style="font-size: 12px; color: #7a8f99; margin-bottom: 15px;">
       A continuación se listan los colaboradores apadrinados. Expande los paneles para verificar el cumplimiento criterio por criterio.
     </p>
-
-
-
 
     <!-- 🔍 CONTROL ADICIONADO: BUSCADOR INSTANTÁNEO FILTRADOR -->
     <div style="margin-bottom:15px; width:100%;">
@@ -500,7 +521,7 @@
     <div style="font-size: 10px; font-weight: 700; color: #206987; letter-spacing: 0.05em; margin-top: 3px; text-transform: uppercase;">Anderson Alexander Devs</div>
   </div>
 
-</div> <!-- Aquí cierra tu div class="admin-container" -->
+</div>
 
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>

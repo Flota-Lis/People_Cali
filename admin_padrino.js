@@ -82,7 +82,7 @@ function ejecutarRestriccionDeRoles() {
     }
 }
 
-// 📊 1. ESCUCHADOR DEL DASHBOARD DE INDICADORES GENERALES
+// 📊 1. ESCUCHADOR DEL DASHBOARD DE INDICADORES GENERALES CON MONITOR DE REPROBADOS INTEGRADO
 db.collection('empleados').onSnapshot((snapshot) => {
     let ingresosMes = 0; let ingresosAnio = 0;
     let padrinosActivos = 0;
@@ -90,9 +90,14 @@ db.collection('empleados').onSnapshot((snapshot) => {
     let tOnboardingTotal = 0; let tOnboardingComp = 0;
     let examenesRealizados = 0; let examenesPendientes = 0;
 
-    let sumaNota7 = 0; let cant7 = 0;
-    let sumaNota30 = 0; let cant30 = 0;
-    let sumaNota90 = 0; let cant90 = 0;
+    let sumaNota7 = 0;
+    let sumaNota30 = 0;
+    let sumaNota90 = 0;
+    let totalApadrinados = 0;
+
+    // Variables de control de alertas críticas de reprobados solicitadas
+    let totalEvaluadosOnboarding = 0;
+    let arrayReprobadosHTML = [];
 
     const hoy = new Date('2026-06-08T00:00:00');
     const setRegiones = new Set();
@@ -109,6 +114,8 @@ db.collection('empleados').onSnapshot((snapshot) => {
 
         if (emp.es_apadrinado === true) {
             if (miRol === 'padrino' && String(emp.padrino_id) !== String(cedulaLogueada)) return;
+
+            totalApadrinados++; 
 
             if (emp.estado_plan_padrino === "Plan Padrino Finalizado") {
                 planesFinalizados++;
@@ -135,14 +142,62 @@ db.collection('empleados').onSnapshot((snapshot) => {
             if (emp.onboarding_dia2 && emp.onboarding_dia2.estado === "Completado") tOnboardingComp++;
 
             if (emp.hitos) {
-                if (emp.hitos.eval_tecnico_nota > 0) { sumaNota7 += emp.hitos.eval_tecnico_nota; cant7++; examenesRealizados++; } else { examenesPendientes++; }
-                if (emp.hitos.eval_funcional_nota > 0) { sumaNota30 += emp.hitos.eval_funcional_nota; cant30++; examenesRealizados++; } else { examenesPendientes++; }
-                if (emp.hitos.eval_autonomo_nota > 0) { sumaNota90 += emp.hitos.eval_autonomo_nota; cant90++; examenesRealizados++; } else { examenesPendientes++; }
+                const nSafety = emp.hitos.onboarding_safety_nota || 0;
+                const nPeople = emp.hitos.onboarding_people_nota || 0;
+
+                let cargoFallas = [];
+                if (nSafety > 0 && nSafety < 100) cargoFallas.push(`Safety (${nSafety}%)`);
+                if (nPeople > 0 && nPeople < 80)  cargoFallas.push(`People (${nPeople}%)`);
+
+                if (nSafety > 0 || nPeople > 0) totalEvaluadosOnboarding++;
+
+                if (cargoFallas.length > 0) {
+                    arrayReprobadosHTML.push(`
+                        <div class="reprobado-row-item">
+                            <div style="flex: 1;">
+                                <strong style="font-size:12px; color:#1c2430;">${emp.nombre}</strong>
+                                <div style="font-size:10.5px; color:#7a8f99;">CC ${emp.cedula} · CD: ${emp.region || 'General'}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="font-size:10.5px; font-weight:700; color:#a32d2d; background:#fff0f0; padding:3px 8px; border-radius:4px; border:1px solid #f5c2c2;">
+                                    ❌ ${cargoFallas.join(' y ')}
+                                </span>
+                            </div>
+                        </div>
+                    `);
+                }
+
+                if (emp.hitos.eval_tecnico_nota > 0) { sumaNota7 += emp.hitos.eval_tecnico_nota; examenesRealizados++; } else { examenesPendientes++; }
+                if (emp.hitos.eval_funcional_nota > 0) { sumaNota30 += emp.hitos.eval_funcional_nota; examenesRealizados++; } else { examenesPendientes++; }
+
+                let n90 = 0;
+                let n90Arr = [];
+                if (emp.hitos.eval_autonomo_pre_nota) n90Arr.push(emp.hitos.eval_autonomo_pre_nota);
+                if (emp.hitos.eval_autonomo_nota) n90Arr.push(emp.hitos.eval_autonomo_nota);
+                if (emp.hitos.eval_autonomo_post_nota) n90Arr.push(emp.hitos.eval_autonomo_post_nota);
+                if (n90Arr.length > 0) n90 = Math.round(n90Arr.reduce((a, b) => a + b, 0) / n90Arr.length);
+
+                if (n90 > 0) { sumaNota90 += n90; }
             }
         }
     });
 
     poblarFiltrosEstrategicos(Array.from(setRegiones), Array.from(setMeses).sort());
+
+    // Inyectar datos en la tarjeta crítica de alertas
+    if (document.getElementById('dashTotalReprobados')) {
+        document.getElementById('dashTotalReprobados').textContent = arrayReprobadosHTML.length;
+        document.getElementById('dashTotalReprobados').style.background = arrayReprobadosHTML.length > 0 ? '#FCEBEB' : '#e1f5ee';
+        document.getElementById('dashTotalReprobados').style.color = arrayReprobadosHTML.length > 0 ? '#a32d2d' : '#0f6e56';
+    }
+    if (document.getElementById('dashEvaluadosOnboarding')) {
+        document.getElementById('dashEvaluadosOnboarding').textContent = totalEvaluadosOnboarding;
+    }
+    if (document.getElementById('lista-desplegable-reprobados')) {
+        document.getElementById('lista-desplegable-reprobados').innerHTML = arrayReprobadosHTML.length === 0
+            ? `<div style="text-align:center; padding:15px; color:#0f6e56; font-size:11.5px; font-weight:600; background:#e1f5ee; border-radius:6px;">✅ Todos los colaboradores se encuentran aprobados al día.</div>`
+            : arrayReprobadosHTML.join('');
+    }
 
     if (document.getElementById('dashIngresosMes')) document.getElementById('dashIngresosMes').textContent = ingresosMes;
     if (document.getElementById('dashIngresosAnio')) document.getElementById('dashIngresosAnio').textContent = ingresosAnio;
@@ -153,10 +208,12 @@ db.collection('empleados').onSnapshot((snapshot) => {
     if (document.getElementById('countEvalRealizadas')) document.getElementById('countEvalRealizadas').textContent = examenesRealizados;
     if (document.getElementById('countEvalPendientes')) document.getElementById('countEvalPendientes').textContent = examenesPendientes;
 
+    const denominadorReal = totalApadrinados || 1;
+
     const pctOnboard = tOnboardingTotal > 0 ? Math.round((tOnboardingComp / tOnboardingTotal) * 100) : 0;
-    const pct7 = cant7 > 0 ? Math.round(sumaNota7 / cant7) : 0;
-    const pct30 = cant30 > 0 ? Math.round(sumaNota30 / cant30) : 0;
-    const pct90 = cant90 > 0 ? Math.round(sumaNota90 / cant90) : 0;
+    const pct7 = Math.round(sumaNota7 / denominadorReal);
+    const pct30 = Math.round(sumaNota30 / denominadorReal);
+    const pct90 = Math.round(sumaNota90 / denominadorReal);
 
     if (document.getElementById('barPctOnboarding')) document.getElementById('barPctOnboarding').textContent = pctOnboard + "%";
     if (document.getElementById('fillOnboarding')) document.getElementById('fillOnboarding').style.width = pctOnboard + "%";
@@ -183,7 +240,6 @@ function poblarFiltrosEstrategicos(regiones, meses) {
     }
 }
 
-// 📸 2. PROCESAMIENTO DE IMAGEN CANVAS
 function procesarFotoPadrinoLocal(input) {
     const file = input.files[0];
     if (!file) return;
@@ -205,7 +261,6 @@ function procesarFotoPadrinoLocal(input) {
     reader.readAsDataURL(file);
 }
 
-// 🏅 3. CERTIFICACIÓN MANUAL DE TUTORES
 async function convertirYConfigurarPadrino() {
     const cedulaPadrino = document.getElementById('padrePadrinoCedula').value.trim();
     const empresa = document.getElementById('padrePadrinoEmpresa').value.trim();
@@ -235,7 +290,6 @@ async function convertirYConfigurarPadrino() {
     } catch (error) { console.error(error); }
 }
 
-// 🚀 4. REGISTRAR NUEVO INGRESO E HISTORIAL
 async function vincularPlanPadrinoNuevo() {
     const cedula = document.getElementById('padreApadrinadoId').value.trim();
     const nombre = document.getElementById('padreApadrinadoNombre').value.trim();
@@ -319,7 +373,6 @@ async function vincularPlanPadrinoNuevo() {
     } catch (error) { console.error(error); }
 }
 
-// 👥 5. ESCUCHADOR EN VIVO DEL MENÚ DE SELECCIÓN Y PANEL DE PADRINOS
 db.collection('empleados').onSnapshot((snapshot) => {
     const containerLista = document.getElementById('lista-padrinos-seleccionables');
     const selectDinamico = document.getElementById('selectPadrinoDinamico');
@@ -337,7 +390,7 @@ db.collection('empleados').onSnapshot((snapshot) => {
         selectDinamico.innerHTML = padrinosActivosDisponibles.length === 0
             ? `<option value="">No hay padrinos activos</option>`
             : `<option value="">-- Selecciona un tutor calificado --</option>` +
-            padrinosActivosDisponibles.map(p => `<option value="${p.cedula}">${p.nombre} (${p.cargo || 'Líder'})</option>`).join('');
+              padrinosActivosDisponibles.map(p => `<option value="${p.cedula}">${p.nombre} (${p.cargo || 'Líder'})</option>`).join('');
     }
 
     if (containerLista) {
@@ -353,13 +406,11 @@ db.collection('empleados').onSnapshot((snapshot) => {
     }
 });
 
-// ⚡ 6. MONITOR DETALLADO DE HITOS CON ESCUCHADOR FIRESTORE
 db.collection('empleados').where('es_apadrinado', '==', true).onSnapshot((snapshot) => {
     cacheSnapshotEmpleadosLocal = snapshot;
     renderizarMonitorColaboradores();
 });
 
-// ⚡ 6. MONITOR DETALLADO DE HITOS CON PAGINACIÓN SINCRONIZADA MAESTRA Y DIPLOMA ACCESIBLE
 function renderizarMonitorColaboradores() {
     if (!cacheSnapshotEmpleadosLocal) return;
     const container = document.getElementById('lista-evaluaciones-pendientes');
@@ -451,15 +502,14 @@ function renderizarMonitorColaboradores() {
         const h = emp.hitos || {};
         const lim = emp.fechas_limite_evaluaciones || {};
 
-        let notas90 = [];
-        if (h.eval_autonomo_pre_nota) notas90.push(h.eval_autonomo_pre_nota);
-        if (h.eval_autonomo_nota) notas90.push(h.eval_autonomo_nota);
-        if (h.eval_autonomo_post_nota) notas90.push(h.eval_autonomo_post_nota);
+        let notes90 = [];
+        if (h.eval_autonomo_pre_nota) notes90.push(h.eval_autonomo_pre_nota);
+        if (h.eval_autonomo_nota) notes90.push(h.eval_autonomo_nota);
+        if (h.eval_autonomo_post_nota) notes90.push(h.eval_autonomo_post_nota);
 
-        let notaUnificada90 = notas90.length > 0 ? Math.round(notas90.reduce((a, b) => a + b, 0) / notas90.length) : 0;
+        let notaUnificada90 = notes90.length > 0 ? Math.round(notes90.reduce((a, b) => a + b, 0) / notes90.length) : 0;
         let fecha90Final = h.eval_autonomo_nota_fecha || h.eval_autonomo_fecha || h.eval_autonomo_pre_fecha || h.eval_autonomo_post_fecha || "";
 
-        // 🕵️‍♂️ REGLA MAESTRA DE APROBACIÓN DE TODAS LAS ETAPAS COMPLETA
         const safetyOk = h.onboarding_safety_nota >= 100;
         const peopleOk = h.onboarding_people_nota >= 80;
         const tecnicoOk = h.eval_tecnico_nota >= 60;
@@ -476,7 +526,6 @@ function renderizarMonitorColaboradores() {
         if (notaUnificada90) { sumaTotal += notaUnificada90; totalNotasValidas++; }
         const promedioAvanceActual = totalNotasValidas > 0 ? Math.round(sumaTotal / totalNotasValidas) : 0;
 
-        // 🎓 BOTÓN MUTABLE INTELIGENTE SOLICITADO
         let botonCertificadoHtml = '';
         if (todoCompletado || emp.estado_plan_padrino === "Plan Padrino Finalizado") {
             botonCertificadoHtml = `<button class="status-btn active-comp" style="font-size:12px; padding:8px 14px; background:#e1f5ee; color:#0f6e56; border-color:#3cbcae;" onclick="imprimirCertificadoCompletoPDF('${docId}')">🎓 Descargar Certificado</button>`;
@@ -537,7 +586,18 @@ function toggleDetalleContenedor(id, btn) {
     btn.textContent = panel.classList.contains('open') ? '▴ Ocultar Detalle' : '▾ Ver Detalle de Criterios';
 }
 
-// 📂 7. RECONOCEDOR EXCEL CON PARSEO DE MATRICES SHEETJS
+function resolverCicloExcel(valorCelda) {
+    if (!valorCelda) return '';
+    const txt = String(valorCelda).toLowerCase().trim();
+    if (txt.includes('7') || txt.includes('tecnico')) return '7';
+    if (txt.includes('30') || txt.includes('funcional')) return '30';
+    if (txt.includes('90') && txt.includes('pre')) return '90_pre';
+    if (txt.includes('90') && txt.includes('post')) return '90_post';
+    if (txt.includes('90') || txt.includes('autonomo')) return '90';
+    if (txt.includes('retro') || txt.includes('nps')) return 'retro';
+    return '';
+}
+
 async function procesarCargaMasivaExcel(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -622,59 +682,6 @@ function scoreExcelDinamico(row) {
     return { tech: scoreExcelRange(row, 18, lastIdx - 6), people: scoreExcelRange(row, lastIdx - 5, lastIdx - 1), nps: row[lastIdx] };
 }
 
-async function procesarOnboardingExcel(event, tipoOnboarding) {
-    const file = event.target.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        try {
-            const data = new Uint8Array(e.target.result);
-            const wb = XLSX.read(data, { type: 'array', cellDates: true });
-            const ws = wb.Sheets[wb.SheetNames[0]];
-            const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
-            const headers = rows[0] || []; const rawRows = rows.slice(1);
-
-            let idxTotalPuntos = headers.findIndex(h => {
-                const txt = String(h || '').trim().toLowerCase();
-                return txt === 'total de puntos' || txt === 'puntos' || txt === 'puntos totales';
-            });
-            let idxCedula = headers.findIndex(h => {
-                const txt = String(h || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-                return txt.includes('identificacion') || txt.includes('cedula') || txt.includes('documento');
-            });
-            if (idxCedula === -1) idxCedula = 34;
-
-            let totalProcesados = 0; const umbral = tipoOnboarding === 'safety' ? 100 : 80;
-
-            for (const row of rawRows) {
-                let cedulaRaw = String(row[idxCedula] || '').trim().replace(/['"\s.\-,]/g, '');
-                if (!cedulaRaw || cedulaRaw === 'null' || cedulaRaw === '0') continue;
-
-                let notaDirecta = idxTotalPuntos !== -1 ? Number(row[idxTotalPuntos] || 0) : Number(row[5] || 0);
-                let pct = Math.min(100, Math.max(0, Math.round(notaDirecta)));
-                const aprobado = pct >= umbral;
-                const fechaEjecucion = row[1] instanceof Date ? row[1].toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-
-                let snap = await db.collection('empleados').where('cedula', '==', cedulaRaw).limit(1).get();
-                if (snap.empty) snap = await db.collection('empleados').where('cedula', '==', Number(cedulaRaw)).limit(1).get();
-
-                if (!snap.empty) {
-                    const docId = snap.docs[0].id; const hitos = snap.docs[0].data().hitos || {}; let up = {};
-                    if (tipoOnboarding === 'safety') {
-                        hitos.onboarding_safety_nota = pct; hitos.onboarding_safety_fecha = fechaEjecucion; hitos.onboarding_safety_aprobado = aprobado;
-                        up.onboarding_dia1 = { estado: aprobado ? 'Completado' : 'Reprobado', fecha_completado: fechaEjecucion };
-                    } else {
-                        hitos.onboarding_people_nota = pct; hitos.onboarding_people_fecha = fechaEjecucion; hitos.onboarding_people_aprobado = aprobado;
-                        up.onboarding_dia2 = { estado: aprobado ? 'Completado' : 'Reprobado', fecha_completado: fechaEjecucion };
-                    }
-                    up.hitos = hitos; await db.collection('empleados').doc(docId).set(up, { merge: true }); totalProcesados++;
-                }
-            }
-            alert(`✅ Consolidación Onboarding exitosa.`); location.reload();
-        } catch (err) { console.error(err); }
-    };
-    reader.readAsArrayBuffer(file);
-}
-
 function cambiarPaginaMonitor(nuevaPagina) {
     window.paginaActualMonitor = nuevaPagina;
     renderizarMonitorColaboradores();
@@ -689,15 +696,73 @@ function scoreExcelRange(row, start, end) {
     return total > 0 ? { pct: Math.round((si / total) * 100), si, total } : null;
 }
 
-async function cambiarEstadoOnboarding(docId, campo, estado) {
-    const hoyStr = new Date().toISOString().split('T')[0];
-    await db.collection('empleados').doc(docId).update({ [campo]: { estado: estado, fecha_completado: estado === "Completado" ? hoyStr : "" } });
+async function PROBAR_DESCARGA_DIPLOMA_SIMULADO() {
+    try {
+        console.log("🎲 Generando estructura visual del certificado simulado para pruebas...");
+        const promedioHistorico = 99;
+        const distincionConceptual = "SOBRESALIENTE 🌟";
+        const nombrePadrinoDoc = "JUAN CARLOS PÉREZ (Tutor Asignado)";
+
+        const elementoDiploma = document.createElement('div');
+        elementoDiploma.style.width = '800px';
+        elementoDiploma.style.padding = '35px';
+        elementoDiploma.style.background = '#ffffff';
+        elementoDiploma.style.fontFamily = 'sans-serif';
+        elementoDiploma.style.color = '#1c2430';
+        elementoDiploma.style.position = 'fixed';
+        elementoDiploma.style.bottom = '-9999px';
+        elementoDiploma.style.left = '0';
+        elementoDiploma.style.zIndex = '-1000';
+
+        elementoDiploma.innerHTML = `
+          <div style="border: 8px double #206987; padding: 30px; border-radius: 12px; background: #fafbfc; box-sizing: border-box;">
+            <div style="width: 100%; height: 6px; background: #3cbcae; margin-bottom: 20px;"></div>
+            <div style="text-align: center; margin-bottom: 20px;">
+              <span style="font-size: 11px; font-weight: 800; color: #206987; letter-spacing: 0.15em; text-transform: uppercase;">Portal People · Logística Conectamos Más</span>
+              <h1 style="font-size: 24px; color: #206987; margin-top: 5px; font-weight: 800;">CERTIFICADO DE MADURACIÓN FINAL</h1>
+              <div style="width: 80px; height: 3px; background: #ffc404; margin: 8px auto;"></div>
+            </div>
+            <p style="text-align: center; font-size: 13px; color: #556570; font-style: italic; margin-bottom: 20px;">Por medio del presente documento, el departamento de Gestión de Talento Humano otorga el reconocimiento formal a:</p>
+            <div style="text-align: center; margin-bottom: 25px;">
+              <h2 style="font-size: 28px; color: #1c2430; font-weight: 700; margin: 0; text-transform: uppercase;">RUIZ HIGUERA VLADIMIR</h2>
+              <p style="font-size: 12px; color: #7a8f99; margin-top: 4px;">Número de Identificación: <strong>79972886</strong></p>
+            </div>
+            <p style="text-align: center; font-size: 13px; color: #1c2430; line-height: 1.6; max-width: 650px; margin: 0 auto 30px auto;">Por haber culminado satisfactoriamente todo su ciclo integral de inducción dentro del <strong>Plan Padrino corporativo</strong> para el desempeño del cargo de <strong>CONDUCTOR DE REPARTO</strong>.</p>
+            <div style="background: #ffffff; border: 1.5px solid #dde3e7; border-radius: 10px; padding: 15px; margin-bottom: 30px;">
+              <div style="display: flex; justify-content: space-around; align-items: center; text-align: center;">
+                <div><div style="font-size: 9px; color: #7a8f99;">ONBOARDING SAFETY</div><div style="font-size: 14px; font-weight: 700;">100 / 100</div></div>
+                <div><div style="font-size: 9px; color: #7a8f99;">ONBOARDING PEOPLE</div><div style="font-size: 14px; font-weight: 700;">100 / 100</div></div>
+                <div><div style="font-size: 9px; color: #7a8f99;">EVAL. TÉCNICO</div><div style="font-size: 14px; font-weight: 700;">96 / 100</div></div>
+                <div><div style="font-size: 9px; color: #7a8f99;">EVAL. FUNCIONAL</div><div style="font-size: 14px; font-weight: 700;">100 / 100</div></div>
+                <div style="background: #f4fbf9; padding: 6px 14px; border-radius: 8px;">
+                  <div style="font-size: 9px; color: #0f6e56; font-weight: 700;">PROMEDIO</div>
+                  <div style="font-size: 20px; font-weight: 800; color: #0f6e56;">${promedioHistorico}%</div>
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 0 10px;">
+              <div style="text-align: center; width: 220px;"><div style="font-size: 12px; font-weight: 700; border-top: 1.5px solid #dde3e7; padding-top: 6px;">${nombrePadrinoDoc}</div></div>
+              <div style="text-align: center;"><div style="font-size: 11px; font-weight: 700; color: #0f6e56; background: #e1f5ee; padding: 5px 12px; border-radius: 6px;">${distincionConceptual}</div></div>
+              <div style="text-align: center; width: 220px;"><div style="font-size: 12px; font-weight: 700; color: #206987; border-top: 1.5px solid #dde3e7; padding-top: 6px;">Área de People</div></div>
+            </div>
+          </div>`;
+
+        document.body.appendChild(elementoDiploma);
+
+        const opcionesConfig = {
+            margin: 10,
+            filename: `Certificado_79972886_SIMULADO.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'letter', orientation: 'landscape' }
+        };
+
+        await html2pdf().set(opcionesConfig).from(elementoDiploma).save();
+        document.body.removeChild(elementoDiploma);
+        console.log("🎉 ¡Certificado de prueba descargado con éxito!");
+    } catch (error) { console.error("Fallo en la prueba del PDF:", error); }
 }
 
-
-
-// 🎓 AMBIENTE B: ENLACE FIRESTORE REAL (Lee la data viva de Vladimir desde la nube)
-// 🎓 FUNCIÓN MAESTRA CONECTADA A FIRESTORE — CORREGIDA CON TIEMPO DE ESPERA PARA EVITAR LIENZO EN BLANCO
 async function imprimirCertificadoCompletoPDF(docId) {
     try {
         console.log(`🔍 Consultando Firebase para la cédula o documento: ${docId}`);
@@ -715,24 +780,24 @@ async function imprimirCertificadoCompletoPDF(docId) {
         }
 
         const h = emp.hitos || {};
-        let notas90 = [];
-        if (h.eval_autonomo_pre_nota) notas90.push(h.eval_autonomo_pre_nota);
-        if (h.eval_autonomo_nota) notas90.push(h.eval_autonomo_nota);
-        if (h.eval_autonomo_post_nota) notas90.push(h.eval_autonomo_post_nota);
-        let n90Unificada = notas90.length > 0 ? Math.round(notas90.reduce((a, b) => a + b, 0) / notas90.length) : 0;
+        let notes90 = [];
+        if (h.eval_autonomo_pre_nota) notes90.push(h.eval_autonomo_pre_nota);
+        if (h.eval_autonomo_nota) notes90.push(h.eval_autonomo_nota);
+        if (h.eval_autonomo_post_nota) notes90.push(h.eval_autonomo_post_nota);
+        let n90Unificada = notes90.length > 0 ? Math.round(notes90.reduce((a, b) => a + b, 0) / notes90.length) : 0;
 
         const nSafety = h.onboarding_safety_nota || 0;
         const nPeople = h.onboarding_people_nota || 0;
-        const n7      = h.eval_tecnico_nota       || 0;
-        const n30     = h.eval_funcional_nota     || 0;
-        const n90     = n90Unificada;
+        const n7 = h.eval_tecnico_nota || 0;
+        const n30 = h.eval_funcional_nota || 0;
+        const n90 = n90Unificada;
 
         let totalNotasValidas = 0; let sumaTotal = 0;
         if (nSafety > 0) { sumaTotal += nSafety; totalNotasValidas++; }
         if (nPeople > 0) { sumaTotal += nPeople; totalNotasValidas++; }
-        if (n7 > 0)      { sumaTotal += n7;      totalNotasValidas++; }
-        if (n30 > 0)     { sumaTotal += n30;     totalNotasValidas++; }
-        if (n90 > 0)     { sumaTotal += n90;     totalNotasValidas++; }
+        if (n7 > 0) { sumaTotal += n7; totalNotasValidas++; }
+        if (n30 > 0) { sumaTotal += n30; totalNotasValidas++; }
+        if (n90 > 0) { sumaTotal += n90; totalNotasValidas++; }
 
         const promedioHistorico = totalNotasValidas > 0 ? Math.round(sumaTotal / totalNotasValidas) : 0;
         const distincionConceptual = promedioHistorico >= 90 ? "SOBRESALIENTE 🌟" : "SATISFACTORIO";
@@ -743,17 +808,8 @@ async function imprimirCertificadoCompletoPDF(docId) {
             if (!tutorSnap.empty) nombrePadrinoDoc = tutorSnap.docs[0].data().nombre;
         }
 
-        // 🏗️ Contenedor trampa: oculta al usuario pero html2canvas sí puede renderizarlo
         const contenedor = document.createElement('div');
-        contenedor.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 0;
-            height: 0;
-            overflow: hidden;
-            z-index: -1;
-        `;
+        contenedor.style.cssText = `position: fixed; top: 0; left: 0; width: 0; height: 0; overflow: hidden; z-index: -1;`;
 
         const elementoDiploma = document.createElement('div');
         elementoDiploma.style.width = '800px';
@@ -791,15 +847,9 @@ async function imprimirCertificadoCompletoPDF(docId) {
               </div>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 0 10px;">
-              <div style="text-align: center; width: 220px;">
-                <div style="font-size: 12px; font-weight: 700; border-top: 1.5px solid #dde3e7; padding-top: 6px;">${nombrePadrinoDoc}</div>
-              </div>
-              <div style="text-align: center;">
-                <div style="font-size: 11px; font-weight: 700; color: #0f6e56; background: #e1f5ee; padding: 5px 12px; border-radius: 6px;">${distincionConceptual}</div>
-              </div>
-              <div style="text-align: center; width: 220px;">
-                <div style="font-size: 12px; font-weight: 700; color: #206987; border-top: 1.5px solid #dde3e7; padding-top: 6px;">Área de People</div>
-              </div>
+              <div style="text-align: center; width: 220px;"><div style="font-size: 12px; font-weight: 700; border-top: 1.5px solid #dde3e7; padding-top: 6px;">${nombrePadrinoDoc}</div></div>
+              <div style="text-align: center;"><div style="font-size: 11px; font-weight: 700; color: #0f6e56; background: #e1f5ee; padding: 5px 12px; border-radius: 6px;">${distincionConceptual}</div></div>
+              <div style="text-align: center; width: 220px;"><div style="font-size: 12px; font-weight: 700; color: #206987; border-top: 1.5px solid #dde3e7; padding-top: 6px;">Área de People</div></div>
             </div>
           </div>`;
 
@@ -812,26 +862,67 @@ async function imprimirCertificadoCompletoPDF(docId) {
                     margin: 10,
                     filename: `Certificado_${emp.cedula}_REAL.pdf`,
                     image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: {
-                        scale: 2,
-                        useCORS: true,
-                        logging: false,
-                        scrollX: 0,
-                        scrollY: 0
-                    },
+                    html2canvas: { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
                     jsPDF: { unit: 'mm', format: 'letter', orientation: 'landscape' }
                 };
-
                 await html2pdf().set(opciones).from(elementoDiploma).save();
                 console.log("🎉 ¡Certificado Real descargado con éxito!");
-            } catch (errPDF) {
-                console.error("❌ Error generando el PDF:", errPDF);
-            } finally {
-                document.body.removeChild(contenedor); // siempre limpia el DOM
-            }
+            } catch (errPDF) { console.error("❌ Error generando el PDF:", errPDF); }
+            finally { document.body.removeChild(contenedor); }
         }, 600);
+    } catch (e) { console.error("❌ Error crítico", e); }
+}
 
-    } catch (e) {
-        console.error("❌ Error crítico compilando el lienzo PDF:", e);
-    }
+async function cargarPerfilDetalladoPadrinoCompleto(cedulaPadrino) {
+    try {
+        const fichaRoot = document.getElementById('ficha-detalle-padrino-root');
+        if (fichaRoot) fichaRoot.style.display = 'flex';
+        const snapPad = await db.collection('empleados').where('cedula', '==', String(cedulaPadrino)).limit(1).get();
+        if (snapPad.empty) return;
+        const pData = snapPad.docs[0].data();
+        document.getElementById('viewPadName').textContent = pData.nombre;
+        document.getElementById('viewPadCargo').textContent = pData.cargo || "Supervisor / Líder";
+        document.getElementById('viewPadEmpresa').textContent = pData.empresa_padrino || "Bavaria AB InBev";
+        document.getElementById('viewPadTiempo').textContent = pData.tiempo_compania || "N/A";
+        if (document.getElementById('viewPadCorreo')) document.getElementById('viewPadCorreo').textContent = pData.correo || "Sin correo registrado";
+
+        const boxBadge = document.getElementById('viewPadBadgeEstado');
+        if (boxBadge) boxBadge.innerHTML = pData.padrino_estado === "Inactivo" ? `<span style="background: #a32d2d; color: white; padding: 3px 10px; border-radius: 12px; font-size:9.5px;">❌ Inactivo</span>` : `<span style="background: #ffc404; color: #1c2430; padding: 3px 10px; border-radius: 12px; font-size:9.5px;">🏅 Activo</span>`;
+
+        const boxFoto = document.getElementById('contenedor-foto-padrino');
+        if (boxFoto) {
+            if (pData.foto_url && pData.foto_url.trim() !== "") {
+                boxFoto.innerHTML = `<img src="${pData.foto_url}" style="width:85px; height:85px; object-fit:cover; border-radius:50%; display:block;">`;
+            } else {
+                const iniciales = pData.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                boxFoto.innerHTML = `<div style="font-weight:bold; font-size:24px; color:rgba(255,255,255,0.9);">${iniciales}</div>`;
+            }
+        }
+
+        const containerTecnicas = document.getElementById('viewPadTagsTecnicas'); if (containerTecnicas) containerTecnicas.innerHTML = '';
+        if (pData.habilidades_tecnicas && pData.habilidades_tecnicas.length > 0) { pData.habilidades_tecnicas.forEach(h => { if (containerTecnicas) containerTecnicas.innerHTML += `<span class="tag-skill tag-tecnica">${h}</span>`; }); } else { if (containerTecnicas) containerTecnicas.innerHTML = `<span>Sin competencias</span>`; }
+        const containerBlandas = document.getElementById('viewPadTagsBlandas'); if (containerBlandas) containerBlandas.innerHTML = '';
+        if (pData.habilidades_blandas && pData.habilidades_blandas.length > 0) { pData.habilidades_blandas.forEach(h => { if (containerBlandas) containerBlandas.innerHTML += `<span class="tag-skill tag-blanda">${h}</span>`; }); } else { if (containerBlandas) containerBlandas.innerHTML = `<span>Sin competencias</span>`; }
+
+        const muchachosSnapshot = await db.collection('empleados').where('padrino_id', '==', String(cedulaPadrino)).get();
+        const containerMuchachos = document.getElementById('viewPadListaMuchachos'); const containerHistoricoNotas = document.getElementById('viewPadHistoricoNotasBody');
+        if (containerMuchachos) containerMuchachos.innerHTML = ''; if (containerHistoricoNotas) containerHistoricoNotas.innerHTML = '';
+        let cTecnico = 0; let cFuncional = 0; let cAutonomo = 0; let sumaNotasTutor = 0; let totalNotasContadas = 0;
+
+        if (!muchachosSnapshot.empty) {
+            muchachosSnapshot.forEach(docM => {
+                const m = docM.data(); let estiloTag = 'background: #fff8e1; color: #8a6e00; border: 1px solid #ffc404;'; let nombreEtapaSimple = 'Técnico';
+                if (m.etapa_actual === "Etapa Funcional") { cFuncional++; estiloTag = 'background: #e1f5ee; color: #0f6e56; border: 1px solid #3cbcae;'; nombreEtapaSimple = 'Funcional'; } else if (m.etapa_actual === "Etapa Autónomo") { cAutonomo++; estiloTag = 'background: #e1f0f5; color: #206987; border: 1px solid #206987;'; nombreEtapaSimple = 'Autónomo'; } else { cTecnico++; }
+                if (containerMuchachos) containerMuchachos.innerHTML += `<div style="display:flex; align-items:center; justify-content:between; background:#f8fafb; border:1px solid #eef1f3; padding:12px; border-radius:8px; width:100%;"><div style="flex:1;"><div style="font-size:12.5px; font-weight: 700;">${m.nombre}</div></div><div><span class="tag-skill" style="${estiloTag} font-size:9.5px; border-radius:12px;">${nombreEtapaSimple}</span></div></div>`;
+                const n7 = (m.hitos && m.hitos.eval_tecnico_nota !== undefined) ? m.hitos.eval_tecnico_nota : "---"; const n30 = (m.hitos && m.hitos.eval_funcional_nota !== undefined) ? m.hitos.eval_funcional_nota : "---"; const n90 = (m.hitos && m.hitos.eval_autonomo_nota !== undefined) ? m.hitos.eval_autonomo_nota : "---"; const estadoPlanLabel = m.estado_plan_padrino || "Activo";
+                if (typeof n7 === "number" && n7 > 0) { sumaNotasTutor += n7; totalNotasContadas++; } if (typeof n30 === "number" && n30 > 0) { sumaNotasTutor += n30; totalNotasContadas++; } if (typeof n90 === "number" && n90 > 0) { sumaNotasTutor += n90; totalNotasContadas++; }
+                if (containerHistoricoNotas) containerHistoricoNotas.innerHTML += `<tr style="border-bottom: 1px solid #eef1f3;"><td style="padding: 8px; font-weight: 600; color: #1a3540;">${m.nombre}</td><td style="padding: 8px; text-align: center; font-weight: 700; color: ${n7 >= 70 ? '#0f6e56' : '#a32d2d'}">${n7}</td><td style="padding: 8px; text-align: center; font-weight: 700; color: ${n30 >= 70 ? '#0f6e56' : '#a32d2d'}">${n30}</td><td style="padding: 8px; text-align: center; font-weight: 700; color: ${n90 >= 70 ? '#0f6e56' : '#a32d2d'}">${n90}</td><td style="padding: 8px; text-align: center;"><span class="tag" style="font-size: 9px; ${estadoPlanLabel === 'Plan Padrino Finalizado' ? 'background:#e1f5ee; color:#0f6e56;' : 'background:#fff8e1; color:#8a6e00;'}">${estadoPlanLabel === 'Plan Padrino Finalizado' ? 'Graduado 🎓' : 'En proceso'}</span></td></tr>`;
+            });
+        } else {
+            if (containerMuchachos) containerMuchachos.innerHTML = `<div style="text-align:center; color:#7a8f99; font-size:11px; padding:10px;">Sin alumnos asignados</div>`;
+            if (containerHistoricoNotas) containerHistoricoNotas.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#7a8f99; padding:10px;">Este tutor no registra histórico de notas.</td></tr>`;
+        }
+        const campoDesempenoVisual = document.getElementById('viewPadDesempeno'); if (campoDesempenoVisual) { if (totalNotasContadas > 0) { const promedioRealPadrino = Math.round(sumaNotasTutor / totalNotasContadas); campoDesempenoVisual.textContent = promedioRealPadrino + "%"; campoDesempenoVisual.style.color = promedioRealPadrino >= 85 ? "#0f6e56" : "#a32d2d"; } else { campoDesempenoVisual.textContent = "100%"; campoDesempenoVisual.style.color = "#0f6e56"; } }
+        if (document.getElementById('cvCountTecnico')) document.getElementById('cvCountTecnico').textContent = cTecnico; if (document.getElementById('cvCountFuncional')) document.getElementById('cvCountFuncional').textContent = cFuncional; if (document.getElementById('cvCountAutonomo')) document.getElementById('cvCountAutonomo').textContent = cAutonomo;
+    } catch (err) { console.error("Error cargando perfil del padrino:", err); }
 }

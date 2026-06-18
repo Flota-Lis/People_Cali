@@ -52,6 +52,10 @@
     .tag { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 12px; display: inline-block; }
     .tag-green { background: #e1f5ee; color: #0f6e56; }
     .tag-red { background: #fdecea; color: #a32d2d; }
+
+    /* Estilos del monitor de reprobados */
+    #lista-desplegable-reprobados.open { display: flex !important; }
+    .reprobado-row-item { display: flex; justify-content: space-between; align-items: center; background: #fdf2f2; border: 1px solid #f5c2c2; padding: 10px; border-radius: 8px; }
   </style>
 </head>
 <body>
@@ -171,9 +175,9 @@
           <input type="text" id="crudCargo" placeholder="Ej: Conductor, Warehouse, etc.">
         </div>
         <div class="form-group" style="flex: 1; min-width: 150px;">
-  <label style="font-size: 11px; font-weight: 700; color: #206987; text-transform: uppercase; margin-bottom: 6px; display: block;">Grupo / Turno</label>
-  <input type="text" id="regEmpleadoGrupo" placeholder="Ej: ABI, OL , UC" style="width: 100%; padding: 11px; border: 1.5px solid #dde3e7; border-radius: 8px;">
-</div>
+          <label style="font-size: 11px; font-weight: 700; color: #206987; text-transform: uppercase; margin-bottom: 6px; display: block;">Grupo / Turno</label>
+          <input type="text" id="regEmpleadoGrupo" placeholder="Ej: ABI, OL , UC" style="width: 100%; padding: 11px; border: 1.5px solid #dde3e7; border-radius: 8px;">
+        </div>
         <div class="form-group">
           <label>Región Geográfica</label>
           <input type="text" id="crudRegion" placeholder="Ej: Sur, Norte, Cali">
@@ -195,41 +199,65 @@
       </div>
     </div>
 
-   <div class="card full-width" id="bloqueCargaEvaluaciones" style="border-left: 5px solid #ffc404;">
-  <div class="card-title" style="color: #206987; border-bottom: 2px solid #ffc404;">
-    <i class="ti ti-database-import"></i> 2.6 Importador Central de Notas (Onboarding & Pilares QR)
-  </div>
-  <p style="font-size: 12px; color: #7a8f99; margin-bottom: 15px;">
-    Carga los Excel de Microsoft Forms para registrar automáticamente las notas de cada etapa. El sistema cruza por cédula y actualiza Firebase en tiempo real.
-  </p>
+    <div class="card full-width" id="bloqueCargaEvaluaciones" style="border-left: 5px solid #ffc404;">
+      <div class="card-title" style="color: #206987; border-bottom: 2px solid #ffc404;">
+        <i class="ti ti-database-import"></i> 2.6 Importador Central de Notas (Onboarding & Pilares QR)
+      </div>
+      <p style="font-size: 12px; color: #7a8f99; margin-bottom: 15px;">
+        Carga los Excel de Microsoft Forms para registrar automáticamente las notas de cada etapa. El sistema cruza por cédula y actualiza Firebase en tiempo real.
+      </p>
 
-  <!-- ✅ NUEVO: BLOQUE ONBOARDING -->
-  <div style="background:#f4fbf9; border:1.5px solid #3cbcae; border-radius:10px; padding:18px; margin-bottom:18px;">
-  <div style="font-size:11px; font-weight:700; color:#0f6e56; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px;">
-    <i class="ti ti-shield-check"></i> Onboarding de Inducción (Días 1 y 2 — Antes del Plan Padrino)
-  </div>
-  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:14px;">
-    
-    <div style="background:white; border:1px solid #dde3e7; border-radius:8px; padding:14px;">
-      <div style="font-size:12px; font-weight:700; color:#206987; margin-bottom:4px;">📋 Onboarding Safety — Día 1</div>
-      <div style="font-size:11px; color:#7a8f99; margin-bottom:10px;">Aprobación mínima: <strong>100%</strong>. Se realiza el día de contratación.</div>
-      <input type="file" id="excel-onboarding-safety" accept=".xlsx,.xls" style="display:none;" onchange="procesarOnboardingExcel(event, 'safety')">
-      <button type="button" class="btn btn-primary" style="background:#206987; width:100%; justify-content:center;" onclick="event.preventDefault(); document.getElementById('excel-onboarding-safety').click(); return false;">
-        <i class="ti ti-upload"></i> Cargar Excel Safety
-      </button>
+      <div style="background:#f4fbf9; border:1.5px solid #3cbcae; border-radius:10px; padding:18px; margin-bottom:18px;">
+        <div style="font-size:11px; font-weight:700; color:#0f6e56; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px;">
+          <i class="ti ti-shield-check"></i> Onboarding de Inducción (Días 1 y 2 — Antes del Plan Padrino)
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:14px;">
+          
+          <div style="background:white; border:1px solid #dde3e7; border-radius:8px; padding:14px;">
+            <div style="font-size:12px; font-weight:700; color:#206987; margin-bottom:4px;">📋 Onboarding Safety — Día 1</div>
+            <div style="font-size:11px; color:#7a8f99; margin-bottom:10px;">Aprobación mínima: <strong>100%</strong>. Se realiza el día de contratación.</div>
+            <input type="file" id="excel-onboarding-safety" accept=".xlsx,.xls,.csv" style="display:none;" onchange="procesarOnboardingExcel(event, 'safety')">
+            <button type="button" class="btn btn-primary" style="background:#206987; width:100%; justify-content:center;" onclick="event.preventDefault(); document.getElementById('excel-onboarding-safety').click(); return false;">
+              <i class="ti ti-upload"></i> Cargar Excel Safety
+            </button>
+          </div>
+
+          <div style="background:white; border:1px solid #dde3e7; border-radius:8px; padding:14px;">
+            <div style="font-size:12px; font-weight:700; color:#3cbcae; margin-bottom:4px;">🤝 Onboarding People — Día 2</div>
+            <div style="font-size:11px; color:#7a8f99; margin-bottom:10px;">Aprobación mínima: <strong>80%</strong>. Se realiza al segundo día según cargo.</div>
+            <input type="file" id="excel-onboarding-people" accept=".xlsx,.xls,.csv" style="display:none;" onchange="procesarOnboardingExcel(event, 'people')">
+            <button type="button" class="btn btn-primary" style="background:#3cbcae; width:100%; justify-content:center;" onclick="event.preventDefault(); document.getElementById('excel-onboarding-people').click(); return false;">
+              <i class="ti ti-upload"></i> Cargar Excel People
+            </button>
+          </div>
+
+        </div>
+      </div>
     </div>
 
-    <div style="background:white; border:1px solid #dde3e7; border-radius:8px; padding:14px;">
-      <div style="font-size:12px; font-weight:700; color:#3cbcae; margin-bottom:4px;">🤝 Onboarding People — Día 2</div>
-      <div style="font-size:11px; color:#7a8f99; margin-bottom:10px;">Aprobación mínima: <strong>80%</strong>. Se realiza al segundo día según cargo.</div>
-      <input type="file" id="excel-onboarding-people" accept=".xlsx,.xls" style="display:none;" onchange="procesarOnboardingExcel(event, 'people')">
-      <button type="button" class="btn btn-primary" style="background:#3cbcae; width:100%; justify-content:center;" onclick="event.preventDefault(); document.getElementById('excel-onboarding-people').click(); return false;">
-        <i class="ti ti-upload"></i> Cargar Excel People
-      </button>
-    </div>
+    <div class="card full-width card-alerta-reprobados" style="border-left: 5px solid #a32d2d;">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #f1f3f5; padding-bottom: 12px; margin-bottom: 12px;">
+        <div>
+          <span style="font-size: 11px; font-weight: 800; color: #a32d2d; letter-spacing: 0.05em; text-transform: uppercase;">⚠️ Alertas Críticas</span>
+          <h3 style="margin: 4px 0 0 0; font-size: 16px; font-weight: 800; color: #1c2430;">Colaboradores Reprobados (Onboarding)</h3>
+        </div>
+        <div style="background: #FCEBEB; color: #a32d2d; border-radius: 50%; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800;" id="dashTotalReprobados">
+          0
+        </div>
+      </div>
+      
+      <p style="font-size: 12px; color: #7a8f99; margin-bottom: 12px;">
+        Universo evaluado: <strong id="dashEvaluadosOnboarding" style="color: #1c2430;">0</strong> personas en inducción.
+      </p>
 
-  </div>
-</div>
+      <button type="button" class="btn" style="width: 100%; text-align: left; background: #f8fafb; border: 1px solid #dde3e7; padding: 10px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; color: #206987; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="document.getElementById('lista-desplegable-reprobados').classList.toggle('open')">
+        <span>🔍 Ver listado detallado de alertas</span>
+        <i class="ti ti-chevron-down"></i>
+      </button>
+
+      <div id="lista-desplegable-reprobados" class="detail-panel" style="margin-top: 10px; max-height: 250px; overflow-y: auto; display: none; flex-direction: column; gap: 8px;">
+        </div>
+    </div>
 
     <div class="card" id="seccionFormCapacitaciones">
       <div class="card-title"><i class="ti ti-calendar-plus"></i> Programar Tarea de Capacitación</div>
@@ -310,7 +338,6 @@
 
   </div>
 
-  <!-- 🏁 PIE DE PÁGINA PERFECTAMENTE CENTRADO Y CON ESPACIADO DE SEGURIDAD -->
   <div style="text-align: center; padding: 25px 15px 40px 15px; margin-top: 30px; grid-column: 1 / -1; width: 100%; display: block; clear: both; margin-left: auto; margin-right: auto;">
     <div style="font-size: 11px; font-weight: 600; color: #7a8f99; letter-spacing: 0.03em;">
       © 2026 Todos los derechos reservados
@@ -332,7 +359,6 @@
 const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 🔒 CONTROL DE ACCESO ACTUALIZADO: Permite que Admin y People entren a admin.html
 const rolLogueado = localStorage.getItem('usuario_rol');
 
 if (rolLogueado !== 'admin' && rolLogueado !== 'people') {
@@ -342,7 +368,6 @@ if (rolLogueado !== 'admin' && rolLogueado !== 'people') {
   cargarPerfilAdmin(cedulaAdminLogueado);
 }
 
-// 🎯 CONTROLADOR MAESTRO DE INTERFAZ READ-ONLY PARA AUDITORES PEOPLE (PUNTO 8)
 window.addEventListener('DOMContentLoaded', () => {
   if (localStorage.getItem('usuario_rol') === 'people') {
     if (document.getElementById('seccionFormBeneficios')) document.getElementById('seccionFormBeneficios').style.display = 'none';
@@ -382,7 +407,143 @@ async function cargarPerfilAdmin(cedulaAdminLogueado) {
   }
 }
 
-// 📂 RECONSTITUIDO Y CORREGIDO: Carga Masiva de Personal con columna Grupo
+// 📂 ESCUCHADOR DEL DASHBOARD DE INDICADORES GENERALES CON ALERTA DE REPROBADOS
+db.collection('empleados').onSnapshot((snapshot) => {
+    let ingresosMes = 0; let ingresosAnio = 0;
+    let padrinosActivos = 0;
+    let planesActivos = 0; let planesFinalizados = 0; let planesVencidos = 0;
+    let tOnboardingTotal = 0; let tOnboardingComp = 0;
+    let examenesRealizados = 0; let examenesPendientes = 0;
+
+    let sumaNota7 = 0; 
+    let sumaNota30 = 0; 
+    let sumaNota90 = 0; 
+    let totalApadrinados = 0;
+
+    let totalEvaluadosOnboarding = 0;
+    let arrayReprobadosHTML = [];
+
+    const hoy = new Date('2026-06-08T00:00:00');
+    const setRegiones = new Set();
+    const setMeses = new Set();
+
+    snapshot.forEach((doc) => {
+        const emp = doc.data();
+        if (emp.region) setRegiones.add(emp.region.trim());
+        if (emp.fecha_ingreso) setMeses.add(emp.fecha_ingreso.substring(0, 7));
+
+        if (emp.es_padrino === true || emp.es_padrino === "true") {
+            if (emp.padrino_estado !== "Inactivo") padrinosActivos++;
+        }
+
+        if (emp.es_apadrinado === true) {
+            totalApadrinados++; 
+
+            if (emp.estado_plan_padrino === "Plan Padrino Finalizado") {
+                planesFinalizados++;
+            } else {
+                planesActivos++;
+                if (emp.fechas_limite_evaluaciones) {
+                    const f7 = new Date(emp.fechas_limite_evaluaciones.eval_7_dias + 'T00:00:00');
+                    const f30 = new Date(emp.fechas_limite_evaluaciones.eval_30_dias + 'T00:00:00');
+                    const f90 = new Date(emp.fechas_limite_evaluaciones.eval_90_dias + 'T00:00:00');
+
+                    if (emp.etapa_actual === "Etapa Técnico" && hoy > f7) planesVencidos++;
+                    else if (emp.etapa_actual === "Etapa Funcional" && hoy > f30) planesVencidos++;
+                    else if (emp.etapa_actual === "Etapa Autónomo" && hoy > f90) planesVencidos++;
+                }
+            }
+
+            if (emp.fecha_ingreso) {
+                if (emp.fecha_ingreso.startsWith("2026-06")) ingresosMes++;
+                if (emp.fecha_ingreso.startsWith("2026")) ingresosAnio++;
+            }
+
+            tOnboardingTotal += 2;
+            if (emp.onboarding_dia1 && emp.onboarding_dia1.estado === "Completado") tOnboardingComp++;
+            if (emp.onboarding_dia2 && emp.onboarding_dia2.estado === "Completado") tOnboardingComp++;
+
+            if (emp.hitos) {
+                const nSafety = emp.hitos.onboarding_safety_nota || 0;
+                const nPeople = emp.hitos.onboarding_people_nota || 0;
+
+                let cargoFallas = [];
+                if (nSafety > 0 && nSafety < 100) cargoFallas.push(`Safety (${nSafety}%)`);
+                if (nPeople > 0 && nPeople < 80)  cargoFallas.push(`People (${nPeople}%)`);
+
+                if (nSafety > 0 || nPeople > 0) totalEvaluadosOnboarding++;
+
+                if (cargoFallas.length > 0) {
+                    arrayReprobadosHTML.push(`
+                        <div class="reprobado-row-item">
+                            <div style="flex: 1;">
+                                <strong style="font-size:12px; color:#1c2430;">${emp.nombre}</strong>
+                                <div style="font-size:10.5px; color:#7a8f99;">CC ${emp.cedula} · Reg: ${emp.region || 'General'}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="font-size:10.5px; font-weight:700; color:#a32d2d; background:#fff0f0; padding:3px 8px; border-radius:4px; border:1px solid #f5c2c2;">
+                                    ❌ ${cargoFallas.join(' y ')}
+                                </span>
+                            </div>
+                        </div>
+                    `);
+                }
+
+                if (emp.hitos.eval_tecnico_nota > 0)   { sumaNota7 += emp.hitos.eval_tecnico_nota; examenesRealizados++; } else { examenesPendientes++; }
+                if (emp.hitos.eval_funcional_nota > 0) { sumaNota30 += emp.hitos.eval_funcional_nota; examenesRealizados++; } else { examenesPendientes++; }
+                
+                let n90 = 0;
+                let n90Arr = [];
+                if (emp.hitos.eval_autonomo_pre_nota) n90Arr.push(emp.hitos.eval_autonomo_pre_nota);
+                if (emp.hitos.eval_autonomo_nota) n90Arr.push(emp.hitos.eval_autonomo_nota);
+                if (emp.hitos.eval_autonomo_post_nota) n90Arr.push(emp.hitos.eval_autonomo_post_nota);
+                if (n90Arr.length > 0) n90 = Math.round(n90Arr.reduce((a, b) => a + b, 0) / n90Arr.length);
+                if (n90 > 0) { sumaNota90 += n90; }
+            }
+        }
+    });
+
+    poblarFiltrosEstrategicos(Array.from(setRegiones), Array.from(setMeses).sort());
+
+    if (document.getElementById('dashTotalReprobados')) {
+        document.getElementById('dashTotalReprobados').textContent = arrayReprobadosHTML.length;
+        document.getElementById('dashTotalReprobados').style.background = arrayReprobadosHTML.length > 0 ? '#FCEBEB' : '#e1f5ee';
+        document.getElementById('dashTotalReprobados').style.color = arrayReprobadosHTML.length > 0 ? '#a32d2d' : '#0f6e56';
+    }
+    if (document.getElementById('dashEvaluadosOnboarding')) {
+        document.getElementById('dashEvaluadosOnboarding').textContent = totalEvaluadosOnboarding;
+    }
+    if (document.getElementById('lista-desplegable-reprobados')) {
+        document.getElementById('lista-desplegable-reprobados').innerHTML = arrayReprobadosHTML.length === 0
+            ? `<div style="text-align:center; padding:15px; color:#0f6e56; font-size:11.5px; font-weight:600; background:#e1f5ee; border-radius:6px;">✅ Todos los colaboradores se encuentran aprobados al día.</div>`
+            : arrayReprobadosHTML.join('');
+    }
+
+    if (document.getElementById('dashIngresosMes')) document.getElementById('dashIngresosMes').textContent = ingresosMes;
+    if (document.getElementById('dashIngresosAnio')) document.getElementById('dashIngresosAnio').textContent = ingresosAnio;
+    if (document.getElementById('dashPadrinosActivos')) document.getElementById('dashPadrinosActivos').textContent = padrinosActivos;
+    if (document.getElementById('dashPlanesActivos')) document.getElementById('dashPlanesActivos').textContent = planesActivos;
+    if (document.getElementById('dashPlanesFinalizados')) document.getElementById('dashPlanesFinalizados').textContent = planesFinalizados;
+    if (document.getElementById('dashPlanesVencidos')) document.getElementById('dashPlanesVencidos').textContent = planesVencidos;
+    if (document.getElementById('countEvalRealizadas')) document.getElementById('countEvalRealizadas').textContent = examenesRealizados;
+    if (document.getElementById('countEvalPendientes')) document.getElementById('countEvalPendientes').textContent = examenesPendientes;
+
+    const denominadorReal = totalApadrinados || 1; 
+    const pctOnboard = tOnboardingTotal > 0 ? Math.round((tOnboardingComp / tOnboardingTotal) * 100) : 0;
+    const pct7  = Math.round(sumaNota7 / denominadorReal);
+    const pct30 = Math.round(sumaNota30 / denominadorReal);
+    const pct90 = Math.round(sumaNota90 / denominadorReal);
+
+    if (document.getElementById('barPctOnboarding')) document.getElementById('barPctOnboarding').textContent = pctOnboard + "%";
+    if (document.getElementById('fillOnboarding')) document.getElementById('fillOnboarding').style.width = pctOnboard + "%";
+    if (document.getElementById('barPct7Dias')) document.getElementById('barPct7Dias').textContent = pct7 + "%";
+    if (document.getElementById('fill7Dias')) document.getElementById('fill7Dias').style.width = pct7 + "%";
+    if (document.getElementById('barPct30Dias')) document.getElementById('barPct30Dias').textContent = pct30 + "%";
+    if (document.getElementById('fill30Dias')) document.getElementById('fill30Dias').style.width = pct30 + "%";
+    if (document.getElementById('barPct90Dias')) document.getElementById('barPct90Dias').textContent = pct90 + "%";
+    if (document.getElementById('fill90Dias')) document.getElementById('fill90Dias').style.width = pct90 + "%";
+});
+
 function cargarExcel() {
   const fileInput = document.getElementById('excelFile');
   if (!fileInput || !fileInput.files.length) return alert("Por favor, selecciona un archivo de Excel primero.");
@@ -448,21 +609,16 @@ function cargarExcel() {
             };
           }
 
-          // 🛡️ CONTROL INTELIGENTE ANTI-DUPLICADOS:
-          // Buscamos si ya existe un empleado con esa cédula
           const querySnapshot = await db.collection('empleados').where('cedula', '==', cedulaExcel).limit(1).get();
 
           if (!querySnapshot.empty) {
-            // Si YA existe, actualizamos sus datos básicos sin borrarle sus notas/hitos actuales
             const docId = querySnapshot.docs[0].id;
-            // Eliminamos hitos por defecto para no sobreescribir el progreso real que ya lleve el usuario
             delete datosEstructurados.hitos; 
             delete datosEstructurados.etapa_actual;
             delete datosEstructurados.estado_plan_padrino;
 
             await db.collection('empleados').doc(docId).update(datosEstructurados);
           } else {
-            // Si NO existe (es nuevo), lo creamos desde cero
             await db.collection('empleados').add(datosEstructurados);
           }
           procesados++;
@@ -472,52 +628,37 @@ function cargarExcel() {
       alert(`¡Sincronización Exitosa! Se procesó el archivo Excel. El sistema omitió duplicados y actualizó/creó los registros.`);
       fileInput.value = '';
     } catch (error) {
-      console.error("Error crítico procesando el archivo Excel:", error);
-      alert("Hubo un problema al abrir el Excel.");
+      console.error("Error crítico:", error);
     }
   };
   reader.readAsArrayBuffer(file);
 }
 
-// 🔍 BUSCADOR DE EMPLEADOS INTEGRADO CON LA VISTA DEL GRUPO
 async function buscarEmpleado() {
   const inputCedula = document.getElementById('searchCedula');
-  if(!inputCedula) return alert("No se encontró el input 'searchCedula' en el HTML.");
-  
+  if(!inputCedula) return;
   const cedulaBuscada = inputCedula.value.trim();
   if(!cedulaBuscada) return alert("Digita el número de cédula para realizar la búsqueda.");
 
   try {
     let snapshot = await db.collection('empleados').where('cedula', '==', cedulaBuscada).limit(1).get();
-    
     if(snapshot.empty && !isNaN(cedulaBuscada)) {
       snapshot = await db.collection('empleados').where('cedula', '==', Number(cedulaBuscada)).limit(1).get();
     }
 
     if(!snapshot.empty) {
       const emp = snapshot.docs[0].data();
-      
       document.getElementById('crudNombre').value = emp.nombre || '';
       document.getElementById('crudCargo').value = emp.cargo || '';
       document.getElementById('crudRegion').value = emp.region || '';
       document.getElementById('regEmpleadoGrupo').value = emp.grupo || 'General'; 
       document.getElementById('empleadoRol').value = emp.rol || 'empleado';
-      
-      if(document.getElementById('targetCedula')) document.getElementById('targetCedula').value = cedulaBuscada;
-      if(document.getElementById('auditCedula')) {
-        document.getElementById('auditCedula').value = cedulaBuscada;
-        if (typeof auditarAvanceReal === "function") auditarAvanceReal();
-      }
     } else {
-      alert("La cédula no está registrada. Si completas los campos abajo y presionas 'Guardar', se creará un registro nuevo.");
+      alert("La cédula no está registrada.");
     }
-  } catch(err) { 
-    console.error("Error al buscar empleado:", err); 
-    alert("Error al consultar en la base de datos.");
-  }
+  } catch(err) { console.error(err); }
 }
 
-// 💾 GUARDADO INDIVIDUAL EN FIRESTORE
 async function guardarEmpleado() {
   const cedula = document.getElementById('searchCedula').value.trim();
   const nombre = document.getElementById('crudNombre').value.trim();
@@ -526,76 +667,34 @@ async function guardarEmpleado() {
   const grupo = document.getElementById('regEmpleadoGrupo').value.trim();
   const rol = document.getElementById('empleadoRol').value;
 
-  if(!cedula || !nombre) return alert("Los campos de Cédula (en la barra de búsqueda superior) y Nombre son obligatorios.");
+  if(!cedula || !nombre) return alert("Cédula y Nombre son obligatorios.");
 
-  const datosEstructurados = {
-    cedula: String(cedula),
-    nombre,
-    cargo,
-    region,
-    grupo: grupo || "General", 
-    rol,
-    password: String(cedula) 
-  };
-
-  if (rol === 'padrino') {
-    datosEstructurados.es_padrino = true;
-    datosEstructurados.padrino_estado = "Activo";
-    datosEstructurados.padrino_certified = true;
-  } else if (rol === 'empleado') {
-    datosEstructurados.es_apadrinado = true;
-    datosEstructurados.estado_plan_padrino = "Activo";
-  }
+  const datosEstructurados = { cedula: String(cedula), nombre, cargo, region, grupo: grupo || "General", rol, password: String(cedula) };
+  if (rol === 'padrino') { datosEstructurados.es_padrino = true; datosEstructurados.padrino_estado = "Activo"; datosEstructurados.padrino_certified = true; }
+  else if (rol === 'empleado') { datosEstructurados.es_apadrinado = true; datosEstructurados.estado_plan_padrino = "Activo"; }
 
   try {
     let snapshot = await db.collection('empleados').where('cedula', '==', cedula).limit(1).get();
-    if(snapshot.empty && !isNaN(cedula)) {
-      snapshot = await db.collection('empleados').where('cedula', '==', Number(cedula)).limit(1).get();
-    }
+    if(snapshot.empty && !isNaN(cedula)) snapshot = await db.collection('empleados').where('cedula', '==', Number(cedula)).limit(1).get();
 
-    if(!snapshot.empty) {
-      await db.collection('empleados').doc(snapshot.docs[0].id).update(datosEstructurados);
-      alert("¡Registro del empleado modificado con éxito!");
-    } else {
-      await db.collection('empleados').add(datosEstructurados);
-      alert("¡Nuevo empleado incorporado al sistema!");
-    }
+    if(!snapshot.empty) { await db.collection('empleados').doc(snapshot.docs[0].id).update(datosEstructurados); alert("¡Modificado!"); }
+    else { await db.collection('empleados').add(datosEstructurados); alert("¡Creado!"); }
     limpiarFormularioCRUD();
-  } catch(err) { 
-    console.error("Error al guardar:", err); 
-    alert("Fallo al intentar conectarse a la base de datos.");
-  }
+  } catch(err) { console.error(err); }
 }
 
 async function eliminarEmpleado() {
   const cedula = document.getElementById('searchCedula').value.trim();
-  if(!cedula) return alert("Requiere especificar la cédula del usuario que desea eliminar.");
-
-  if(!confirm("¿Está completamente seguro de eliminar a este empleado de la plataforma?")) return;
-
+  if(!cedula || !confirm("¿Eliminar?")) return;
   try {
     let snapshot = await db.collection('empleados').where('cedula', '==', cedula).limit(1).get();
-    if(snapshot.empty && !isNaN(cedula)) {
-      snapshot = await db.collection('empleados').where('cedula', '==', Number(cedula)).limit(1).get();
-    }
-
-    if(!snapshot.empty) {
-      await db.collection('empleados').doc(snapshot.docs[0].id).delete();
-      alert("Empleado borrado del sistema correctamente.");
-      limpiarFormularioCRUD();
-    } else {
-      alert("No se encontró el registro especificado en la base de datos.");
-    }
-  } catch(err) { console.error("Error al eliminar:", err); }
+    if(!snapshot.empty) { await db.collection('empleados').doc(snapshot.docs[0].id).delete(); alert("Eliminado."); limpiarFormularioCRUD(); }
+  } catch(err) { console.error(err); }
 }
 
 function limpiarFormularioCRUD() {
-  document.getElementById('searchCedula').value = '';
-  document.getElementById('crudNombre').value = '';
-  document.getElementById('crudCargo').value = '';
-  document.getElementById('crudRegion').value = '';
-  document.getElementById('regEmpleadoGrupo').value = ''; 
-  document.getElementById('empleadoRol').value = 'empleado';
+  document.getElementById('searchCedula').value = ''; document.getElementById('crudNombre').value = ''; document.getElementById('crudCargo').value = '';
+  document.getElementById('crudRegion').value = ''; document.getElementById('regEmpleadoGrupo').value = ''; document.getElementById('empleadoRol').value = 'empleado';
 }
 
 async function publicarCapacitacion() {
@@ -605,291 +704,49 @@ async function publicarCapacitacion() {
   const qrUrl = document.getElementById('capQrUrl').value.trim();
   const fechaLimite = document.getElementById('capFechaLimite').value;
 
-  if(!empleadoId || !titulo || !pptDriveId || !qrUrl || !fechaLimite) {
-    return alert("Todos los campos del bloque de programación de tareas son obligatorios.");
-  }
+  if(!empleadoId || !titulo || !pptDriveId || !qrUrl || !fechaLimite) return alert("Campos obligatorios.");
 
   try {
-    await db.collection('items_cronograma').add({
-      empleado_id: empleadoId,
-      titulo: titulo,
-      ppt_drive_id: pptDriveId,
-      qr_url: qrUrl,
-      fecha_limite: fechaLimite,
-      completado: false,
-      visto_ppt: false, 
-      fecha_completado: ""
-    });
-
-    alert("¡Capacitación guardada! Alerta generada de forma automática para el empleado.");
-    
-    document.getElementById('capTitulo').value = '';
-    document.getElementById('capDriveId').value = '';
-    document.getElementById('capQrUrl').value = '';
-    document.getElementById('capFechaLimite').value = '';
-    
-    if(document.getElementById('auditCedula').value.trim() === empleadoId) {
-      auditarAvanceReal();
-    }
+    await db.collection('items_cronograma').add({ empleado_id: empleadoId, titulo, ppt_drive_id: pptDriveId, qr_url: qrUrl, fecha_limite: fechaLimite, completado: false, visto_ppt: false, fecha_completado: "" });
+    alert("¡Publicada!");
+    document.getElementById('capTitulo').value = ''; document.getElementById('capDriveId').value = ''; document.getElementById('capQrUrl').value = ''; document.getElementById('capFechaLimite').value = '';
   } catch(e) { console.error(e); }
 }
-
-let desvincularEscuchadorAuditoria = null;
 
 async function auditarAvanceReal() {
   const cedula = document.getElementById('auditCedula').value.trim();
   const desde = document.getElementById('filterDesde').value;
   const hasta = document.getElementById('filterHasta').value;
+  if(!cedula) return;
 
-  if(!cedula) return alert("Especifica un número de cédula para auditar.");
-
-  if (typeof desvincularEscuchadorAuditoria === "function") {
-    desvincularEscuchadorAuditoria();
-  }
-
-  desvincularEscuchadorAuditoria = db.collection('items_cronograma')
-    .where('empleado_id', '==', cedula)
-    .onSnapshot((snapshot) => {
-      const tbody = document.getElementById('auditTableBody');
-      if(!tbody) return;
-      tbody.innerHTML = '';
-
-      let asignadas = 0;
-      let hechas = 0;
-
-      snapshot.forEach(doc => {
-        const item = doc.data();
-        if (item.fecha_limite >= desde && item.fecha_limite <= hasta) {
-          asignadas++;
-          if(item.completado) hechas++;
-
-          const stringPPT = item.visto_ppt ? '<span class="tag tag-green">✓ Sí Abrió</span>' : '<span class="tag tag-red">✗ No ha visto</span>';
-          const stringEval = item.completado ? `<span class="tag tag-green">✓ Hecho (${item.fecha_completado})</span>` : '<span class="tag tag-red">✗ Pendiente</span>';
-
-          const fila = `
-            <tr>
-              <td><strong>${item.titulo}</strong></td>
-              <td>${item.fecha_limite}</td>
-              <td>${stringPPT}</td>
-              <td>${stringEval}</td>
-            </tr>
-          `;
-          tbody.innerHTML += fila;
-        }
-      });
-
-      if(asignadas === 0) {
-        document.getElementById('auditPctText').textContent = "0%";
-        document.getElementById('auditCountText').textContent = "0 / 0";
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#7a8f99;">El empleado no registra capacitaciones programadas en el rango de meses seleccionado.</td></tr>';
-        document.getElementById('auditResultPanel').style.display = 'block';
-        return;
+  db.collection('items_cronograma').where('empleado_id', '==', cedula).onSnapshot((snapshot) => {
+    const tbody = document.getElementById('auditTableBody'); if(!tbody) return; tbody.innerHTML = '';
+    let asignadas = 0, hechas = 0;
+    snapshot.forEach(doc => {
+      const item = doc.data();
+      if (item.fecha_limite >= desde && item.fecha_limite <= hasta) {
+        asignadas++; if(item.completado) hechas++;
+        tbody.innerHTML += `<tr><td><strong>${item.titulo}</strong></td><td>${item.fecha_limite}</td><td>${item.visto_ppt ? '✓ Sí':'✗ No'}</td><td>${item.completado ? '✓ Hecho':'✗ Pendiente'}</td></tr>`;
       }
-
-      const pct = Math.round((hechas / asignadas) * 100);
-      document.getElementById('auditPctText').textContent = pct + "%";
-      document.getElementById('auditCountText').textContent = `${hechas} / ${asignadas}`;
-      document.getElementById('auditResultPanel').style.display = 'block';
-    }, (error) => {
-      console.error("Error en tiempo real de auditoría:", error);
     });
-}
-
-// 🌟 CONSOLIDADOR DE RESPUESTAS DEL FORMS DE EXÁMENES (PLAN PADRINO)
-async function procesarExcelEvaluacionesMasivo() {
-  const pilarDestino = document.getElementById('pilarExcelTarget').value;
-  const fileInput = document.getElementById('excelEvaluacionesFile');
-
-  if (!fileInput || !fileInput.files.length) {
-    return alert("Por favor, selecciona primero el archivo de Excel de Forms.");
-  }
-
-  const file = fileInput.files[0];
-  const reader = new FileReader();
-
-  reader.onload = async function(e) {
-    try {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const filas = XLSX.utils.sheet_to_json(worksheet);
-
-      if (filas.length === 0) return alert("El archivo está vacío.");
-
-      let colCedulaApadrinado = null;   
-      let colCedulaPadrino    = null;   
-      let colNPS              = null;   
-      const colsSi            = [];     
-
-      const primeraFila = filas[0];
-      Object.keys(primeraFila).forEach(header => {
-        const h = header.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-        if (h.includes('identificacion apadrinado') || h.includes('cedula apadrinado') || h.includes('identificacion del apadrinado')) {
-          colCedulaApadrinado = header;
-        }
-        else if ((h === 'identificacion' || h === 'cedula' || h.includes('identificacion')) && !colCedulaApadrinado) {
-          colCedulaPadrino = header;
-        }
-        if (h.includes('escala') || h.includes('probable') || h.includes('recomiend')) {
-          colNPS = header;
-        }
-      });
-
-      Object.keys(primeraFila).forEach(header => {
-        const val = String(primeraFila[header] || '').toLowerCase().trim();
-        if (val === 'si' || val === 'no' || val === 'sí') {
-          colsSi.push(header);
-        } else {
-          for (let i = 1; i < Math.min(filas.length, 4); i++) {
-            const v2 = String(filas[i][header] || '').toLowerCase().trim();
-            if (v2 === 'si' || v2 === 'no' || v2 === 'sí') {
-              if (!colsSi.includes(header)) colsSi.push(header);
-              break;
-            }
-          }
-        }
-      });
-
-      const colBusqueda = colCedulaApadrinado || colCedulaPadrino;
-      if (!colBusqueda) return alert("No se encontró columna de Identificación.");
-
-      let actualizados = 0, saltados = 0;
-      const hoy = new Date().toISOString().split('T')[0];
-
-      for (const fila of filas) {
-        const cedulaRaw = fila[colBusqueda];
-        if (!cedulaRaw && cedulaRaw !== 0) { saltados++; continue; }
-
-        const cedula = String(cedulaRaw).replace(/[\s.\-,]/g, '').trim();
-
-        let puntajeTotal = 0;
-        let puntajeMaximo = 0;
-
-        colsSi.forEach(col => {
-          const val = String(fila[col] || '').toLowerCase().trim();
-          puntajeMaximo++;
-          if (val === 'si' || val === 'sí') puntajeTotal++;
-        });
-
-        if (colNPS && fila[colNPS] !== undefined) {
-          const nps = parseFloat(fila[colNPS]);
-          if (!isNaN(nps)) {
-            puntajeTotal += nps / 10;
-            puntajeMaximo++;
-          }
-        }
-
-        let notaBase100 = puntajeMaximo > 0 ? Math.round((puntajeTotal / puntajeMaximo) * 100) : 0;
-        notaBase100 = Math.max(0, Math.min(100, notaBase100));
-
-        let snapshot = await db.collection('empleados').where('cedula', '==', String(cedula)).limit(1).get();
-        if (snapshot.empty && !isNaN(cedula)) {
-          snapshot = await db.collection('empleados').where('cedula', '==', Number(cedula)).limit(1).get();
-        }
-
-        if (!snapshot.empty) {
-          const docId = snapshot.docs[0].id;
-          const empData = snapshot.docs[0].data();
-          const hitos = empData.hitos || {};
-          let etapa = empData.etapa_actual || "Etapa Técnico";
-          let estadoPlan = empData.estado_plan_padrino || "Activo";
-
-          if (pilarDestino === 'eval_tecnico_nota') {
-            hitos.eval_tecnico_nota = notaBase100;
-            hitos.eval_tecnico_fecha = hoy;
-            etapa = "Etapa Funcional";
-          } else if (pilarDestino === 'eval_funcional_nota') {
-            hitos.eval_funcional_nota = notaBase100;
-            hitos.eval_funcional_fecha = hoy;
-            etapa = "Etapa Autónomo";
-          } else if (pilarDestino === 'eval_autonomo_nota') {
-            hitos.eval_autonomo_nota = notaBase100;
-            hitos.eval_autonomo_fecha = hoy;
-            estadoPlan = "Plan Padrino Finalizado";
-          }
-
-          await db.collection('empleados').doc(docId).update({
-            hitos, etapa_actual: etapa, estado_plan_padrino: estadoPlan
-          });
-          actualizados++;
-        } else {
-          saltados++;
-        }
-      }
-
-      alert(`✅ ¡Consolidación Exitosa!\n\n· Perfiles actualizados: ${actualizados}\n· No encontrados: ${saltados}`);
-      fileInput.value = '';
-    } catch (err) {
-      console.error(err);
-      alert("Error al procesar el archivo: " + err.message);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-// 📊 CRUD TABLA BENEFICIOS EN VIVO
-db.collection('beneficios').onSnapshot((snapshot) => {
-  const tbody = document.getElementById('tablaBeneficiosBody');
-  if (!tbody) return;
-  if (snapshot.empty) {
-    tbody.innerHTML = `<tr><td colspan="5" style="padding: 15px; text-align: center; color: #7a8f99;">No hay beneficios creados en el sistema aún.</td></tr>`;
-    return;
-  }
-  const esAuditor = localStorage.getItem('usuario_rol') === 'people';
-  let html = '';
-  snapshot.forEach((doc) => {
-    const b = doc.data();
-    const valorFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(b.valor || 0);
-    const celdaAcciones = esAuditor ? '' : `
-      <td style="padding: 10px; text-align: center; display: flex; gap: 6px; justify-content: center;">
-        <button onclick="cargarBeneficioForm('${doc.id}', '${b.cargo}', '${b.concepto}', ${b.valor}, '${b.indicador || ''}')" style="background:#fff8e1; color:#8a6e00; border:1px solid #c89b00; padding:3px 8px; border-radius:5px; cursor:pointer; font-size:11px;">✏️ Editar</button>
-        <button onclick="eliminarBeneficio('${doc.id}')" style="background:#fdecea; color:#a32d2d; border:1px solid #a32d2d; padding:3px 8px; border-radius:5px; cursor:pointer; font-size:11px;">🗑️ Borrar</button>
-      </td>`;
-    html += `<tr><td>${b.cargo}</td><td>${b.concepto}</td><td>${valorFormateado}</td><td><span>🎯 ${b.indicador || 'General'}</span></td>${celdaAcciones}</tr>`;
+    const pct = asignadas > 0 ? Math.round((hechas / asignadas) * 100) : 0;
+    document.getElementById('auditPctText').textContent = pct + "%";
+    document.getElementById('auditCountText').textContent = `${hechas} / ${asignadas}`;
+    document.getElementById('auditResultPanel').style.display = 'block';
   });
-  tbody.innerHTML = html;
-});
-
-let idBeneficioEdicion = null;
-async function guardarBeneficio() {
-  const cargo = document.getElementById('benCargo').value.trim();
-  const concepto = document.getElementById('benConcepto').value.trim();
-  const valor = document.getElementById('benValor').value.trim();
-  const indicador = document.getElementById('benIndicador').value.trim();
-  if (!cargo || !concepto || !valor) return alert("Campos obligatorios.");
-  const datos = { cargo, concepto, valor: Number(valor), indicador: indicador || "Cumplimiento general" };
-  try {
-    if (idBeneficioEdicion) { await db.collection('beneficios').doc(idBeneficioEdicion).update(datos); }
-    else { await db.collection('beneficios').add(datos); }
-    limpiarFormularioBeneficio();
-  } catch (error) { console.error(error); }
 }
 
-function cargarBeneficioForm(id, cargo, concepto, valor, indicador) {
-  idBeneficioEdicion = id;
-  document.getElementById('benCargo').value = cargo;
-  document.getElementById('benConcepto').value = concepto;
-  document.getElementById('benValor').value = valor;
-  document.getElementById('benIndicador').value = indicador;
-}
-
-async function eliminarBeneficio(id) {
-  if (!confirm("¿Seguro?")) return;
-  try { await db.collection('beneficios').doc(id).delete(); } catch (error) { console.error(error); }
-}
-
+// 📂 PROCESADOR EXCEL ONBOARDING DE INDUCCIÓN CON DEDUPLICACIÓN DE NOTA MÁXIMA REAL Y SOPORTE PARA DELIMITADOR CSV (PUNTO Y COMA)
 async function procesarOnboardingExcel(event, tipoOnboarding) {
   const file = event.target.files[0];
-  if (!file) { alert("No se seleccionó archivo."); return; }
+  if (!file) return;
 
-  // Mostrar indicador de carga
-  const btnId = tipoOnboarding === 'safety' ? 'excel-onboarding-safety' : 'excel-onboarding-people';
   const btn = document.querySelector(`[onclick*="'${tipoOnboarding}'"]`);
   const textoOriginal = btn ? btn.innerHTML : '';
   if (btn) btn.innerHTML = '⏳ Procesando...';
 
   const reader = new FileReader();
-  reader.onerror = () => alert("❌ Error al leer el archivo.");
+  reader.onerror = () => { alert("❌ Error al leer el archivo."); if (btn) btn.innerHTML = textoOriginal; };
 
   reader.onload = async (e) => {
     try {
@@ -898,103 +755,75 @@ async function procesarOnboardingExcel(event, tipoOnboarding) {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
 
-      if (rows.length <= 1) return alert("❌ El archivo está vacío.");
+      if (rows.length <= 1) {
+        if (btn) btn.innerHTML = textoOriginal;
+        return alert("❌ El archivo está vacío.");
+      }
 
       const headers = rows[0] || [];
-      const rawRows = rows.slice(1).filter(r => r.some(c => c !== null)); // Elimina filas vacías
+      const rawRows = rows.slice(1);
 
-      // --- Detectar columna cédula ---
-      let idxCedula = -1;
-      for (let i = 0; i < headers.length; i++) {
-        const h = String(headers[i] || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-        if (h.includes('identificacion') || h.includes('cedula') || h.includes('documento')) {
-          idxCedula = i; break;
-        }
-      }
-      if (idxCedula === -1) {
-        return alert(`⚠️ No se encontró columna de cédula.\nColumnas:\n${headers.map((h,i)=>`[${i}] ${h}`).join('\n')}`);
-      }
-
-      // --- Calcular puntajeMax REAL sumando denominadores ---
-      // --- PASO 1: Identificar columna de Calificación Directa de Forms ---
-      // Buscamos la columna de control que ya trae la nota lista
-      const idxTotalPuntos = headers.findIndex(h => {
-        const txt = String(h || '').trim().toLowerCase();
-        return txt === 'total de puntos' || txt === 'puntos' || txt === 'puntos totales';
-      });
+      // 🎯 TIRO FIJO A TUS COLUMNAS REALES DEL CUESTIONARIO FORMS CAMBIANTE:
+      const idxTotalPuntos = 5;  // Columna F (Total de puntos neto)
+      const idxCedula      = 32; // Columna AG ("15. Identificación" real del Forms)
 
       const umbral = tipoOnboarding === 'safety' ? 100 : 80;
+      const mejorPorCedula = new Map();
 
-      // Mapa temporal: cedula → datos
-      const mapCedulaDatos = new Map();
+      // ✅ PASO 1: Agrupar por la columna AG y filtrar de forma matemática el puntaje más alto
+      for (let row of rawRows) {
+        // 🕵️‍♂️ CONTROL MAESTRO: Si la fila viene unificada en un solo string por culpa del delimitador CSV (;):
+        if (row.length === 1 && typeof row[0] === 'string') {
+          row = row[0].split(';'); 
+        }
 
-      for (const row of rawRows) {
-        let cedulaRaw = String(row[idxCedula] || '').trim();
-        if (!cedulaRaw || cedulaRaw === 'null' || cedulaRaw === '0') continue;
+        let cedulaRaw = String(row[idxCedula] || '').trim().replace(/['"\s.\-,]/g, '');
+        if (!cedulaRaw || cedulaRaw === 'null' || cedulaRaw === 'undefined' || cedulaRaw === '0') continue;
 
-        const cedula = cedulaRaw.replace(/['"\s.\-,]/g, '');
-        if (!cedula) continue;
-
-        // 🎯 EXTRACCIÓN MAESTRA DIRECTA: 
-        // Si Forms ya calculó la nota en base 100, la tomamos directamente. Si no, leemos la col 5.
-        let notaDirecta = idxTotalPuntos !== -1 ? Number(row[idxTotalPuntos] || 0) : Number(row[5] || 0);
-
-        // Forzamos un rango seguro entre 0 y 100 por si viene un formato extraño
+        let notaDirecta = Number(row[idxTotalPuntos] || 0);
         let pct = Math.min(100, Math.max(0, Math.round(notaDirecta)));
         
-        const aprobado = pct >= umbral;
-
         const fechaEjecucion = row[1] instanceof Date
           ? row[1].toISOString().split('T')[0]
           : new Date().toISOString().split('T')[0];
 
-        // Guardamos en el mapa indexador
-        mapCedulaDatos.set(cedula, { pct, aprobado, fechaEjecucion });
+        // Se conserva estrictamente el intento con el puntaje numérico más alto (100% vence a 44%)
+        if (mejorPorCedula.has(cedulaRaw)) {
+          const existente = mejorPorCedula.get(cedulaRaw);
+          if (pct > existente.pct) {
+            mejorPorCedula.set(cedulaRaw, { pct, aprobado: pct >= umbral, fechaEjecucion });
+          }
+        } else {
+          mejorPorCedula.set(cedulaRaw, { pct, aprobado: pct >= umbral, fechaEjecucion });
+        }
       }
 
-      console.log(`📋 Cédulas únicas listas para impactar base de datos: ${mapCedulaDatos.size}`);
+      console.log(`📋 Cédulas deduplicadas listas para Firebase: ${mejorPorCedula.size}`);
+      if (mejorPorCedula.size === 0) {
+        if (btn) btn.innerHTML = textoOriginal;
+        return alert("⚠️ No se pudieron extraer cédulas válidas. Verifica que la identificación viaje en la columna AG.");
+      }
 
-      // --- PASO 2: Traer TODOS los empleados de Firebase en chunks de 30 (límite Firestore) ---
-      const cedulasArray = Array.from(mapCedulaDatos.keys());
+      // ✅ PASO 2: Traer los registros de Firebase para cruzarlos en bloque
+      const cedulasArray = Array.from(mejorPorCedula.keys());
       const chunkSize = 30;
-      const chunks = [];
-      for (let i = 0; i < cedulasArray.length; i += chunkSize) {
-        chunks.push(cedulasArray.slice(i, i + chunkSize));
-      }
-
-      // Mapa: cedula → {docId, data}
       const mapFirestore = new Map();
 
-      if (btn) btn.innerHTML = `⏳ Consultando Firebase (0/${chunks.length} bloques)...`;
-
-      for (let ci = 0; ci < chunks.length; ci++) {
-        const chunk = chunks[ci];
-        if (btn) btn.innerHTML = `⏳ Consultando Firebase (${ci+1}/${chunks.length} bloques)...`;
-
-        const snap = await db.collection('empleados')
-          .where('cedula', 'in', chunk)
-          .get();
-
+      for (let i = 0; i < cedulasArray.length; i += chunkSize) {
+        const chunk = cedulasArray.slice(i, i + chunkSize);
+        const snap = await db.collection('empleados').where('cedula', 'in', chunk).get();
         snap.forEach(doc => {
           mapFirestore.set(String(doc.data().cedula), { docId: doc.id, data: doc.data() });
         });
       }
 
-      console.log(`🔥 Empleados encontrados en Firebase: ${mapFirestore.size}`);
-
-      // --- PASO 3: Escribir en Firebase con batch (500 ops por batch) ---
-      const hoy = new Date().toISOString().split('T')[0];
+      // ✅ PASO 3: Escribir en Firebase con transacciones por lote (Batch Set Merge)
+      let batch = db.batch();
+      let opsEnBatch = 0;
       let totalProcesados = 0;
       const noEncontrados = [];
 
-      // Firestore batch: máximo 500 escrituras por batch
-      let batch = db.batch();
-      let opsEnBatch = 0;
-      const MAX_OPS = 400; // margen de seguridad
-
-      if (btn) btn.innerHTML = `⏳ Escribiendo en Firebase...`;
-
-      for (const [cedula, { pct, aprobado, fechaEjecucion }] of mapCedulaDatos) {
+      for (const [cedula, { pct, aprobado, fechaEjecucion }] of mejorPorCedula) {
         const registro = mapFirestore.get(cedula);
         if (!registro) { noEncontrados.push(cedula); continue; }
 
@@ -1002,6 +831,7 @@ async function procesarOnboardingExcel(event, tipoOnboarding) {
         const hitos = { ...(data.hitos || {}) };
         const up = {};
 
+        // 🎯 FORZADO INTELIGENTE ANTI-REPROBADOS VIEJOS:
         if (tipoOnboarding === 'safety') {
           hitos.onboarding_safety_nota = pct;
           hitos.onboarding_safety_fecha = fechaEjecucion;
@@ -1021,47 +851,56 @@ async function procesarOnboardingExcel(event, tipoOnboarding) {
         opsEnBatch++;
         totalProcesados++;
 
-        // Commit del batch cuando llega al límite
-        if (opsEnBatch >= MAX_OPS) {
+        if (opsEnBatch >= 400) {
           await batch.commit();
           batch = db.batch();
           opsEnBatch = 0;
-          console.log(`✅ Batch commiteado: ${totalProcesados} hasta ahora`);
         }
       }
 
-      // Commit del batch final
-      if (opsEnBatch > 0) {
-        await batch.commit();
-      }
-
-      // Restaurar botón
+      if (opsEnBatch > 0) await batch.commit();
       if (btn) btn.innerHTML = textoOriginal;
 
       if (totalProcesados === 0) {
-        alert(`⚠️ NO se actualizó nada.\n\nCédulas leídas: ${mapCedulaDatos.size}\nNo encontradas en Firebase: ${noEncontrados.length}\n\nPrimeras cédulas del Excel:\n${Array.from(mapCedulaDatos.keys()).slice(0,10).join(', ')}`);
+        alert(`⚠️ No se actualizó ningún perfil de Firebase. Valida si las cédulas del Excel ya fueron registradas previamente en el sistema.`);
       } else {
-        let msg = `✅ Onboarding [${tipoOnboarding.toUpperCase()}] completado!\n\n`;
-        msg += `· Registros actualizados: ${totalProcesados}\n`;
-        msg += `· Cédulas únicas en Excel: ${mapCedulaDatos.size}\n`;
-        if (noEncontrados.length > 0) msg += `· No encontrados en Firebase: ${noEncontrados.length}\n  ${noEncontrados.slice(0,10).join(', ')}`;
+        let msg = `✅ ¡Consolidación de Onboarding completada con éxito!\n\n`;
+        msg += `· Registros reales guardados con nota máxima: ${totalProcesados}\n`;
+        msg += `· Colaboradores únicos procesados: ${mejorPorCedula.size}\n`;
+        if (noEncontrados.length > 0) msg += `· Cédulas omitidas por no estar en la base de datos: ${noEncontrados.length}`;
         alert(msg);
         location.reload();
       }
 
     } catch (err) {
       if (btn) btn.innerHTML = textoOriginal;
-      console.error("Error crítico:", err);
+      console.error("Error crítico de guardado:", err);
       alert("❌ ERROR: " + err.message);
     }
   };
   reader.readAsArrayBuffer(file);
 }
 
-function logout() {
-  localStorage.clear();
-  window.location.href = 'login.html';
+db.collection('beneficios').onSnapshot((snapshot) => {
+  const tbody = document.getElementById('tablaBeneficiosBody'); if (!tbody) return;
+  if (snapshot.empty) { tbody.innerHTML = `<tr><td colspan="5" style="padding:15px; text-align:center; color:#7a8f99;">No hay beneficios creados.</td></tr>`; return; }
+  let html = '';
+  snapshot.forEach((doc) => {
+    const b = doc.data();
+    const valorFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(b.valor || 0);
+    const celdaAcciones = localStorage.getItem('usuario_rol') === 'people' ? '' : `
+      <td style="padding:10px; text-align:center;"><button onclick="cargarBeneficioForm('${doc.id}', '${b.cargo}', '${b.concepto}', ${b.valor}, '${b.indicador || ''}')" style="background:#fff8e1; color:#8a6e00; border:1px solid #c89b00; padding:3px 8px; border-radius:5px; cursor:pointer; font-size:11px;">✏️ Editar</button></td>`;
+    html += `<tr><td>${b.cargo}</td><td>${b.concepto}</td><td>${valorFormateado}</td><td><span>🎯 ${b.indicador || 'General'}</span></td>${celdaAcciones}</tr>`;
+  });
+  tbody.innerHTML = html;
+});
+
+function limpiarFormularioBeneficio() {
+  document.getElementById('benCargo').value = ''; document.getElementById('benConcepto').value = ''; document.getElementById('benValor').value = ''; document.getElementById('benIndicador').value = ''; idBeneficioEdicion = null;
 }
+
+function poblarFiltrosEstrategicos(regiones, meses) {}
+function logout() { localStorage.clear(); window.location.href = 'login.html'; }
 </script>
 </body>
 </html>
