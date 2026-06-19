@@ -994,3 +994,126 @@ async function cargarPerfilDetalladoPadrinoCompleto(cedulaPadrino) {
           renderizarMonitorColaboradores();
       }
   }
+
+  // ============================================================
+// 🎓 FUNCIÓN NUEVA: GENERA EL CERTIFICADO EN PDF Y GRADÚA AL COLABORADOR
+// ============================================================
+// Flujo:
+//  1) Lee los datos reales del empleado en Firestore (notas, fechas, padrino).
+//  2) Construye un diploma oculto en el DOM con esos datos.
+//  3) html2pdf.js lo convierte a PDF y dispara la descarga.
+//  4) Al terminar, marca certificado_descargado:true en Firestore.
+//     El onSnapshot ya existente refresca el cache automáticamente y
+//     renderizarMonitorColaboradores() mueve al colaborador al Histórico
+//     sin necesidad de location.reload().
+// ============================================================
+async function imprimirCertificadoCompletoPDF(docId) {
+    try {
+        const docSnap = await db.collection('empleados').doc(docId).get();
+        if (!docSnap.exists) return alert("⚠️ No se encontró el registro del colaborador.");
+
+        const emp = docSnap.data();
+        const h = emp.hitos || {};
+
+        // Buscamos el nombre del padrino asignado para mostrarlo en el diploma
+        let nombrePadrino = "—";
+        if (emp.padrino_id) {
+            const snapPad = await db.collection('empleados').where('cedula', '==', String(emp.padrino_id)).limit(1).get();
+            if (!snapPad.empty) nombrePadrino = snapPad.docs[0].data().nombre || "—";
+        }
+
+        const fechaHoyFormateada = new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
+        const fechaIngreso = emp.fecha_ingreso || h.fecha_contratacion || "—";
+
+        // 🎨 PLANTILLA DEL DIPLOMA (oculta, se renderiza solo para capturarla a PDF)
+        const certificadoHTML = `
+        <div id="hoja-certificado-temporal" style="width: 1000px; padding: 60px; background: #ffffff; font-family: sans-serif; border: 14px solid #206987; box-sizing: border-box; position: relative;">
+            <div style="position:absolute; top:0; left:0; right:0; height:10px; background:#3cbcae;"></div>
+
+            <div style="text-align:center; margin-bottom: 10px;">
+                <div style="font-size:13px; font-weight:700; letter-spacing:0.15em; color:#3cbcae; text-transform:uppercase;">Plan Padrino Logístico</div>
+                <div style="font-size:34px; font-weight:800; color:#1c2430; margin-top:6px; letter-spacing:0.04em;">CERTIFICADO DE FINALIZACIÓN</div>
+                <div style="width:120px; height:3px; background:#ffc404; margin:18px auto;"></div>
+            </div>
+
+            <div style="text-align:center; margin: 35px 0;">
+                <div style="font-size:14px; color:#7a8f99;">Se certifica que</div>
+                <div style="font-size:30px; font-weight:800; color:#206987; margin:12px 0; text-transform:uppercase; border-bottom:2px solid #edf1f4; display:inline-block; padding-bottom:8px;">${emp.nombre}</div>
+                <div style="font-size:13px; color:#7a8f99;">Identificado(a) con CC ${emp.cedula}</div>
+            </div>
+
+            <div style="text-align:center; max-width:720px; margin: 0 auto 35px auto; font-size:14px; color:#2e3a4e; line-height:1.7;">
+                Completó satisfactoriamente el proceso de maduración y acompañamiento del
+                <strong>Plan Padrino Logístico</strong>, cumpliendo con los hitos de inducción, evaluación técnica,
+                funcional y autónoma, bajo el acompañamiento de su tutor asignado.
+            </div>
+
+            <div style="display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin-bottom: 40px;">
+                <div style="background:#e1f5ee; border:1px solid #3cbcae; color:#0f6e56; padding:8px 16px; border-radius:8px; font-size:11px; font-weight:700;">Safety: ${h.onboarding_safety_nota || 0}%</div>
+                <div style="background:#e1f5ee; border:1px solid #3cbcae; color:#0f6e56; padding:8px 16px; border-radius:8px; font-size:11px; font-weight:700;">People: ${h.onboarding_people_nota || 0}%</div>
+                <div style="background:#e1f5ee; border:1px solid #3cbcae; color:#0f6e56; padding:8px 16px; border-radius:8px; font-size:11px; font-weight:700;">7 Días: ${h.eval_tecnico_nota || 0}%</div>
+                <div style="background:#e1f5ee; border:1px solid #3cbcae; color:#0f6e56; padding:8px 16px; border-radius:8px; font-size:11px; font-weight:700;">30 Días: ${h.eval_funcional_nota || 0}%</div>
+                <div style="background:#e1f5ee; border:1px solid #3cbcae; color:#0f6e56; padding:8px 16px; border-radius:8px; font-size:11px; font-weight:700;">90 Días: ${h.eval_autonomo_nota || 0}%</div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:55px;">
+                <div style="text-align:center; width:260px;">
+                    <div style="border-top:1.5px solid #1c2430; padding-top:6px; font-size:12px; font-weight:700; color:#1c2430;">${nombrePadrino}</div>
+                    <div style="font-size:10px; color:#7a8f99; text-transform:uppercase;">Padrino / Tutor Asignado</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:11px; color:#7a8f99;">Fecha de emisión</div>
+                    <div style="font-size:13px; font-weight:700; color:#206987;">${fechaHoyFormateada}</div>
+                </div>
+                <div style="text-align:center; width:260px;">
+                    <div style="border-top:1.5px solid #1c2430; padding-top:6px; font-size:12px; font-weight:700; color:#1c2430;">Logística Inteligente</div>
+                    <div style="font-size:10px; color:#7a8f99; text-transform:uppercase;">People & Desarrollo</div>
+                </div>
+            </div>
+
+            <div style="text-align:center; margin-top:40px; font-size:9px; color:#bcc7cd;">
+                Fecha de ingreso: ${fechaIngreso} &nbsp;·&nbsp; Documento generado automáticamente por el Portal People
+            </div>
+        </div>`;
+
+        // Inyectamos el diploma fuera de la pantalla visible para que html2pdf lo pueda capturar
+        const hojaTemporal = document.createElement('div');
+        hojaTemporal.style.position = 'fixed';
+        hojaTemporal.style.top = '-99999px';
+        hojaTemporal.style.left = '-99999px';
+        hojaTemporal.innerHTML = certificadoHTML;
+        document.body.appendChild(hojaTemporal);
+
+        const elementoDiploma = document.getElementById('hoja-certificado-temporal');
+
+        const opcionesPdf = {
+            margin: 0,
+            filename: `Certificado_PlanPadrino_${emp.nombre.replace(/\s+/g, '_')}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'pt', format: 'a4', orientation: 'landscape' }
+        };
+
+        // Generamos el PDF y esperamos a que termine de descargar
+        await html2pdf().set(opcionesPdf).from(elementoDiploma).save();
+
+        // Limpiamos el elemento temporal del DOM
+        document.body.removeChild(hojaTemporal);
+
+        // 🏁 GRADUACIÓN: marcamos al colaborador como certificado_descargado
+        // Esto hace que renderizarMonitorColaboradores() lo mueva automáticamente
+        // de "Seguimiento Apadrinados Activos" al "Histórico de Certificados"
+        await db.collection('empleados').doc(docId).update({
+            certificado_descargado: true,
+            fecha_certificado_descargado: new Date().toISOString().split('T')[0]
+        });
+
+        alert(`🎓 ¡Certificado generado y descargado!\n\n${emp.nombre} ha sido movido al Histórico de Graduados.`);
+        // No hace falta location.reload(): el onSnapshot de empleados ya
+        // refresca cacheSnapshotEmpleadosLocal y vuelve a pintar el monitor.
+
+    } catch (error) {
+        console.error("❌ Error generando el certificado:", error);
+        alert("Ocurrió un error generando el certificado. Revisa la consola.");
+    }
+}
