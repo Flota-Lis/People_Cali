@@ -7,19 +7,32 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: sans-serif; background: #edf1f4; padding: 20px; color: #1c2430; }
+    body { font-family: sans-serif; background: #edf1f4; color: #1c2430; padding-bottom: 40px; }
     
-    .admin-container { max-width: 1200px; margin: 0 auto; width: 100%; }
+    .admin-container { max-width: 1200px; margin: 0 auto; width: 100%; padding: 0 20px; }
     
     /* 🎯 Encabezado con el Azul Logística y línea base Verde Esmeralda */
-    .header { background: #206987; color: #fff; padding: 15px 22px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; border-bottom: 4px solid #3cbcae; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+    .header { background: #206987; color: #fff; padding: 15px 22px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-top: 20px; margin-bottom: 15px; flex-wrap: wrap; gap: 15px; border-bottom: 4px solid #3cbcae; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
     .header-left-block { display: flex; align-items: center; gap: 15px; }
     .logo-admin-img { height: 42px; width: auto; object-fit: contain; background: rgba(255, 255, 255, 0.9); padding: 4px 8px; border-radius: 8px; }
     .header h1 { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; letter-spacing: 0.02em; }
     
+    /* 🚀 BOTONES DEL NAVBAR ESTILIZADOS */
+    .navbar-menu { display: flex; gap: 10px; background: white; padding: 10px 15px; border-radius: 12px; border: 1.5px solid #dde3e7; margin-bottom: 20px; flex-wrap: wrap; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+    .nav-tab-btn { background: #f8fafb; border: 1.5px solid #dde3e7; padding: 10px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 700; color: #206987; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s ease; }
+    .nav-tab-btn:hover { background: #eef5f8; border-color: #206987; }
+    .nav-tab-btn.active-tab { background: #206987; color: white; border-color: #206987; box-shadow: 0 4px 10px rgba(32, 105, 135, 0.2); }
+    
     /* 🚀 Botón Cerrar Sesión con Amarillo Corporativo */
     .btn-logout { background: #ffc404; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; color: #1c2430; cursor: pointer; transition: all 0.2s ease; letter-spacing: 0.03em; }
     .btn-logout:hover { background: #e0ab00; transform: translateY(-1px); }
+    
+    /* Control de visibilidad de secciones */
+    .admin-section-pane { display: none; width: 100%; }
+    .admin-section-pane.pane-active { display: block; }
+    
+    /* Mensaje de bienvenida de fondo */
+    .welcome-background-box { background: white; border-radius: 16px; border: 1.5px solid #cdd5db; padding: 50px 30px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.02); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px; }
     
     .grid-layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
     @media(min-width: 992px) {
@@ -28,7 +41,7 @@
     }
     
     /* Tarjetas con detalles de color de marca */
-    .card { background: #fff; border-radius: 12px; padding: 20px; border: 1.5px solid #cdd5db; box-shadow: 0 6px 16px rgba(0,0,0,0.03); }
+    .card { background: #fff; border-radius: 12px; padding: 20px; border: 1.5px solid #cdd5db; box-shadow: 0 6px 16px rgba(0,0,0,0.03); margin-bottom: 20px; }
     .card-title { font-size: 15px; font-weight: 700; color: #206987; margin-bottom: 15px; border-bottom: 2px solid #3cbcae; padding-bottom: 8px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.03em; }
     
     .form-group { margin-bottom: 15px; }
@@ -52,9 +65,6 @@
     .tag { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 12px; display: inline-block; }
     .tag-green { background: #e1f5ee; color: #0f6e56; }
     .tag-red { background: #fdecea; color: #a32d2d; }
-
-    /* Estilos del monitor de reprobados */
-    #lista-desplegable-reprobados.open { display: flex !important; }
     .reprobado-row-item { display: flex; justify-content: space-between; align-items: center; background: #fdf2f2; border: 1px solid #f5c2c2; padding: 10px; border-radius: 8px; }
   </style>
 </head>
@@ -81,17 +91,36 @@
     </div>
   </div>
 
-  <div class="grid-layout">
+  <div class="navbar-menu">
+    <button class="nav-tab-btn active-tab" onclick="cambiarSeccionAdmin('inicio', this)"><i class="ti ti-home"></i> Inicio</button>
+    <button class="nav-tab-btn" onclick="cambiarSeccionAdmin('beneficios', this)"><i class="ti ti-gift"></i> Beneficios</button>
+    <button class="nav-tab-btn" onclick="cambiarSeccionAdmin('empleados', this)"><i class="ti ti-users"></i> Empleados</button>
+    <button class="nav-tab-btn" onclick="cambiarSeccionAdmin('onboarding', this)"><i class="ti ti-shield-check"></i> Importar Onboarding</button>
+    <button class="nav-tab-btn" onclick="cambiarSeccionAdmin('capacitaciones', this)"><i class="ti ti-calendar-plus"></i> Capacitaciones & Auditoría</button>
+  </div>
 
+  <div id="section-inicio" class="admin-section-pane pane-active">
+    <div class="welcome-background-box">
+      <i class="ti ti-building-warehouse" style="font-size: 64px; color: #206987; margin-bottom: 15px;"></i>
+      <h2 style="font-size: 22px; font-weight: 800; color: #1c2430; margin-bottom: 8px;">Consola de Mando Central</h2>
+      <p style="font-size: 13px; color: #7a8f99; max-width: 500px; line-height: 1.5; margin-bottom: 25px;">
+        Selecciona una de las opciones del menú superior para empezar a configurar el sistema, realizar cargas masivas de personal o auditar notas.
+      </p>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+        <span style="font-size: 11px; font-weight: 700; background: #eef1f3; padding: 6px 12px; border-radius: 20px; color: #206987;">v2.6 Estable</span>
+        <span style="font-size: 11px; font-weight: 700; background: #eef1f3; padding: 6px 12px; border-radius: 20px; color: #0f6e56;">Firebase Conectado</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="section-beneficios" class="admin-section-pane">
     <div style="background: #fff; border-radius: 14px; padding: 20px; border: 0.5px solid #dde3e7; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
       <div style="font-weight: bold; color: #1e6e7e; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
         <span style="font-size: 18px;">🎁</span> GESTIÓN DE BENEFICIOS Y COMPENSACIÓN POR CARGO
       </div>
-      
       <p style="font-size: 12px; color: #7a8f99; margin-bottom: 15px;">
         Configura y asigna paquetes de beneficios específicos para cada cargo del sistema. Los empleados verán estos datos actualizados en su app.
       </p>
-
       <div id="seccionFormBeneficios">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 15px;">
           <div>
@@ -111,7 +140,6 @@
             <input type="text" id="benIndicador" placeholder="Ej: Cero ausentismos" style="width:100%; padding:8px; border:1px solid #dde3e7; border-radius:8px; font-size:12px;">
           </div>
         </div>
-
         <div style="display: flex; gap: 10px; margin-bottom: 20px;">
           <button onclick="guardarBeneficio()" style="background:#1e6e7e; color:#fff; border:none; padding:8px 16px; border-radius:8px; font-weight:600; font-size:12px; cursor:pointer;">
             💾 Guardar / Actualizar Beneficio
@@ -121,7 +149,6 @@
           </button>
         </div>
       </div>
-
       <div style="border: 1px solid #dde3e7; border-radius: 10px; overflow: hidden;">
         <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
           <thead style="background: #f7fafb; color: #1e6e7e; border-bottom: 1px solid #dde3e7;">
@@ -141,13 +168,15 @@
         </table>
       </div>
     </div>
-      
+  </div>
+
+  <div id="section-empleados" class="admin-section-pane">
     <div class="card full-width">
       <div class="card-title"><i class="ti ti-users"></i> Gestión y Carga Masiva de Empleados</div>
       
       <div id="bloqueCargaMasiva" style="background: #f7fafb; padding: 15px; border-radius: 8px; border: 1px dashed #1e6e7e; margin-bottom: 20px;">
         <label style="color:#1e6e7e;"><strong>Carga Masiva de Personal (.xlsx / .xls / .csv)</strong></label>
-        <p style="font-size: 11px; color:#7a8f99; margin-bottom: 10px;">Columnas requeridas en la primera hoja: <strong>cedula, nombre, cargo, region, rol</strong></p>
+        <p style="font-size: 11px; color:#7a8f99; margin-bottom: 10px;">Columnas requeridas en la primera hoja: <strong>cedula, nombre, cargo, region, rol, fecha_ingreso, grupo</strong></p>
         <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
           <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" style="flex: 1; min-width: 200px; background:transparent; border:none; padding:0;" onchange="event.preventDefault(); cargarExcel(); return false;">
           <button class="btn btn-primary" onclick="event.preventDefault(); cargarExcel(); return false;"><i class="ti ti-upload"></i> Importar Archivo</button>
@@ -176,11 +205,15 @@
         </div>
         <div class="form-group" style="flex: 1; min-width: 150px;">
           <label style="font-size: 11px; font-weight: 700; color: #206987; text-transform: uppercase; margin-bottom: 6px; display: block;">Grupo / Turno</label>
-          <input type="text" id="regEmpleadoGrupo" placeholder="Ej: ABI, OL , UC" style="width: 100%; padding: 11px; border: 1.5px solid #dde3e7; border-radius: 8px;">
+          <input type="text" id="regEmpleadoGrupo" placeholder="Ej: ABI, OL , UC">
         </div>
         <div class="form-group">
           <label>Región Geográfica</label>
           <input type="text" id="crudRegion" placeholder="Ej: Sur, Norte, Cali">
+        </div>
+        <div class="form-group">
+          <label>Fecha de Contratación / Ingreso CD</label>
+          <input type="date" id="crudFechaIngreso">
         </div>
         <div class="form-group">
           <label>Rol del Sistema</label>
@@ -198,16 +231,18 @@
         </div>
       </div>
     </div>
+  </div>
 
+  <div id="section-onboarding" class="admin-section-pane">
     <div class="card full-width" id="bloqueCargaEvaluaciones" style="border-left: 5px solid #ffc404;">
       <div class="card-title" style="color: #206987; border-bottom: 2px solid #ffc404;">
-        <i class="ti ti-database-import"></i> 2.6 Importador Central de Notas (Onboarding & Pilares QR)
+        <i class="ti ti-database-import"></i> Importador Central de Notas (Onboarding & Pilares QR)
       </div>
       <p style="font-size: 12px; color: #7a8f99; margin-bottom: 15px;">
         Carga los Excel de Microsoft Forms para registrar automáticamente las notas de cada etapa. El sistema cruza por cédula y actualiza Firebase en tiempo real.
       </p>
 
-      <div style="background:#f4fbf9; border:1.5px solid #3cbcae; border-radius:10px; padding:18px; margin-bottom:18px;">
+      <div style="background:#f4fbf9; border:1.5px solid #3cbcae; border-radius:10px; padding:18px;">
         <div style="font-size:11px; font-weight:700; color:#0f6e56; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:12px;">
           <i class="ti ti-shield-check"></i> Onboarding de Inducción (Días 1 y 2 — Antes del Plan Padrino)
         </div>
@@ -234,86 +269,87 @@
         </div>
       </div>
     </div>
+  </div>
 
- 
-
-    <div class="card" id="seccionFormCapacitaciones">
-      <div class="card-title"><i class="ti ti-calendar-plus"></i> Programar Tarea de Capacitación</div>
-      
-      <div class="form-group">
-        <label>Cédula del Trabajador Asignado</label>
-        <input type="text" id="targetCedula" placeholder="Asigna la cédula">
-      </div>
-      <div class="form-group">
-        <label>Título de la Capacitación</label>
-        <input type="text" id="capTitulo" placeholder="Ej: Safety 360°, Manejo Seguro">
-      </div>
-      <div class="form-group">
-        <label>Enlace Completo de la Presentación (SharePoint o Google Drive)</label>
-        <input type="url" id="capDriveId" placeholder="Pega el enlace web completo de la presentación" required>
-      </div>
-      <div class="form-group">
-        <label>Enlace Web de la Evaluación (Formulario / Link QR)</label>
-        <input type="url" id="capQrUrl" placeholder="Pega el enlace del formulario de evaluación">
-      </div>
-      <div class="form-group">
-        <label>Fecha Límite de Ejecución</label>
-        <input type="date" id="capFechaLimite">
-      </div>
-      
-      <button class="btn btn-primary" onclick="publicarCapacitacion()"><i class="ti ti-cloud-upload"></i> Publicar en Cronograma</button>
-    </div>
-
-    <div class="card">
-      <div class="card-title"><i class="ti ti-chart-bar"></i> Auditoría Detallada de Avance Real</div>
-      
-      <div class="form-group">
-        <label>Consultar Avance de Cédula</label>
-        <input type="text" id="auditCedula" placeholder="Digita el documento a auditar">
-      </div>
-
-      <div class="form-group" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom: 15px;">
-        <div>
-          <label>Desde (Fecha límite)</label>
-          <input type="date" id="filterDesde" value="2026-01-01">
+  <div id="section-capacitaciones" class="admin-section-pane">
+    <div class="grid-layout">
+      <div class="card" id="seccionFormCapacitaciones">
+        <div class="card-title"><i class="ti ti-calendar-plus"></i> Programar Tarea de Capacitación</div>
+        
+        <div class="form-group">
+          <label>Cédula del Trabajador Asignado</label>
+          <input type="text" id="targetCedula" placeholder="Asigna la cédula">
         </div>
-        <div>
-          <label>Hasta (Fecha límite)</label>
-          <input type="date" id="filterHasta" value="2026-12-31">
+        <div class="form-group">
+          <label>Título de la Capacitación</label>
+          <input type="text" id="capTitulo" placeholder="Ej: Safety 360°, Manejo Seguro">
         </div>
+        <div class="form-group">
+          <label>Enlace Completo de la Presentación (SharePoint o Google Drive)</label>
+          <input type="url" id="capDriveId" placeholder="Pega el enlace web completo de la presentación" required>
+        </div>
+        <div class="form-group">
+          <label>Enlace Web de la Evaluación (Formulario / Link QR)</label>
+          <input type="url" id="capQrUrl" placeholder="Pega el enlace del formulario de evaluación">
+        </div>
+        <div class="form-group">
+          <label>Fecha Límite de Ejecución</label>
+          <input type="date" id="capFechaLimite">
+        </div>
+        
+        <button class="btn btn-primary" onclick="publicarCapacitacion()"><i class="ti ti-cloud-upload"></i> Publicar en Cronograma</button>
       </div>
 
-      <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="auditarAvanceReal()"><i class="ti ti-eye"></i> Consultar Historial y Progreso</button>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-chart-bar"></i> Auditoría Detallada de Avance Real</div>
+        
+        <div class="form-group">
+          <label>Consultar Avance de Cédula</label>
+          <input type="text" id="auditCedula" placeholder="Digita el documento a auditar">
+        </div>
 
-      <div id="auditResultPanel" style="margin-top: 20px; display: none;">
-        <div style="display: flex; gap: 15px; margin-bottom: 15px; background: #f7fafb; padding: 12px; border-radius: 8px;">
-          <div style="flex: 1; text-align: center;">
-            <div style="font-size: 11px; color: #7a8f99; font-weight: 600;">PORCENTAJE REAL</div>
-            <div id="auditPctText" style="font-size: 24px; font-weight: 700; color: #1e6e7e;">0%</div>
+        <div class="form-group" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom: 15px;">
+          <div>
+            <label>Desde (Fecha límite)</label>
+            <input type="date" id="filterDesde" value="2026-01-01">
           </div>
-          <div style="flex: 1; text-align: center; border-left: 1px solid #dde3e7;">
-            <div style="font-size: 11px; color: #7a8f99; font-weight: 600;">EVALUACIONES</div>
-            <div id="auditCountText" style="font-size: 24px; font-weight: 700; color: #1a3540;">0 / 0</div>
+          <div>
+            <label>Hasta (Fecha límite)</label>
+            <input type="date" id="filterHasta" value="2026-12-31">
           </div>
         </div>
 
-        <label><strong>Listado de capacitaciones asignadas:</strong></label>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Capacitación</th>
-                <th>Límite</th>
-                <th>¿Abrió PPT?</th>
-                <th>Evaluación</th>
-              </tr>
-            </thead>
-            <tbody id="auditTableBody"></tbody>
-          </table>
+        <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="auditarAvanceReal()"><i class="ti ti-eye"></i> Consultar Historial y Progreso</button>
+
+        <div id="auditResultPanel" style="margin-top: 20px; display: none;">
+          <div style="display: flex; gap: 15px; margin-bottom: 15px; background: #f7fafb; padding: 12px; border-radius: 8px;">
+            <div style="flex: 1; text-align: center;">
+              <div style="font-size: 11px; color: #7a8f99; font-weight: 600;">PORCENTAJE REAL</div>
+              <div id="auditPctText" style="font-size: 24px; font-weight: 700; color: #1e6e7e;">0%</div>
+            </div>
+            <div style="flex: 1; text-align: center; border-left: 1px solid #dde3e7;">
+              <div style="font-size: 11px; color: #7a8f99; font-weight: 600;">EVALUACIONES</div>
+              <div id="auditCountText" style="font-size: 24px; font-weight: 700; color: #1a3540;">0 / 0</div>
+            </div>
+          </div>
+
+          <label><strong>Listado de capacitaciones asignadas:</strong></label>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Capacitación</th>
+                  <th>Límite</th>
+                  <th>¿Abrió PPT?</th>
+                  <th>Evaluación</th>
+                </tr>
+              </thead>
+              <tbody id="auditTableBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
-
   </div>
 
   <div style="text-align: center; padding: 25px 15px 40px 15px; margin-top: 30px; grid-column: 1 / -1; width: 100%; display: block; clear: both; margin-left: auto; margin-right: auto;">
@@ -336,6 +372,28 @@
 <script>
 const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+
+// 🚀 FUNCIÓN DINÁMICA DEL NAVBAR PARA INTERCAMBIAR SECCIONES EN VIVO
+function cambiarSeccionAdmin(targetPaneId, botonPresionado) {
+    // 1. Apagamos todas las secciones activas
+    document.querySelectorAll('.admin-section-pane').forEach(pane => {
+        pane.classList.remove('pane-active');
+    });
+    // 2. Apagamos el estilo activo de todos los botones del Navbar
+    document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+        btn.classList.remove('active-tab');
+    });
+    
+    // 3. Encendemos la sección que el usuario clickeó
+    const seccionObjetivo = document.getElementById('section-' + targetPaneId);
+    if (seccionObjetivo) {
+        seccionObjetivo.classList.add('pane-active');
+    }
+    // 4. Pintamos el botón presionado en azul corporativo
+    if (botonPresionado) {
+        botonPresionado.classList.add('active-tab');
+    }
+}
 
 const rolLogueado = localStorage.getItem('usuario_rol');
 
@@ -360,6 +418,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('crudCargo')) document.getElementById('crudCargo').disabled = true;
     if (document.getElementById('crudRegion')) document.getElementById('crudRegion').disabled = true;
     if (document.getElementById('regEmpleadoGrupo')) document.getElementById('regEmpleadoGrupo').disabled = true;
+    if (document.getElementById('crudFechaIngreso')) document.getElementById('crudFechaIngreso').disabled = true;
     if (document.getElementById('empleadoRol')) document.getElementById('empleadoRol').disabled = true;
 
     if (document.getElementById('thAccionesBeneficios')) document.getElementById('thAccionesBeneficios').style.display = 'none';
@@ -385,7 +444,7 @@ async function cargarPerfilAdmin(cedulaAdminLogueado) {
   }
 }
 
-// 📂 ESCUCHADOR DEL DASHBOARD DE INDICADORES GENERALES CON ALERTA DE REPROBADOS
+// 📊 1. ESCUCHADOR DEL DASHBOARD DE INDICADORES GENERALES CON MONITOR DE REPROBADOS
 db.collection('empleados').onSnapshot((snapshot) => {
     let ingresosMes = 0; let ingresosAnio = 0;
     let padrinosActivos = 0;
@@ -532,7 +591,7 @@ function cargarExcel() {
   reader.onload = function(e) {
     try {
       const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
+      const workbook = XLSX.read(data, { type: 'array', cellDates: true });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
       
@@ -547,7 +606,7 @@ function cargarExcel() {
       listaEmpleados.forEach(async (emp) => {
         const registroNormalizado = {};
         Object.keys(emp).forEach(key => {
-          registroNormalizado[key.toLowerCase().trim()] = emp[key];
+          registroNormalizado[key.toLowerCase().trim().replace(/[\s.\-,]/g, '_')] = emp[key];
         });
 
         const cedulaExcel = registroNormalizado['cedula'] ? String(registroNormalizado['cedula']).trim() : null;
@@ -556,6 +615,17 @@ function cargarExcel() {
         const regionExcel = registroNormalizado['region'];
         const grupoExcel = registroNormalizado['grupo'] ? String(registroNormalizado['grupo']).trim() : "General";
         const rolExcel = registroNormalizado['rol'] ? String(registroNormalizado['rol']).toLowerCase().trim() : "empleado";
+        
+        let fechaIngresoExcel = "";
+        if (registroNormalizado['fecha_ingreso']) {
+            if (registroNormalizado['fecha_ingreso'] instanceof Date) {
+                fechaIngresoExcel = registroNormalizado['fecha_ingreso'].toISOString().split('T')[0];
+            } else {
+                fechaIngresoExcel = String(registroNormalizado['fecha_ingreso']).trim();
+            }
+        } else {
+            fechaIngresoExcel = new Date().toISOString().split('T')[0];
+        }
 
         if (cedulaExcel) {
           const datosEstructurados = {
@@ -563,6 +633,7 @@ function cargarExcel() {
             nombre: nombreExcel ? String(nombreExcel).trim() : "Sin Nombre",
             cargo: cargoExcel ? String(cargoExcel).trim() : "Operativo",
             region: regionExcel ? String(regionExcel).trim() : "General",
+            fecha_ingreso: fechaIngresoExcel, 
             grupo: grupoExcel, 
             rol: rolExcel,
             password: cedulaExcel
@@ -577,8 +648,20 @@ function cargarExcel() {
             datosEstructurados.estado_plan_padrino = "Activo";
             datosEstructurados.etapa_actual = "Inducción"; 
             
+            const formatFecha = (d) => d.toISOString().split('T')[0];
+            const baseDate = new Date(fechaIngresoExcel + 'T00:00:00');
+            const f7 = new Date(baseDate); f7.setDate(f7.getDate() + 7);
+            const f30 = new Date(baseDate); f30.setDate(f30.getDate() + 30);
+            const f90 = new Date(baseDate); f90.setDate(f90.getDate() + 90);
+
+            datosEstructurados.fechas_limite_evaluaciones = {
+                eval_7_dias: formatFecha(f7),
+                eval_30_dias: formatFecha(f30),
+                eval_90_dias: formatFecha(f90)
+            };
+
             datosEstructurados.hitos = {
-              fecha_contratacion: new Date().toISOString().split('T')[0],
+              fecha_contratacion: fechaIngresoExcel,
               onboarding_safety_nota: 0,
               onboarding_people_nota: 0,
               eval_tecnico_nota: 0,
@@ -587,13 +670,14 @@ function cargarExcel() {
             };
           }
 
-          const querySnapshot = await db.collection('empleados').where('cedula', '==', cedulaExcel).limit(1).get();
+          const querySnapshot = await db.collection('empleados').where('cedula', '==', $.trim(cedulaExcel)).limit(1).get();
 
           if (!querySnapshot.empty) {
             const docId = querySnapshot.docs[0].id;
             delete datosEstructurados.hitos; 
             delete datosEstructurados.etapa_actual;
             delete datosEstructurados.estado_plan_padrino;
+            delete datosEstructurados.fechas_limite_evaluaciones;
 
             await db.collection('empleados').doc(docId).update(datosEstructurados);
           } else {
@@ -603,7 +687,7 @@ function cargarExcel() {
         }
       });
 
-      alert(`¡Sincronización Exitosa! Se procesó el archivo Excel. El sistema omitió duplicados y actualizó/creó los registros.`);
+      alert(`¡Sincronización Masiva Completa!\n Se procesó el archivo. El sistema guardó de forma estricta las fechas de ingreso nativas.`);
       fileInput.value = '';
     } catch (error) {
       console.error("Error crítico:", error);
@@ -631,6 +715,10 @@ async function buscarEmpleado() {
       document.getElementById('crudRegion').value = emp.region || '';
       document.getElementById('regEmpleadoGrupo').value = emp.grupo || 'General'; 
       document.getElementById('empleadoRol').value = emp.rol || 'empleado';
+      
+      if (document.getElementById('crudFechaIngreso')) {
+          document.getElementById('crudFechaIngreso').value = emp.fecha_ingreso || (emp.hitos && emp.hitos.fecha_contratacion) || '';
+      }
     } else {
       alert("La cédula no está registrada.");
     }
@@ -643,20 +731,65 @@ async function guardarEmpleado() {
   const cargo = document.getElementById('crudCargo').value.trim();
   const region = document.getElementById('crudRegion').value.trim();
   const grupo = document.getElementById('regEmpleadoGrupo').value.trim();
+  const fechaIngreso = document.getElementById('crudFechaIngreso').value; 
   const rol = document.getElementById('empleadoRol').value;
 
   if(!cedula || !nombre) return alert("Cédula y Nombre son obligatorios.");
 
-  const datosEstructurados = { cedula: String(cedula), nombre, cargo, region, grupo: grupo || "General", rol, password: String(cedula) };
-  if (rol === 'padrino') { datosEstructurados.es_padrino = true; datosEstructurados.padrino_estado = "Activo"; datosEstructurados.padrino_certified = true; }
-  else if (rol === 'empleado') { datosEstructurados.es_apadrinado = true; datosEstructurados.estado_plan_padrino = "Activo"; }
+  const datosEstructurados = { 
+      cedula: String(cedula), 
+      nombre, 
+      cargo, 
+      region, 
+      fecha_ingreso: fechaIngreso, 
+      grupo: grupo || "General", 
+      rol, 
+      password: String(cedula) 
+  };
+  
+  if (rol === 'padrino') { 
+      datosEstructurados.es_padrino = true; 
+      datosEstructurados.padrino_estado = "Activo"; 
+      datosEstructurados.padrino_certified = true; 
+  } else if (rol === 'empleado') { 
+      datosEstructurados.es_apadrinado = true; 
+      datosEstructurados.estado_plan_padrino = "Activo"; 
+      
+      const formatFecha = (d) => d.toISOString().split('T')[0];
+      const baseDate = fechaIngreso ? new Date(fechaIngreso + 'T00:00:00') : new Date();
+      const f7 = new Date(baseDate); f7.setDate(f7.getDate() + 7);
+      const f30 = new Date(baseDate); f30.setDate(f30.getDate() + 30);
+      const f90 = new Date(baseDate); f90.setDate(f90.getDate() + 90);
+
+      datosEstructurados.fechas_limite_evaluaciones = {
+          eval_7_dias: formatFecha(f7),
+          eval_30_dias: formatFecha(f30),
+          eval_90_dias: formatFecha(f90)
+      };
+
+      datosEstructurados.hitos = {
+          fecha_contratacion: fechaIngreso || formatFecha(new Date()),
+          onboarding_safety_nota: 0,
+          onboarding_people_nota: 0,
+          eval_tecnico_nota: 0,
+          eval_funcional_nota: 0,
+          eval_autonomo_nota: 0
+      };
+  }
 
   try {
     let snapshot = await db.collection('empleados').where('cedula', '==', cedula).limit(1).get();
     if(snapshot.empty && !isNaN(cedula)) snapshot = await db.collection('empleados').where('cedula', '==', Number(cedula)).limit(1).get();
 
-    if(!snapshot.empty) { await db.collection('empleados').doc(snapshot.docs[0].id).update(datosEstructurados); alert("¡Modificado!"); }
-    else { await db.collection('empleados').add(datosEstructurados); alert("¡Creado!"); }
+    if(!snapshot.empty) { 
+        delete datosEstructurados.hitos;
+        delete datosEstructurados.fechas_limite_evaluaciones;
+        await db.collection('empleados').doc(snapshot.docs[0].id).update(datosEstructurados); 
+        alert("¡Registro modificado con éxito!"); 
+    } else { 
+        await db.collection('empleados').add(datosEstructurados); 
+        alert("¡Nuevo colaborador creado en el sistema!"); 
+    }
     limpiarFormularioCRUD();
   } catch(err) { console.error(err); }
 }
@@ -671,8 +804,13 @@ async function eliminarEmpleado() {
 }
 
 function limpiarFormularioCRUD() {
-  document.getElementById('searchCedula').value = ''; document.getElementById('crudNombre').value = ''; document.getElementById('crudCargo').value = '';
-  document.getElementById('crudRegion').value = ''; document.getElementById('regEmpleadoGrupo').value = ''; document.getElementById('empleadoRol').value = 'empleado';
+  document.getElementById('searchCedula').value = ''; 
+  document.getElementById('crudNombre').value = ''; 
+  document.getElementById('crudCargo').value = '';
+  document.getElementById('crudRegion').value = ''; 
+  document.getElementById('regEmpleadoGrupo').value = ''; 
+  document.getElementById('crudFechaIngreso').value = ''; 
+  document.getElementById('empleadoRol').value = 'empleado';
 }
 
 async function publicarCapacitacion() {
@@ -689,6 +827,13 @@ async function publicarCapacitacion() {
     alert("¡Publicada!");
     document.getElementById('capTitulo').value = ''; document.getElementById('capDriveId').value = ''; document.getElementById('capQrUrl').value = ''; document.getElementById('capFechaLimite').value = '';
   } catch(e) { console.error(e); }
+}
+
+async function abrirPestañaAuditoria(cedula) {
+    if (document.getElementById('auditCedula')) {
+        document.getElementById('auditCedula').value = cedula;
+        auditarAvanceReal();
+    }
 }
 
 async function auditarAvanceReal() {
@@ -714,7 +859,6 @@ async function auditarAvanceReal() {
   });
 }
 
-// 📂 PROCESADOR EXCEL ONBOARDING DE INDUCCIÓN CON DEDUPLICACIÓN DE NOTA MÁXIMA REAL Y SOPORTE PARA DELIMITADOR CSV (PUNTO Y COMA)
 async function procesarOnboardingExcel(event, tipoOnboarding) {
   const file = event.target.files[0];
   if (!file) return;
@@ -741,16 +885,13 @@ async function procesarOnboardingExcel(event, tipoOnboarding) {
       const headers = rows[0] || [];
       const rawRows = rows.slice(1);
 
-      // 🎯 TIRO FIJO A TUS COLUMNAS REALES DEL CUESTIONARIO FORMS CAMBIANTE:
-      const idxTotalPuntos = 5;  // Columna F (Total de puntos neto)
-      const idxCedula      = 32; // Columna AG ("15. Identificación" real del Forms)
+      const idxTotalPuntos = 5;  
+      const idxCedula      = 32; 
 
       const umbral = tipoOnboarding === 'safety' ? 100 : 80;
       const mejorPorCedula = new Map();
 
-      // ✅ PASO 1: Agrupar por la columna AG y filtrar de forma matemática el puntaje más alto
       for (let row of rawRows) {
-        // 🕵️‍♂️ CONTROL MAESTRO: Si la fila viene unificada en un solo string por culpa del delimitador CSV (;):
         if (row.length === 1 && typeof row[0] === 'string') {
           row = row[0].split(';'); 
         }
@@ -765,7 +906,6 @@ async function procesarOnboardingExcel(event, tipoOnboarding) {
           ? row[1].toISOString().split('T')[0]
           : new Date().toISOString().split('T')[0];
 
-        // Se conserva estrictamente el intento con el puntaje numérico más alto (100% vence a 44%)
         if (mejorPorCedula.has(cedulaRaw)) {
           const existente = mejorPorCedula.get(cedulaRaw);
           if (pct > existente.pct) {
@@ -776,13 +916,6 @@ async function procesarOnboardingExcel(event, tipoOnboarding) {
         }
       }
 
-      console.log(`📋 Cédulas deduplicadas listas para Firebase: ${mejorPorCedula.size}`);
-      if (mejorPorCedula.size === 0) {
-        if (btn) btn.innerHTML = textoOriginal;
-        return alert("⚠️ No se pudieron extraer cédulas válidas. Verifica que la identificación viaje en la columna AG.");
-      }
-
-      // ✅ PASO 2: Traer los registros de Firebase para cruzarlos en bloque
       const cedulasArray = Array.from(mejorPorCedula.keys());
       const chunkSize = 30;
       const mapFirestore = new Map();
@@ -795,7 +928,6 @@ async function procesarOnboardingExcel(event, tipoOnboarding) {
         });
       }
 
-      // ✅ PASO 3: Escribir en Firebase con transacciones por lote (Batch Set Merge)
       let batch = db.batch();
       let opsEnBatch = 0;
       let totalProcesados = 0;
@@ -809,7 +941,6 @@ async function procesarOnboardingExcel(event, tipoOnboarding) {
         const hitos = { ...(data.hitos || {}) };
         const up = {};
 
-        // 🎯 FORZADO INTELIGENTE ANTI-REPROBADOS VIEJOS:
         if (tipoOnboarding === 'safety') {
           hitos.onboarding_safety_nota = pct;
           hitos.onboarding_safety_fecha = fechaEjecucion;
@@ -840,20 +971,18 @@ async function procesarOnboardingExcel(event, tipoOnboarding) {
       if (btn) btn.innerHTML = textoOriginal;
 
       if (totalProcesados === 0) {
-        alert(`⚠️ No se actualizó ningún perfil de Firebase. Valida si las cédulas del Excel ya fueron registradas previamente en el sistema.`);
+        alert(`⚠️ No se actualizó ningún perfil de Firebase.`);
       } else {
         let msg = `✅ ¡Consolidación de Onboarding completada con éxito!\n\n`;
         msg += `· Registros reales guardados con nota máxima: ${totalProcesados}\n`;
         msg += `· Colaboradores únicos procesados: ${mejorPorCedula.size}\n`;
-        if (noEncontrados.length > 0) msg += `· Cédulas omitidas por no estar en la base de datos: ${noEncontrados.length}`;
         alert(msg);
         location.reload();
       }
 
     } catch (err) {
       if (btn) btn.innerHTML = textoOriginal;
-      console.error("Error crítico de guardado:", err);
-      alert("❌ ERROR: " + err.message);
+      console.error(err);
     }
   };
   reader.readAsArrayBuffer(file);
