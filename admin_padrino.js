@@ -13,6 +13,37 @@ let globalCampoFaseEvalua = '';
 let globalPadrinoFotoBase64 = '';
 let cacheSnapshotEmpleadosLocal = null;
 
+// 🇨🇴 Matriz Oficial Unificada de Días Festivos en Colombia (2026 - 2027)
+const FESTIVOS_COLOMBIA = [
+    "2026-01-01", "2026-01-12", "2026-03-23", "2026-04-02", "2026-04-03",
+    "2026-05-01", "2026-05-18", "2026-06-08", "2026-06-15", "2026-06-29",
+    "2026-07-20", "2026-08-07", "2026-08-17", "2026-10-12", "2026-11-02",
+    "2026-11-16", "2026-12-08", "2026-12-25",
+    "2027-01-01", "2027-01-11", "2027-03-22", "2027-03-25", "2027-03-26",
+    "2027-05-01", "2027-05-10", "2027-05-31", "2027-06-07", "2027-07-05",
+    "2027-07-20", "2027-08-07", "2027-08-16", "2027-10-18", "2027-11-01",
+    "2027-11-15", "2027-12-08", "2027-12-25"
+];
+
+function esDiaInhabilColombia(fechaObjeto) {
+    if (fechaObjeto.getDay() === 0) return true; // Domingo
+    const formatoISO = fechaObjeto.toISOString().split('T')[0];
+    return FESTIVOS_COLOMBIA.includes(formatoISO);
+}
+
+function calcularFechaLimiteHabilesColombia(fechaIngresoStr, diasHabilesAsumidos) {
+    if (!fechaIngresoStr) return null;
+    let fechaActual = new Date(fechaIngresoStr + 'T00:00:00');
+    let diasContados = 0;
+    while (diasContados < diasHabilesAsumidos) {
+        fechaActual.setDate(fechaActual.getDate() + 1);
+        if (!esDiaInhabilColombia(fechaActual)) {
+            diasContados++;
+        }
+    }
+    return fechaActual.toISOString().split('T')[0];
+}
+
 const miRol = localStorage.getItem('usuario_rol');
 const cedulaLogueada = localStorage.getItem('usuario_cedula');
 
@@ -25,7 +56,7 @@ if (!miRol) {
 window.addEventListener('DOMContentLoaded', () => {
     ejecutarRestriccionDeRoles();
 
-     // 🔍 BUSCADOR EN VIVO: dispara el render cada vez que el usuario escribe
+    // 🔍 BUSCADOR EN VIVO: dispara el render cada vez que el usuario escribe
     const inputBusqueda = document.getElementById('search-colaborador');
     if (inputBusqueda) {
         inputBusqueda.addEventListener('input', () => {
@@ -59,7 +90,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     if (document.getElementById('padreApadrinadoArea')) document.getElementById('padreApadrinadoArea').value = empData.area || '';
                     if (document.getElementById('padreApadrinadoRegion')) document.getElementById('padreApadrinadoRegion').value = empData.region || '';
                     if (document.getElementById('padreApadrinadoCorreo')) document.getElementById('padreApadrinadoCorreo').value = empData.correo || '';
-                    
+
                     const campoFecha = document.getElementById('padreApadrinadoFechaIngreso');
                     if (campoFecha) {
                         campoFecha.value = empData.fecha_ingreso || (empData.hitos && empData.hitos.fecha_contratacion) || '';
@@ -116,13 +147,13 @@ db.collection('empleados').onSnapshot((snapshot) => {
 
     let totalEvaluadosOnboarding = 0;
     let arrayReprobadosHTML = [];
-    
+
     // Arrays de memoria para alimentar el popup modal preventivo
     let listadoVencidosPopupHTML = [];
     let listadoProximosPopupHTML = [];
 
     // Colecciones temporales para armar el Folleto Digital de Tutores Certificados
-    const padrinosTotales = []; 
+    const padrinosTotales = [];
     const padrinosActivosDisponibles = [];
 
     // ⏱️ Fecha fija de control de auditoría
@@ -141,7 +172,7 @@ db.collection('empleados').onSnapshot((snapshot) => {
     // 🔄 UN SOLO RECORRIDO MAESTRO SOBRE LOS DOCUMENTOS VIVOS de FIRESTORE
     snapshot.forEach((doc) => {
         const emp = doc.data();
-        
+
         // Extracción de datos estructurales para los filtros selectores
         if (emp.region) setRegiones.add(emp.region.trim());
         if (emp.fecha_ingreso) setMeses.add(emp.fecha_ingreso.substring(0, 7));
@@ -159,7 +190,7 @@ db.collection('empleados').onSnapshot((snapshot) => {
         if (emp.es_apadrinado === true) {
             if (miRol === 'padrino' && String(emp.padrino_id) !== String(cedulaLogueada)) return;
 
-            totalApadrinados++; 
+            totalApadrinados++;
 
             if (emp.estado_plan_padrino === "Plan Padrino Finalizado") {
                 planesFinalizados++;
@@ -203,10 +234,25 @@ db.collection('empleados').onSnapshot((snapshot) => {
                 ];
 
                 if (fBase) {
+                    // 🎯 Se calculan los plazos dinámicos descartando Domingos y Festivos
+                    const limiteSafetyStr = calcularFechaLimiteHabilesColombia(fBase, 0);
+                    const limitePeopleStr = calcularFechaLimiteHabilesColombia(fBase, 1);
+                    const limiteTecnicoStr = calcularFechaLimiteHabilesColombia(fBase, 7);
+                    const limiteFuncionalStr = calcularFechaLimiteISO(fBase, 32);
+                    const limiteAutonomoStr = calcularFechaLimiteISO(fBase, 92);
+
+                    const hitosPlazos = [
+                        { nombre: "Safety (D1)", nota: nSafety, limiteCalculado: limiteSafetyStr },
+                        { nombre: "People (D2)", nota: nPeople, limiteCalculado: limitePeopleStr },
+                        { nombre: "7 Días (Téc)", nota: n7, limiteCalculado: limiteTecnicoStr },
+                        { nombre: "30 Días (Fun)", nota: n30, limiteCalculado: limiteFuncionalStr },
+                        { nombre: "90 Días (Aut)", nota: n90, limiteCalculado: limiteAutonomoStr }
+                    ];
+
                     hitosPlazos.forEach(p => {
-                        const limiteStr = calcularFechaLimiteISO(fBase, p.dias);
+                        const limiteStr = p.limiteCalculado; // 🌟 Consumo directo del plazo calculado
                         if (!limiteStr) return;
-                        
+
                         const limiteFecha = new Date(limiteStr + 'T00:00:00');
                         const diferenciaMilisegundos = limiteFecha - hoy;
                         const diasRestantes = Math.ceil(diferenciaMilisegundos / (1000 * 60 * 60 * 24));
@@ -214,19 +260,19 @@ db.collection('empleados').onSnapshot((snapshot) => {
                         if (p.nota === 0) {
                             if (hoy > limiteFecha) {
                                 listadoVencidosPopupHTML.push(`
-                                    <div class="popup-item-alerta popup-bg-rojo" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 8px; font-size: 12px; background: #fff5f5; border: 1px solid #f09595; margin-bottom: 5px;">
-                                        <div><strong>${emp.nombre}</strong><br><span style="font-size:10px; color:#a32d2d;">Hito pendiente: ${p.nombre}</span></div>
-                                        <div style="text-align:right; font-weight:700; color:#a32d2d;">Venció: ${limiteStr}</div>
-                                    </div>
-                                `);
+                    <div class="popup-item-alerta popup-bg-rojo" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 8px; font-size: 12px; background: #fff5f5; border: 1px solid #f09595; margin-bottom: 5px;">
+                        <div><strong>${emp.nombre}</strong><br><span style="font-size:10px; color:#a32d2d;">Hito pendiente: ${p.nombre}</span></div>
+                        <div style="text-align:right; font-weight:700; color:#a32d2d;">Venció: ${limiteStr}</div>
+                    </div>
+                `);
                             } else if (diasRestantes >= 0 && diasRestantes <= 3) {
                                 const textoDias = diasRestantes === 0 ? "¡Vence hoy!" : `Vence en ${diasRestantes} días`;
                                 listadoProximosPopupHTML.push(`
-                                    <div class="popup-item-alerta popup-bg-amarillo" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 8px; font-size: 12px; background: #fff8e1; border: 1px solid #ffc404; margin-bottom: 5px;">
-                                        <div><strong>${emp.nombre}</strong><br><span style="font-size:10px; color:#8a6e00;">Examen por rendir: ${p.nombre}</span></div>
-                                        <div style="text-align:right; font-weight:700; color:#8a6e00;">${textoDias} (${limiteStr})</div>
-                                    </div>
-                                `);
+                    <div class="popup-item-alerta popup-bg-amarillo" style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 8px; font-size: 12px; background: #fff8e1; border: 1px solid #ffc404; margin-bottom: 5px;">
+                        <div><strong>${emp.nombre}</strong><br><span style="font-size:10px; color:#8a6e00;">Examen por rendir: ${p.nombre}</span></div>
+                        <div style="text-align:right; font-weight:700; color:#8a6e00;">${textoDias} (${limiteStr})</div>
+                    </div>
+                `);
                             }
                         }
                     });
@@ -234,7 +280,7 @@ db.collection('empleados').onSnapshot((snapshot) => {
 
                 let cargoFallas = [];
                 if (nSafety > 0 && nSafety < 100) cargoFallas.push(`Safety (${nSafety}%)`);
-                if (nPeople > 0 && nPeople < 80)  cargoFallas.push(`People (${nPeople}%)`);
+                if (nPeople > 0 && nPeople < 80) cargoFallas.push(`People (${nPeople}%)`);
 
                 if (nSafety > 0 || nPeople > 0) totalEvaluadosOnboarding++;
 
@@ -256,7 +302,7 @@ db.collection('empleados').onSnapshot((snapshot) => {
 
                 if (emp.hitos.eval_tecnico_nota > 0) { sumaNota7 += emp.hitos.eval_tecnico_nota; examenesRealizados++; } else { examenesPendientes++; }
                 if (emp.hitos.eval_funcional_nota > 0) { sumaNota30 += emp.hitos.eval_funcional_nota; examenesRealizados++; } else { examenesPendientes++; }
-                
+
                 let n90Unificada = 0;
                 let n90Arr = [];
                 if (emp.hitos.eval_autonomo_pre_nota) n90Arr.push(emp.hitos.eval_autonomo_pre_nota);
@@ -279,7 +325,7 @@ db.collection('empleados').onSnapshot((snapshot) => {
         selectDinamico.innerHTML = padrinosActivosDisponibles.length === 0
             ? `<option value="">No hay padrinos activos</option>`
             : `<option value="">-- Selecciona un tutor calificado --</option>` +
-              padrinosActivosDisponibles.map(p => `<option value="${p.cedula}">${p.nombre} (${p.cargo || 'Líder'})</option>`).join('');
+            padrinosActivosDisponibles.map(p => `<option value="${p.cedula}">${p.nombre} (${p.cargo || 'Líder'})</option>`).join('');
     }
 
     if (containerLista) {
@@ -568,7 +614,10 @@ function renderizarMonitorColaboradores() {
     };
 
     const buildChipInteligente = (label, nota, fechaEjecucion, fechaBaseContratacion, diasDesfase, umbral) => {
-        const limiteStr = calcularFechaLimiteReal(fechaBaseContratacion, diasDesfase);
+        // 🎯 Dentro de buildChipInteligente: elige si calcular en días hábiles o días calendario
+        const limiteStr = (diasDesfase === 0 || diasDesfase === 1 || diasDesfase === 7)
+            ? calcularFechaLimiteHabilesColombia(fechaBaseContratacion, diasDesfase)
+            : calcularFechaLimiteReal(fechaBaseContratacion, diasDesfase);
 
         if (nota === undefined || nota === null || nota === 0) {
             const esVencido = limiteStr ? (hoy > new Date(limiteStr + 'T00:00:00')) : false;
@@ -713,9 +762,9 @@ function renderizarMonitorColaboradores() {
 
         if (h.onboarding_safety_nota > 0) { etapasRealizadasConteo++; sumaNotasParaPromedio += h.onboarding_safety_nota; }
         if (h.onboarding_people_nota > 0) { etapasRealizadasConteo++; sumaNotasParaPromedio += h.onboarding_people_nota; }
-        if (h.eval_tecnico_nota > 0)       { etapasRealizadasConteo++; sumaNotasParaPromedio += h.eval_tecnico_nota; }
-        if (h.eval_funcional_nota > 0)     { etapasRealizadasConteo++; sumaNotasParaPromedio += h.eval_funcional_nota; }
-        if (notaUnificada90 > 0)           { etapasRealizadasConteo++; sumaNotasParaPromedio += notaUnificada90; }
+        if (h.eval_tecnico_nota > 0) { etapasRealizadasConteo++; sumaNotasParaPromedio += h.eval_tecnico_nota; }
+        if (h.eval_funcional_nota > 0) { etapasRealizadasConteo++; sumaNotasParaPromedio += h.eval_funcional_nota; }
+        if (notaUnificada90 > 0) { etapasRealizadasConteo++; sumaNotasParaPromedio += notaUnificada90; }
 
         // Cada etapa realizada suma exactamente 20% al progreso global
         const porcentajeEjecucionReal = etapasRealizadasConteo * 20;
@@ -763,12 +812,12 @@ function renderizarMonitorColaboradores() {
         </div>
         
         <div class="evals-row">
-          ${buildChipInteligente("Safety (D1)", h.onboarding_safety_nota, h.onboarding_safety_fecha, fechaBase, 0, 100)}
-          ${buildChipInteligente("People (D2)", h.onboarding_people_nota, h.onboarding_people_fecha, fechaBase, 1, 80)}
-          ${buildChipInteligente("7 Días (Téc)", h.eval_tecnico_nota, h.eval_tecnico_fecha, fechaBase, 9, 60)}
-          ${buildChipInteligente("30 Días (Fun)", h.eval_funcional_nota, h.eval_funcional_fecha, fechaBase, 32, 60)}
-          ${buildChipInteligente("90 Días (Aut)", notaUnificada90, fecha90Final, fechaBase, 92, 60)}
-        </div>
+  ${buildChipInteligente("Safety (D1)", h.onboarding_safety_nota, h.onboarding_safety_fecha, fechaBase, 0, 100)}
+  ${buildChipInteligente("People (D2)", h.onboarding_people_nota, h.onboarding_people_fecha, fechaBase, 1, 80)}
+  ${buildChipInteligente("7 Días (Téc)", h.eval_tecnico_nota, h.eval_tecnico_fecha, fechaBase, 7, 60)}
+  ${buildChipInteligente("30 Días (Fun)", h.eval_funcional_nota, h.eval_funcional_fecha, fechaBase, 32, 60)}
+  ${buildChipInteligente("90 Días (Aut)", notaUnificada90, fecha90Final, fechaBase, 92, 60)}
+</div>
       </div>`;
     });
 
@@ -974,28 +1023,28 @@ async function cargarPerfilDetalladoPadrinoCompleto(cedulaPadrino) {
         if (document.getElementById('cvCountTecnico')) document.getElementById('cvCountTecnico').textContent = cTecnico; if (document.getElementById('cvCountFuncional')) document.getElementById('cvCountFuncional').textContent = cFuncional; if (document.getElementById('cvCountAutonomo')) document.getElementById('cvCountAutonomo').textContent = cAutonomo;
     } catch (err) { console.error("Error cargando perfil del padrino:", err); }
 }
- function cambiarPestañaPadrino(targetPaneId, botonPresionado) {
-      document.querySelectorAll('.padrino-section-pane').forEach(pane => {
-          pane.classList.remove('pane-active');
-      });
-      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
-          btn.classList.remove('active-tab');
-      });
-      
-      const seccionObjetivo = document.getElementById('padrino-pane-' + targetPaneId);
-      if (seccionObjetivo) {
-          seccionObjetivo.classList.add('pane-active');
-      }
-      if (botonPresionado) {
-          botonPresionado.classList.add('active-tab');
-      }
-      
-      if (targetPaneId === 'monitor' && typeof renderizarMonitorColaboradores === 'function') {
-          renderizarMonitorColaboradores();
-      }
-  }
+function cambiarPestañaPadrino(targetPaneId, botonPresionado) {
+    document.querySelectorAll('.padrino-section-pane').forEach(pane => {
+        pane.classList.remove('pane-active');
+    });
+    document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+        btn.classList.remove('active-tab');
+    });
 
-  // ============================================================
+    const seccionObjetivo = document.getElementById('padrino-pane-' + targetPaneId);
+    if (seccionObjetivo) {
+        seccionObjetivo.classList.add('pane-active');
+    }
+    if (botonPresionado) {
+        botonPresionado.classList.add('active-tab');
+    }
+
+    if (targetPaneId === 'monitor' && typeof renderizarMonitorColaboradores === 'function') {
+        renderizarMonitorColaboradores();
+    }
+}
+
+// ============================================================
 // 🎓 FUNCIÓN NUEVA: GENERA EL CERTIFICADO EN PDF Y GRADÚA AL COLABORADOR
 // ============================================================
 // Flujo:
@@ -1011,20 +1060,20 @@ async function imprimirCertificadoCompletoPDF(docId) {
     try {
         const docSnap = await db.collection('empleados').doc(docId).get();
         if (!docSnap.exists) return alert("⚠️ No se encontró el registro del colaborador.");
- 
+
         const emp = docSnap.data();
         const h = emp.hitos || {};
- 
+
         // Buscamos el nombre del padrino asignado para mostrarlo en el diploma
         let nombrePadrino = "—";
         if (emp.padrino_id) {
             const snapPad = await db.collection('empleados').where('cedula', '==', String(emp.padrino_id)).limit(1).get();
             if (!snapPad.empty) nombrePadrino = snapPad.docs[0].data().nombre || "—";
         }
- 
+
         const fechaHoyFormateada = new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
         const fechaIngreso = emp.fecha_ingreso || h.fecha_contratacion || "—";
- 
+
         // 🖋️ Cargamos la fuente cursiva tipo firma (Dancing Script) si aún no está en el documento
         if (!document.getElementById('fuente-firma-certificado')) {
             const linkFuente = document.createElement('link');
@@ -1035,7 +1084,7 @@ async function imprimirCertificadoCompletoPDF(docId) {
             // Pequeña espera para asegurar que la fuente cargue antes de capturar el PDF
             await new Promise(resolve => setTimeout(resolve, 400));
         }
- 
+
         // 🎨 PLANTILLA DEL DIPLOMA (oculta, se renderiza solo para capturarla a PDF)
         const certificadoHTML = `
         <div id="hoja-certificado-temporal" style="width: 1000px; padding: 60px; background: #ffffff; font-family: sans-serif; border: 14px solid #206987; box-sizing: border-box; position: relative;">
@@ -1092,7 +1141,7 @@ async function imprimirCertificadoCompletoPDF(docId) {
                 Fecha de ingreso: ${fechaIngreso} &nbsp;·&nbsp; Documento generado automáticamente por el Portal People
             </div>
         </div>`;
- 
+
         // Inyectamos el diploma fuera de la pantalla visible para que html2pdf lo pueda capturar
         const hojaTemporal = document.createElement('div');
         hojaTemporal.style.position = 'fixed';
@@ -1100,9 +1149,9 @@ async function imprimirCertificadoCompletoPDF(docId) {
         hojaTemporal.style.left = '-99999px';
         hojaTemporal.innerHTML = certificadoHTML;
         document.body.appendChild(hojaTemporal);
- 
+
         const elementoDiploma = document.getElementById('hoja-certificado-temporal');
- 
+
         const opcionesPdf = {
             margin: 0,
             filename: `Certificado_PlanPadrino_${emp.nombre.replace(/\s+/g, '_')}.pdf`,
@@ -1110,13 +1159,13 @@ async function imprimirCertificadoCompletoPDF(docId) {
             html2canvas: { scale: 2, useCORS: true },
             jsPDF: { unit: 'pt', format: 'a4', orientation: 'landscape' }
         };
- 
+
         // Generamos el PDF y esperamos a que termine de descargar
         await html2pdf().set(opcionesPdf).from(elementoDiploma).save();
- 
+
         // Limpiamos el elemento temporal del DOM
         document.body.removeChild(hojaTemporal);
- 
+
         // 🏁 GRADUACIÓN: marcamos al colaborador como certificado_descargado
         // Esto hace que renderizarMonitorColaboradores() lo mueva automáticamente
         // de "Seguimiento Apadrinados Activos" al "Histórico de Certificados"
@@ -1124,11 +1173,11 @@ async function imprimirCertificadoCompletoPDF(docId) {
             certificado_descargado: true,
             fecha_certificado_descargado: new Date().toISOString().split('T')[0]
         });
- 
+
         alert(`🎓 ¡Certificado generado y descargado!\n\n${emp.nombre} ha sido movido al Histórico de Graduados.`);
         // No hace falta location.reload(): el onSnapshot de empleados ya
         // refresca cacheSnapshotEmpleadosLocal y vuelve a pintar el monitor.
- 
+
     } catch (error) {
         console.error("❌ Error generando el certificado:", error);
         alert("Ocurrió un error generando el certificado. Revisa la consola.");
