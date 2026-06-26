@@ -470,35 +470,71 @@
       </div>
     </div>
 
-    <!-- PESTAÑA C: GESTIÓN DE EMPLEADOS -->
-    <div id="section-empleados" class="admin-section-pane">
-      <div class="card full-width">
-        <div class="card-title"><i class="ti ti-users"></i> Gestión y Carga Masiva de Empleados</div>
+   <!-- PESTAÑA C: GESTIÓN DE EMPLEADOS -->
+<div id="section-empleados" class="admin-section-pane">
+  <div class="card full-width">
 
-        <div id="bloqueCargaMasiva"
-          style="background: #f7fafb; padding: 15px; border-radius: 8px; border: 1px dashed #1e6e7e; margin-bottom: 20px;">
-          <label style="color:#1e6e7e;"><strong>Carga Masiva de Personal (.xlsx / .xls / .csv)</strong></label>
-          <p style="font-size: 11px; color:#7a8f99; margin-bottom: 10px;">Columnas requeridas: <strong>cedula, nombre,
-              cargo, region, rol, fecha_ingreso, grupo</strong></p>
-          <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
-            <input type="file" id="excelFile" accept=".xlsx, .xls, .csv"
-              style="flex: 1; min-width: 200px; background:transparent; border:none; padding:0;"
-               cargarExcel(); return false;">
-           
+    <div class="card-title">
+      <i class="ti ti-users"></i> Gestión y Carga Masiva de Empleados
+    </div>
+
+    <div id="bloqueCargaMasiva"
+      style="background:#f7fafb; padding:15px; border-radius:8px; border:1px dashed #1e6e7e; margin-bottom:20px;">
+
+      <label style="color:#1e6e7e;">
+        <strong>Carga Masiva de Personal (.xlsx / .xls / .csv)</strong>
+      </label>
+
+      <p style="font-size:11px; color:#7a8f99; margin-bottom:10px;">
+        Columnas requeridas:
+        <strong>cedula, nombre, cargo, region, rol, fecha_ingreso, grupo</strong>
+      </p>
+
+      <!-- Selección del archivo -->
+      <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:20px;">
+        <input
+          type="file"
+          id="excelFile"
+          accept=".xlsx,.xls,.csv"
+          onchange="cargarExcel()"
+          style="flex:1; min-width:200px; background:transparent; border:none; padding:0;">
+      </div>
+
+      <!-- Buscar empleado -->
+      <div
+        style="display:grid;
+               grid-template-columns:1fr auto;
+               gap:15px;
+               align-items:flex-end;
+               margin-top:15px;">
+
+        <div class="form-group" style="margin:0;">
+          <label>Buscar o Registrar por Número de Cédula</label>
+          <input
+            type="text"
+            id="searchCedula"
+            placeholder="Ingresa la cédula del empleado">
         </div>
 
-        <div
-          style="display: grid; grid-template-columns: 1fr auto; gap: 15px; align-items: flex-end; margin-bottom: 20px;">
-          <div class="form-group" style="margin:0;">
-            <label>Buscar o Registrar por Número de Cédula</label>
-            <input type="text" id="searchCedula" placeholder="Ingresa la cédula del empleado">
-          </div>
-          <div style="display:flex; gap:8px;">
-            <button class="btn btn-primary" onclick="buscarEmpleado()"><i class="ti ti-search"></i> Buscar</button>
-            <button class="btn" style="background:#7a8f99; color:white;" onclick="limpiarFormularioCRUD()"><i
-                class="ti ti-refresh"></i> Limpiar</button>
-          </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-primary" onclick="buscarEmpleado()">
+            <i class="ti ti-search"></i> Buscar
+          </button>
+
+          <button
+            class="btn"
+            style="background:#7a8f99; color:white;"
+            onclick="limpiarFormularioCRUD()">
+            <i class="ti ti-refresh"></i> Limpiar
+          </button>
         </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
 
         <div id="crudForm"
           style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; background: #f7fafb; padding: 15px; border-radius: 8px;">
