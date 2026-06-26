@@ -842,105 +842,146 @@
       if (document.getElementById('fill30Dias')) document.getElementById('fill30Dias').style.width = pct30 + "%";
     });
 
-    // 📂 CARGA MASIVA DE PERSONAL CORREGIDA (EVITA DUPLICADOS Y VALIDA EN CALIENTE)
-    // 📂 CARGA MASIVA DE PERSONAL CORREGIDA (EVITA DUPLICADOS Y CAPTURA LA FECHA CORRECTAMENTE)
-    async function cargarExcel() {
-      const fileInput = document.getElementById('excelFile');
-      if (!fileInput || !fileInput.files.length) return alert("Por favor, selecciona un archivo de Excel primero.");
+    // 📂 CARGA MASIVA DE PERSONAL CORREGIDA (CERO DUPLICADOS, ALTA VELOCIDAD POR LOTES Y ALERTAS ASENTADAS)
+async function cargarExcel() {
+  const fileInput = document.getElementById('excelFile');
+  if (!fileInput || !fileInput.files.length) return alert("Por favor, selecciona un archivo de Excel primero.");
 
-      const file = fileInput.files[0];
-      const reader = new FileReader();
+  const file = fileInput.files[0];
+  const btn = document.querySelector('#bloqueCargaMasiva .btn-primary');
+  const textoOriginal = btn ? btn.innerHTML : '';
 
-      reader.onload = async function (e) {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
+  // 🌟 ALERT 1: Avisa visualmente que el motor inició la carga masiva y la validación anti-duplicados
+  alert("⏳ Iniciando sincronización masiva de personal y auditoría anti-duplicados.\n\nPor favor, haz clic en Aceptar para procesar el archivo Excel.");
+  if (btn) btn.innerHTML = '⏳ Importando Personal...';
 
-          const listaEmpleados = XLSX.utils.sheet_to_json(worksheet);
-          if (listaEmpleados.length === 0) return alert("El archivo de Excel está vacío.");
+  const reader = new FileReader();
+  reader.onload = async function (e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
 
-          let creados = 0;
-          let actualizados = 0;
+      const listaEmpleados = XLSX.utils.sheet_to_json(worksheet);
+      if (listaEmpleados.length === 0) {
+        if (btn) btn.innerHTML = textoOriginal;
+        return alert("❌ Error: El archivo de Excel seleccionado está vacío.");
+      }
 
-          for (const emp of listaEmpleados) {
-            // 🌟 NORMALIZACIÓN MAESTRA DE COLUMNAS DEL EXCEL
-            const regNorm = {};
-            Object.keys(emp).forEach(k => {
-              regNorm[k.toLowerCase().trim().replace(/[\s.\-,]/g, '_')] = emp[k];
-            });
+      // 🧠 FILTRADO PREVIO EN MEMORIA RAM: Mapeamos los datos del Excel para normalizarlos
+      const empleadosExcelMap = new Map();
+      for (const emp of listaEmpleados) {
+        const regNorm = {};
+        Object.keys(emp).forEach(k => { 
+          regNorm[k.toLowerCase().trim().replace(/[\s.\-,]/g, '_')] = emp[k]; 
+        });
 
-            const cedulaExcel = regNorm['cedula'] ? String(regNorm['cedula']).trim() : null;
-            if (!cedulaExcel) continue;
+        const cedulaExcel = regNorm['cedula'] ? String(regNorm['cedula']).trim() : null;
+        if (!cedulaExcel) continue;
 
-            const rawFecha = regNorm['fecha_de_ingreso'] || regNorm['fecha_ingreso'] || null;
-            const fecha_ingreso = rawFecha instanceof Date
-              ? rawFecha.toISOString().split('T')[0]
-              : (rawFecha ? String(rawFecha).trim() : "");
+        const rawFecha = regNorm['fecha_de_ingreso'] || regNorm['fecha_ingreso'] || null;
+        const fecha_ingreso = rawFecha instanceof Date
+          ? rawFecha.toISOString().split('T')[0]
+          : (rawFecha ? String(rawFecha).trim() : "");
 
-            const datosEstructurados = {
-              cedula: cedulaExcel,
-              nombre: regNorm['nombre'] ? String(regNorm['nombre']).trim() : "Sin Nombre",
-              cargo: regNorm['cargo'] ? String(regNorm['cargo']).trim() : "Operativo",
-              region: regNorm['region'] ? String(regNorm['region']).trim() : "General",
-              grupo: regNorm['grupo'] ? String(regNorm['grupo']).trim() : "General",
-              rol: regNorm['rol'] ? String(regNorm['rol']).toLowerCase().trim() : "empleado",
-              fecha_ingreso: fecha_ingreso
+        empleadosExcelMap.set(cedulaExcel, {
+          cedula: cedulaExcel,
+          nombre: regNorm['nombre'] ? String(regNorm['nombre']).trim() : "Sin Nombre",
+          cargo: regNorm['cargo'] ? String(regNorm['cargo']).trim() : "Operativo",
+          region: regNorm['region'] ? String(regNorm['region']).trim() : "General",
+          grupo: regNorm['grupo'] ? String(regNorm['grupo']).trim() : "General",
+          rol: regNorm['rol'] ? String(regNorm['rol']).toLowerCase().trim() : "empleado",
+          fecha_ingreso: fecha_ingreso
+        });
+      }
+
+      // ⚡ EXTRACCIÓN EN RÁFAGA (CHUNKS): Traemos los perfiles existentes desde Firebase de un solo viaje
+      const cedulasArray = Array.from(empleadosExcelMap.keys());
+      const mapFirestore = new Map();
+      const chunkSize = 30;
+
+      for (let i = 0; i < cedulasArray.length; i += chunkSize) {
+        const chunk = cedulasArray.slice(i, i + chunkSize);
+        
+        const snapNumeric = await db.collection('empleados').where('cedula', 'in', chunk.map(Number)).get();
+        snapNumeric.forEach(doc => mapFirestore.set(String(doc.data().cedula), { docId: doc.id, data: doc.data() }));
+
+        const snapString = await db.collection('empleados').where('cedula', 'in', chunk.map(String)).get();
+        snapString.forEach(doc => mapFirestore.set(String(doc.data().cedula), { docId: doc.id, data: doc.data() }));
+      }
+
+      // 💾 ESCRITURA EN BATCH EM-BLOQUE (Cero sobrecarga de canales de red)
+      let batch = db.batch();
+      let opsEnBatch = 0;
+      let creados = 0;
+      let actualizados = 0;
+
+      for (const [cedula, datosExcel] of empleadosExcelMap) {
+        const registroExistente = mapFirestore.get(cedula);
+
+        if (registroExistente) {
+          // 🎯 SI YA EXISTE: Actualizamos campos base sin duplicar jamás el documento ni alterar hitos
+          const docRef = db.collection('empleados').doc(registroExistente.docId);
+          batch.update(docRef, datosExcel);
+          actualizados++;
+        } else {
+          // 🎯 SI ES NUEVO: Creamos el documento e inicializamos la estructura del Plan Padrino
+          if (datosExcel.rol === 'empleado') {
+            datosExcel.es_apadrinado = true;
+            datosExcel.estado_plan_padrino = "Activo";
+            datosExcel.etapa_actual = "Inducción";
+
+            const formatFecha = (d) => d.toISOString().split('T')[0];
+            const baseDate = datosExcel.fecha_ingreso ? new Date(datosExcel.fecha_ingreso + 'T00:00:00') : new Date();
+            const f7 = new Date(baseDate); f7.setDate(f7.getDate() + 7);
+            const f30 = new Date(baseDate); f30.setDate(f30.getDate() + 30);
+            const f90 = new Date(baseDate); f90.setDate(f90.getDate() + 90);
+
+            datosExcel.fechas_limite_evaluaciones = {
+                eval_7_dias: formatFecha(f7),
+                eval_30_dias: formatFecha(f30),
+                eval_90_dias: formatFecha(f90)
             };
 
-            // 🎯 VALIDACIÓN ANTI-DUPLICADOS: Busca si la cédula ya existe en Firebase
-            let snap = await db.collection('empleados').where('cedula', '==', cedulaExcel).limit(1).get();
-            if (snap.empty && !isNaN(cedulaExcel)) {
-              snap = await db.collection('empleados').where('cedula', '==', Number(cedulaExcel)).limit(1).get();
-            }
-
-            if (!snap.empty) {
-              // Si ya existe, actualiza los campos base sin duplicar el documento
-              await db.collection('empleados').doc(snap.docs[0].id).update(datosEstructurados);
-              actualizados++;
-            } else {
-              // Si es nuevo, se crea desde cero y se le inicializan sus plazos de Plan Padrino
-              if (datosEstructurados.rol === 'empleado') {
-                datosEstructurados.es_apadrinado = true;
-                datosEstructurados.estado_plan_padrino = "Activo";
-                datosEstructurados.etapa_actual = "Inducción";
-
-                const formatFecha = (d) => d.toISOString().split('T')[0];
-                const baseDate = fecha_ingreso ? new Date(fecha_ingreso + 'T00:00:00') : new Date();
-                const f7 = new Date(baseDate); f7.setDate(f7.getDate() + 7);
-                const f30 = new Date(baseDate); f30.setDate(f30.getDate() + 30);
-                const f90 = new Date(baseDate); f90.setDate(f90.getDate() + 90);
-
-                datosEstructurados.fechas_limite_evaluaciones = {
-                  eval_7_dias: formatFecha(f7),
-                  eval_30_dias: formatFecha(f30),
-                  eval_90_dias: formatFecha(f90)
-                };
-
-                datosEstructurados.hitos = {
-                  fecha_contratacion: fecha_ingreso,
-                  onboarding_safety_nota: 0,
-                  onboarding_people_nota: 0,
-                  eval_tecnico_nota: 0,
-                  eval_funcional_nota: 0,
-                  eval_autonomo_nota: 0
-                };
-              }
-              await db.collection('empleados').add(datosEstructurados);
-              creados++;
-            }
+            datosExcel.hitos = {
+              fecha_contratacion: datosExcel.fecha_ingreso,
+              onboarding_safety_nota: 0,
+              onboarding_people_nota: 0,
+              eval_tecnico_nota: 0,
+              eval_funcional_nota: 0,
+              eval_autonomo_nota: 0
+            };
           }
 
-          alert(`¡Sincronización Masiva Completa! 🚀\n\n· Registros Nuevos: ${creados}\n· Registros Actualizados: ${actualizados}`);
-          fileInput.value = '';
-        } catch (error) {
-          console.error("Error en Carga Masiva:", error);
-          alert("❌ Ocurrió un error al procesar el archivo Excel.");
+          const nuevoDocRef = db.collection('empleados').doc(); // Genera ID único automático localmente
+          batch.set(nuevoDocRef, datosExcel);
+          creados++;
         }
-      };
-      reader.readAsArrayBuffer(file);
+
+        opsEnBatch++;
+        if (opsEnBatch >= 400) {
+          await batch.commit();
+          batch = db.batch();
+          opsEnBatch = 0;
+        }
+      }
+
+      if (opsEnBatch > 0) await batch.commit();
+      if (btn) btn.innerHTML = textoOriginal;
+
+      // 🌟 ALERT 2: Mensaje de confirmación final definitivo
+      alert(`¡Sincronización Masiva Completa! 🚀\n\n· Registros Nuevos Creados: ${creados}\n· Registros Existentes Actualizados: ${actualizados}`);
+      fileInput.value = '';
+
+    } catch (error) {
+      if (btn) btn.innerHTML = textoOriginal;
+      console.error("Error en Carga Masiva:", error);
+      alert("❌ Ocurrió un error crítico al procesar el archivo Excel.");
     }
+  };
+  reader.readAsArrayBuffer(file);
+}
 
     async function buscarEmpleado() {
       const cc = document.getElementById('searchCedula').value.trim();
