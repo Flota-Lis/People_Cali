@@ -44,6 +44,20 @@ function calcularFechaLimiteHabilesColombia(fechaIngresoStr, diasHabilesAsumidos
     return fechaActual.toISOString().split('T')[0];
 }
 
+// 🧠 RESOLVEDOR DE CICLOS EN VIVO EXCEL
+function resolverCicloExcel(valorCelda) {
+    if (!valorCelda) return '7';
+    const texto = String(valorCelda).toLowerCase();
+    if (texto.includes('7') || texto.includes('técnico') || texto.includes('tecnico')) return '7';
+    if (texto.includes('30') || texto.includes('funcional')) return '30';
+    if (texto.includes('90') || texto.includes('autónomo') || texto.includes('autonomo')) {
+        if (texto.includes('pre')) return '90_pre';
+        if (texto.includes('post')) return '90_post';
+        return '90';
+    }
+    return '7';
+}
+
 const miRol = localStorage.getItem('usuario_rol');
 const cedulaLogueada = localStorage.getItem('usuario_cedula');
 
@@ -131,6 +145,8 @@ db.collection('empleados').onSnapshot((snapshot) => {
 
     const padrinosTotales = [];
     const padrinosActivosDisponibles = [];
+    
+    // ✅ CORRECCIÓN SEMÁFOROS: Tiempo real del servidor para auditoría exacta
     const hoy = new Date();
     const setRegiones = new Set();
     const setMeses = new Set();
@@ -208,7 +224,6 @@ db.collection('empleados').onSnapshot((snapshot) => {
                     ];
 
                     hitosPlazos.forEach(p => {
-                        const limiteStr = p.get;
                         const limiteVal = p.limiteCalculado;
                         if (!limiteVal) return;
 
@@ -369,20 +384,17 @@ function renderizarMonitorColaboradores() {
 
     let todosLosEmpleados = [];
     let empleadosHistorico = [];
-    let totalEmpleadosFiltro = 0; // 🌟 Definida aquí de forma correcta para el conteo por filtros
+    let totalEmpleadosFiltro = 0; // 🌟 Conteo dinámico y preciso por planta
 
     cacheSnapshotEmpleadosLocal.forEach((doc) => {
         const emp = doc.data();
         const docId = doc.id;
 
         if (miRol === 'padrino' && String(emp.padrino_id) !== String(cedulaLogueada)) return;
-        
-        // Filtrado por región/CD
         if (regFiltro && emp.region !== regFiltro) return;
-        // Filtrado por mes de ingreso
         if (mesFiltro && (!emp.fecha_ingreso || !emp.fecha_ingreso.startsWith(mesFiltro))) return;
 
-        // Si pasó los filtros superiores, se suma al conteo del dashboard dinámico
+        // Si superó los filtros vigentes del CD, sumamos a la tarjeta
         if (emp.es_apadrinado === true) {
             totalEmpleadosFiltro++;
         }
@@ -394,7 +406,7 @@ function renderizarMonitorColaboradores() {
         }
     });
 
-    // Inyecta el resultado del conteo en caliente directo a la tarjeta del dashboard
+    // 🌟 NUEVA TARJETA DINÁMICA: Refresca el conteo en pantalla al cambiar de CD
     if (document.getElementById('dashTotalEmpleados')) {
         document.getElementById('dashTotalEmpleados').textContent = totalEmpleadosFiltro;
     }
@@ -605,6 +617,38 @@ function toggleDetalleContenedor(id, btn) {
 
 async function procesarCargaMasivaExcel(event) {
     const file = event.target.files[0]; if (!file) return;
+
+    const banner = document.getElementById('banner-carga-excel');
+    const bannerIcono = document.getElementById('banner-carga-icono');
+    const bannerTexto = document.getElementById('banner-carga-texto');
+
+    const mostrarBanner = (mensaje, tipo) => {
+        if (!banner) return;
+        banner.style.display = 'flex';
+        if (tipo === 'cargando') {
+            banner.style.background = '#fff8e1';
+            banner.style.border = '1px solid #ffc404';
+            banner.style.color = '#8a6e00';
+            bannerIcono.className = 'ti ti-loader';
+            bannerIcono.style.animation = 'spin 1s linear infinite';
+        } else if (tipo === 'exito') {
+            banner.style.background = '#e1f5ee';
+            banner.style.border = '1px solid #3cbcae';
+            banner.style.color = '#0f6e56';
+            bannerIcono.className = 'ti ti-circle-check';
+            bannerIcono.style.animation = 'none';
+        } else {
+            banner.style.background = '#fff5f5';
+            banner.style.border = '1px solid #f09595';
+            banner.style.color = '#a32d2d';
+            bannerIcono.className = 'ti ti-alert-triangle';
+            bannerIcono.style.animation = 'none';
+        }
+        bannerTexto.textContent = mensaje;
+    };
+
+    mostrarBanner(`⏳ Procesando "${file.name}"... no cierres esta ventana.`, 'cargando');
+
     const reader = new FileReader();
     reader.onload = async (e) => {
         try {
@@ -639,10 +683,15 @@ async function procesarCargaMasivaExcel(event) {
                     up.hitos = hitos; await db.collection('empleados').doc(docId).update(up); totalProcesados++;
                 }
             }
-            alert(`🤖 CONSOLIDACIÓN COMPLETA: Se emparejaron ${totalProcesados} cuestionarios.`);
-            location.reload();
-        } catch (err) { console.error(err); }
+
+            mostrarBanner(`🤖 Consolidación completa: ${totalProcesados} cuestionarios emparejados.`, 'exito');
+            setTimeout(() => { location.reload(); }, 1800);
+        } catch (err) {
+            console.error(err);
+            mostrarBanner('❌ Ocurrió un error al procesar el archivo. Revisa la consola.', 'error');
+        }
     };
+    reader.onerror = () => mostrarBanner('❌ No se pudo leer el archivo seleccionado.', 'error');
     reader.readAsArrayBuffer(file);
 }
 
@@ -762,3 +811,154 @@ function poblarFiltrosEstrategicos(regiones, meses) {
         });
     }
 }
+// 📸 Procesa la foto del padrino en Base64 antes de guardar
+function procesarFotoPadrinoLocal(inputFile) {
+    const file = inputFile.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        globalPadrinoFotoBase64 = e.target.result;
+        const img = document.getElementById('padrinoImgPreview');
+        const icon = document.getElementById('padrinoIconoDefault');
+        if (img) { img.src = globalPadrinoFotoBase64; img.style.display = 'block'; }
+        if (icon) icon.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+// 🏅 Certifica a un colaborador antiguo como Padrino
+async function convertirYConfigurarPadrino() {
+    try {
+        const cedula = document.getElementById('padrePadrinoCedula').value.trim();
+        if (!cedula) { alert('⚠️ Debes ingresar la cédula del empleado.'); return; }
+
+        const empresa = document.getElementById('padrePadrinoEmpresa').value.trim();
+        const tiempo = document.getElementById('padrePadrinoTiempo').value.trim();
+        const desempeno = document.getElementById('padrePadrinoDesempeno').value.trim();
+        const estado = document.getElementById('padrePadrinoEstado').value;
+        const correo = document.getElementById('padrePadrinoCorreo').value.trim();
+        const tecnicas = document.getElementById('padrePadrinoTecnicas').value.split(',').map(s => s.trim()).filter(Boolean);
+        const blandas = document.getElementById('padrePadrinoBlandas').value.split(',').map(s => s.trim()).filter(Boolean);
+
+        const datosPadrino = {
+            es_padrino: true,
+            empresa_padrino: empresa,
+            tiempo_compania: tiempo,
+            padrino_desempeno: desempeno,
+            padrino_estado: estado,
+            habilidades_tecnicas: tecnicas,
+            habilidades_blandas: blandas
+        };
+        if (correo) datosPadrino.correo = correo;
+        if (globalPadrinoFotoBase64) datosPadrino.foto_url = globalPadrinoFotoBase64;
+
+        let snap = await db.collection('empleados').where('cedula', '==', cedula).limit(1).get();
+        if (snap.empty && !isNaN(cedula)) {
+            snap = await db.collection('empleados').where('cedula', '==', Number(cedula)).limit(1).get();
+        }
+
+        if (snap.empty) {
+            alert('⚠️ No se encontró ningún colaborador con esa cédula. Verifica el número.');
+            return;
+        }
+
+        await db.collection('empleados').doc(snap.docs[0].id).update(datosPadrino);
+        alert('🏅 Padrino certificado correctamente.');
+
+        // Limpiar formulario
+        globalPadrinoFotoBase64 = '';
+        ['padrePadrinoCedula','padrePadrinoEmpresa','padrePadrinoTiempo','padrePadrinoDesempeno','padrePadrinoCorreo','padrePadrinoTecnicas','padrePadrinoBlandas']
+            .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        const img = document.getElementById('padrinoImgPreview');
+        const icon = document.getElementById('padrinoIconoDefault');
+        if (img) { img.src = ''; img.style.display = 'none'; }
+        if (icon) icon.style.display = 'block';
+
+    } catch (error) {
+        console.error(error);
+        alert('❌ Ocurrió un error al certificar el padrino.');
+    }
+}
+
+// 🧒 Registra un nuevo apadrinado y vincula su Plan Padrino con fechas límite calculadas
+async function vincularPlanPadrinoNuevo() {
+    try {
+        const cedula = document.getElementById('padreApadrinadoId').value.trim();
+        const nombre = document.getElementById('padreApadrinadoNombre').value.trim();
+        const cargo = document.getElementById('padreApadrinadoCargo').value.trim();
+        const area = document.getElementById('padreApadrinadoArea').value.trim();
+        const region = document.getElementById('padreApadrinadoRegion').value.trim();
+        const fechaIngreso = document.getElementById('padreApadrinadoFechaIngreso').value;
+        const jefe = document.getElementById('padreApadrinadoJefe').value.trim();
+        const correo = document.getElementById('padreApadrinadoCorreo').value.trim();
+        const etapaInicial = document.getElementById('padreEtapa').value;
+        const padrinoId = document.getElementById('selectPadrinoDinamico').value;
+
+        if (!cedula || !nombre || !fechaIngreso) {
+            alert('⚠️ Cédula, nombre y fecha de ingreso son obligatorios.');
+            return;
+        }
+        if (!padrinoId) {
+            alert('⚠️ Debes seleccionar un padrino certificado disponible.');
+            return;
+        }
+
+        // Mismos desfases (7 hábiles / 32 / 92 calendario) que usa el dashboard y los chips
+        const calcularFechaLimiteCalendario = (fechaStr, dias) => {
+            const d = new Date(fechaStr + 'T00:00:00');
+            d.setDate(d.getDate() + dias);
+            return d.toISOString().split('T')[0];
+        };
+
+        const fechasLimite = {
+            eval_7_dias: calcularFechaLimiteHabilesColombia(fechaIngreso, 7),
+            eval_30_dias: calcularFechaLimiteCalendario(fechaIngreso, 32),
+            eval_90_dias: calcularFechaLimiteCalendario(fechaIngreso, 92)
+        };
+
+        const datosApadrinado = {
+            cedula, nombre, cargo, area, region,
+            fecha_ingreso: fechaIngreso,
+            jefe_directo: jefe,
+            correo,
+            es_apadrinado: true,
+            padrino_id: padrinoId,
+            etapa_actual: etapaInicial,
+            estado_plan_padrino: "Plan Padrino Activo",
+            fechas_limite_evaluaciones: fechasLimite,
+            hitos: { fecha_contratacion: fechaIngreso },
+            onboarding_dia1: { estado: "Pendiente", fecha_completado: "" },
+            onboarding_dia2: { estado: "Pendiente", fecha_completado: "" }
+        };
+
+        let snap = await db.collection('empleados').where('cedula', '==', cedula).limit(1).get();
+        if (snap.empty && !isNaN(cedula)) {
+            snap = await db.collection('empleados').where('cedula', '==', Number(cedula)).limit(1).get();
+        }
+
+        if (!snap.empty) {
+            await db.collection('empleados').doc(snap.docs[0].id).update(datosApadrinado);
+        } else {
+            await db.collection('empleados').add(datosApadrinado);
+        }
+
+        alert('✅ Colaborador registrado y Plan Padrino activado.');
+
+        ['padreApadrinadoId','padreApadrinadoNombre','padreApadrinadoCargo','padreApadrinadoArea','padreApadrinadoRegion','padreApadrinadoFechaIngreso','padreApadrinadoJefe','padreApadrinadoCorreo']
+            .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+
+    } catch (error) {
+        console.error(error);
+        alert('❌ Ocurrió un error al activar el plan padrino.');
+    }
+}
+
+// 🌟 EXPORTACIONES AL ÁMBITO GLOBAL (Evita los ReferenceError en el HTML)
+window.cambiarPestañaPadrino = cambiarPestañaPadrino;
+window.poblarFiltrosEstrategicos = poblarFiltrosEstrategicos;
+window.convertirYConfigurarPadrino = convertirYConfigurarPadrino;
+window.vincularPlanPadrinoNuevo = vincularPlanPadrinoNuevo;
+window.renderizarMonitorColaboradores = renderizarMonitorColaboradores;
+window.procesarCargaMasivaExcel = procesarCargaMasivaExcel;
+window.imprimirCertificadoCompletoPDF = imprimirCertificadoCompletoPDF;
+window.toggleOnboardingEstado = toggleOnboardingEstado;

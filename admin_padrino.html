@@ -111,6 +111,11 @@
     .reprobado-row-item { display: flex; justify-content: space-between; align-items: center; background: #fdf2f2; border: 1px solid #f5c2c2; padding: 10px; border-radius: 8px; margin-bottom: 6px; }
     .chip-pass-late { background: #e1f0f5 !important; border-color: #206987 !important; color: #206987 !important; }
     .chip-late-pending { background: #fff8e1 !important; border-color: #ffc404 !important; color: #8a6e00 !important; animation: parpadeoAlerta 2.5s infinite ease-in-out; }
+
+    @keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
   </style>
 </head>
 <body>
@@ -258,6 +263,10 @@
             <i class="ti ti-upload"></i> Cargar Formulario Forms (7 / 30 / 90 días)
           </button>
         </div>
+        <div id="banner-carga-excel" style="display:none; align-items:center; justify-content:center; gap:10px; margin-top:14px; padding:10px 16px; border-radius:8px; font-size:12px; font-weight:700;">
+  <i class="ti ti-loader" id="banner-carga-icono" style="font-size:16px;"></i>
+  <span id="banner-carga-texto">Procesando archivo...</span>
+</div>
       </div>
 
       <div style="margin-bottom:15px; width:100%;">
