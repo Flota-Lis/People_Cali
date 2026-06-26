@@ -482,9 +482,9 @@
               cargo, region, rol, fecha_ingreso, grupo</strong></p>
           <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
             <input type="file" id="excelFile" accept=".xlsx, .xls, .csv"
-              style="flex: 1; min-width: 200px; background:transparent; border:none; padding:0;"
-               cargarExcel(); return false;">
-            
+              style="flex: 1; min-width: 200px; background:transparent; border:none; padding:0;">
+            <button class="btn btn-primary" onclick="event.preventDefault(); cargarExcel(); return false;"><i
+                class="ti ti-upload"></i> Importar Archivo</button>
           </div>
         </div>
 
@@ -843,7 +843,7 @@
     });
 
     // 📂 CARGA MASIVA DE PERSONAL CORREGIDA (EVITA DUPLICADOS Y VALIDA EN CALIENTE)
-   // 📂 CARGA MASIVA DE PERSONAL CORREGIDA (EVITA DUPLICADOS Y CAPTURA LA FECHA CORRECTAMENTE)
+    // 📂 CARGA MASIVA DE PERSONAL CORREGIDA (EVITA DUPLICADOS Y CAPTURA LA FECHA CORRECTAMENTE)
     async function cargarExcel() {
       const fileInput = document.getElementById('excelFile');
       if (!fileInput || !fileInput.files.length) return alert("Por favor, selecciona un archivo de Excel primero.");
@@ -867,8 +867,8 @@
           for (const emp of listaEmpleados) {
             // 🌟 NORMALIZACIÓN MAESTRA DE COLUMNAS DEL EXCEL
             const regNorm = {};
-            Object.keys(emp).forEach(k => { 
-              regNorm[k.toLowerCase().trim().replace(/[\s.\-,]/g, '_')] = emp[k]; 
+            Object.keys(emp).forEach(k => {
+              regNorm[k.toLowerCase().trim().replace(/[\s.\-,]/g, '_')] = emp[k];
             });
 
             const cedulaExcel = regNorm['cedula'] ? String(regNorm['cedula']).trim() : null;
@@ -913,9 +913,9 @@
                 const f90 = new Date(baseDate); f90.setDate(f90.getDate() + 90);
 
                 datosEstructurados.fechas_limite_evaluaciones = {
-                    eval_7_dias: formatFecha(f7),
-                    eval_30_dias: formatFecha(f30),
-                    eval_90_dias: formatFecha(f90)
+                  eval_7_dias: formatFecha(f7),
+                  eval_30_dias: formatFecha(f30),
+                  eval_90_dias: formatFecha(f90)
                 };
 
                 datosEstructurados.hitos = {
@@ -957,13 +957,13 @@
       } catch (e) { console.error(e); }
     }
 
-  async function guardarEmpleado() {
-    const cc = document.getElementById('searchCedula').value.trim();
-    const nom = document.getElementById('crudNombre').value.trim();
-    const fechaRaw = document.getElementById('crudFechaIngreso').value; // "2026-05-02"
-    if (!cc || !nom) return alert("Cédula y nombre requeridos.");
+    async function guardarEmpleado() {
+      const cc = document.getElementById('searchCedula').value.trim();
+      const nom = document.getElementById('crudNombre').value.trim();
+      const fechaRaw = document.getElementById('crudFechaIngreso').value; // "2026-05-02"
+      if (!cc || !nom) return alert("Cédula y nombre requeridos.");
 
-    const datos = {
+      const datos = {
         cedula: cc,
         nombre: nom,
         cargo: document.getElementById('crudCargo').value.trim(),
@@ -971,49 +971,49 @@
         grupo: document.getElementById('regEmpleadoGrupo').value.trim() || 'General',
         rol: document.getElementById('empleadoRol').value,
         fecha_ingreso: fechaRaw || ""
-    };
+      };
 
-    try {
+      try {
         // Busca si ya existe
         let snap = await db.collection('empleados').where('cedula', '==', cc).limit(1).get();
         if (snap.empty) {
-            snap = await db.collection('empleados').where('cedula', '==', Number(cc)).limit(1).get();
+          snap = await db.collection('empleados').where('cedula', '==', Number(cc)).limit(1).get();
         }
 
         if (!snap.empty) {
-            // ✅ Ya existe → actualiza
-            await db.collection('empleados').doc(snap.docs[0].id).update(datos);
-            alert("✅ Empleado actualizado correctamente.");
+          // ✅ Ya existe → actualiza
+          await db.collection('empleados').doc(snap.docs[0].id).update(datos);
+          alert("✅ Empleado actualizado correctamente.");
         } else {
-            // 🆕 No existe → crea con hitos iniciales
-            if (datos.rol === 'empleado') {
-                datos.es_apadrinado = true;
-                datos.estado_plan_padrino = "Activo";
-                datos.etapa_actual = "Inducción";
-                const base = fechaRaw ? new Date(fechaRaw + 'T00:00:00') : new Date();
-                const f7 = new Date(base); f7.setDate(f7.getDate() + 7);
-                const f30 = new Date(base); f30.setDate(f30.getDate() + 30);
-                const f90 = new Date(base); f90.setDate(f90.getDate() + 90);
-                datos.fechas_limite_evaluaciones = {
-                    eval_7_dias: f7.toISOString().split('T')[0],
-                    eval_30_dias: f30.toISOString().split('T')[0],
-                    eval_90_dias: f90.toISOString().split('T')[0]
-                };
-                datos.hitos = {
-                    fecha_contratacion: fechaRaw || "",
-                    onboarding_safety_nota: 0,
-                    onboarding_people_nota: 0,
-                    eval_tecnico_nota: 0,
-                    eval_funcional_nota: 0,
-                    eval_autonomo_nota: 0
-                };
-            }
-            await db.collection('empleados').add(datos);
-            alert("✅ Empleado creado correctamente.");
+          // 🆕 No existe → crea con hitos iniciales
+          if (datos.rol === 'empleado') {
+            datos.es_apadrinado = true;
+            datos.estado_plan_padrino = "Activo";
+            datos.etapa_actual = "Inducción";
+            const base = fechaRaw ? new Date(fechaRaw + 'T00:00:00') : new Date();
+            const f7 = new Date(base); f7.setDate(f7.getDate() + 7);
+            const f30 = new Date(base); f30.setDate(f30.getDate() + 30);
+            const f90 = new Date(base); f90.setDate(f90.getDate() + 90);
+            datos.fechas_limite_evaluaciones = {
+              eval_7_dias: f7.toISOString().split('T')[0],
+              eval_30_dias: f30.toISOString().split('T')[0],
+              eval_90_dias: f90.toISOString().split('T')[0]
+            };
+            datos.hitos = {
+              fecha_contratacion: fechaRaw || "",
+              onboarding_safety_nota: 0,
+              onboarding_people_nota: 0,
+              eval_tecnico_nota: 0,
+              eval_funcional_nota: 0,
+              eval_autonomo_nota: 0
+            };
+          }
+          await db.collection('empleados').add(datos);
+          alert("✅ Empleado creado correctamente.");
         }
         limpiarFormularioCRUD();
-    } catch (e) { console.error(e); alert("❌ Error al guardar."); }
-}
+      } catch (e) { console.error(e); alert("❌ Error al guardar."); }
+    }
 
     async function eliminarEmpleado() {
       const cc = document.getElementById('searchCedula').value.trim();
@@ -1059,129 +1059,129 @@
 
     // 📋 IMPORTADOR MAESTRO DE RESPUESTAS MICROSOFT FORMS CON MENSAJES DE NOTIFICACIÓN
     // 📋 IMPORTADOR MAESTRO DE RESPUESTAS MICROSOFT FORMS (VERSIÓN OPTIMIZADA DE ALTA VELOCIDAD)
-async function procesarOnboardingExcel(event, tipoOnboarding) {
-  const file = event.target.files[0];
-  if (!file) return;
+    async function procesarOnboardingExcel(event, tipoOnboarding) {
+      const file = event.target.files[0];
+      if (!file) return;
 
-  const btn = event.target.nextElementSibling || document.querySelector(`[onclick*="'${tipoOnboarding}'"]`);
-  const textoOriginal = btn ? btn.innerHTML : '';
-  
-  // 🌟 ALERT 1: Avisa visualmente que el motor inició la auditoría masiva
-  alert(`⏳ Iniciando procesamiento de notas para Onboarding ${tipoOnboarding.toUpperCase()}.\n\nPor favor, haz clic en Aceptar para comenzar el cruce inteligente.`);
-  if (btn) btn.innerHTML = '⏳ Procesando Excel...';
+      const btn = event.target.nextElementSibling || document.querySelector(`[onclick*="'${tipoOnboarding}'"]`);
+      const textoOriginal = btn ? btn.innerHTML : '';
 
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    try {
-      const data = new Uint8Array(e.target.result);
-      const wb = XLSX.read(data, { type: 'array', cellDates: true });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+      // 🌟 ALERT 1: Avisa visualmente que el motor inició la auditoría masiva
+      alert(`⏳ Iniciando procesamiento de notas para Onboarding ${tipoOnboarding.toUpperCase()}.\n\nPor favor, haz clic en Aceptar para comenzar el cruce inteligente.`);
+      if (btn) btn.innerHTML = '⏳ Procesando Excel...';
 
-      if (rows.length <= 1) {
-        if (btn) btn.innerHTML = textoOriginal;
-        return alert("❌ Error: El archivo de respuestas seleccionado está vacío.");
-      }
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const wb = XLSX.read(data, { type: 'array', cellDates: true });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
 
-      const rawRows = rows.slice(1);
-      const idxTotalPuntos = 5;  // Columna F (Puntos totales de Microsoft Forms)
-      const idxCedula      = 32; // Columna AG (Cédula del encuestado)
-      const umbral = tipoOnboarding === 'safety' ? 100 : 80;
-
-      // 🧠 FILTRADO PREVIO EN MEMORIA: Almacena la mejor nota de cada cédula sin tocar la red todavía
-      const mejorNotaPorCedula = new Map();
-      for (let row of rawRows) {
-        if (row.length === 1 && typeof row[0] === 'string') row = row[0].split(';');
-
-        let cedulaRaw = String(row[idxCedula] || '').trim().replace(/['"\s.\-,]/g, '');
-        if (!cedulaRaw || cedulaRaw === 'null' || cedulaRaw === '0') continue;
-
-        let nota = Math.min(100, Math.max(0, Math.round(Number(row[idxTotalPuntos] || 0))));
-        const aprobado = nota >= umbral;
-        const fecha = row[1] instanceof Date ? row[1].toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-
-        if (mejorNotaPorCedula.has(cedulaRaw)) {
-          if (nota > mejorNotaPorCedula.get(cedulaRaw).nota) {
-            mejorNotaPorCedula.set(cedulaRaw, { nota, aprobado, fecha });
+          if (rows.length <= 1) {
+            if (btn) btn.innerHTML = textoOriginal;
+            return alert("❌ Error: El archivo de respuestas seleccionado está vacío.");
           }
-        } else {
-          mejorNotaPorCedula.set(cedulaRaw, { nota, aprobado, fecha });
+
+          const rawRows = rows.slice(1);
+          const idxTotalPuntos = 5;  // Columna F (Puntos totales de Microsoft Forms)
+          const idxCedula = 32; // Columna AG (Cédula del encuestado)
+          const umbral = tipoOnboarding === 'safety' ? 100 : 80;
+
+          // 🧠 FILTRADO PREVIO EN MEMORIA: Almacena la mejor nota de cada cédula sin tocar la red todavía
+          const mejorNotaPorCedula = new Map();
+          for (let row of rawRows) {
+            if (row.length === 1 && typeof row[0] === 'string') row = row[0].split(';');
+
+            let cedulaRaw = String(row[idxCedula] || '').trim().replace(/['"\s.\-,]/g, '');
+            if (!cedulaRaw || cedulaRaw === 'null' || cedulaRaw === '0') continue;
+
+            let nota = Math.min(100, Math.max(0, Math.round(Number(row[idxTotalPuntos] || 0))));
+            const aprobado = nota >= umbral;
+            const fecha = row[1] instanceof Date ? row[1].toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+
+            if (mejorNotaPorCedula.has(cedulaRaw)) {
+              if (nota > mejorNotaPorCedula.get(cedulaRaw).nota) {
+                mejorNotaPorCedula.set(cedulaRaw, { nota, aprobado, fecha });
+              }
+            } else {
+              mejorNotaPorCedula.set(cedulaRaw, { nota, aprobado, fecha });
+            }
+          }
+
+          // ⚡ EXTRACCIÓN EN RÁFAGA (CHUNKS): Trae todos los perfiles de Firebase de un solo golpe
+          const cedulasArray = Array.from(mejorNotaPorCedula.keys());
+          const mapFirestore = new Map();
+          const chunkSize = 30;
+
+          for (let i = 0; i < cedulasArray.length; i += chunkSize) {
+            const chunk = cedulasArray.slice(i, i + chunkSize);
+
+            // Consultas masivas optimizadas en paralelo por lotes de 30 cédulas
+            const snapNumeric = await db.collection('empleados').where('cedula', 'in', chunk.map(Number)).get();
+            snapNumeric.forEach(doc => mapFirestore.set(String(doc.data().cedula), { docId: doc.id, data: doc.data() }));
+
+            const snapString = await db.collection('empleados').where('cedula', 'in', chunk.map(String)).get();
+            snapString.forEach(doc => mapFirestore.set(String(doc.data().cedula), { docId: doc.id, data: doc.data() }));
+          }
+
+          // 💾 ESCRITURA EN BATCH EN BLOQUE (Una sola petición de red para guardar todo)
+          let batch = db.batch();
+          let opsEnBatch = 0;
+          let totalActualizados = 0;
+
+          for (const [cedula, { nota, aprobado, fecha }] of mejorNotaPorCedula) {
+            const registro = mapFirestore.get(cedula);
+            if (!registro) continue; // Si la cédula del Excel no existe en tu base de datos, se la salta
+
+            const { docId, data } = registro;
+            const hitos = { ...(data.hitos || {}) };
+            const up = {};
+
+            if (tipoOnboarding === 'safety') {
+              hitos.onboarding_safety_nota = nota;
+              hitos.onboarding_safety_fecha = fecha;
+              up.onboarding_dia1 = { estado: aprobado ? 'Completado' : 'Reprobado', fecha_completado: fecha };
+            } else {
+              hitos.onboarding_people_nota = nota;
+              hitos.onboarding_people_fecha = fecha;
+              up.onboarding_dia2 = { estado: aprobado ? 'Completado' : 'Reprobado', fecha_completado: fecha };
+            }
+
+            up.hitos = hitos;
+
+            const docRef = db.collection('empleados').doc(docId);
+            batch.update(docRef, up);
+            opsEnBatch++;
+            totalActualizados++;
+
+            if (opsEnBatch >= 400) { // Límite de seguridad de Firebase Firestore (500 operaciones por batch)
+              await batch.commit();
+              batch = db.batch();
+              opsEnBatch = 0;
+            }
+          }
+
+          if (opsEnBatch > 0) await batch.commit();
+          if (btn) btn.innerHTML = textoOriginal;
+
+          // 🌟 ALERT 2: Cuadro de confirmación final detallado
+          if (totalActualizados > 0) {
+            alert(`✅ ¡Carga de Onboarding ${tipoOnboarding.toUpperCase()} Exitosa!\n\nSe procesaron las calificaciones de ${totalActualizados} colaboradores en milisegundos.`);
+            location.reload();
+          } else {
+            alert("⚠️ Proceso finalizado.\nNo se detectó ninguna coincidencia entre las cédulas del formulario y los empleados registrados actualmente.");
+          }
+          event.target.value = '';
+
+        } catch (err) {
+          if (btn) btn.innerHTML = textoOriginal;
+          console.error(err);
+          alert("❌ Ocurrió un error crítico al procesar la estructura del Microsoft Forms.");
         }
-      }
-
-      // ⚡ EXTRACCIÓN EN RÁFAGA (CHUNKS): Trae todos los perfiles de Firebase de un solo golpe
-      const cedulasArray = Array.from(mejorNotaPorCedula.keys());
-      const mapFirestore = new Map();
-      const chunkSize = 30;
-
-      for (let i = 0; i < cedulasArray.length; i += chunkSize) {
-        const chunk = cedulasArray.slice(i, i + chunkSize);
-        
-        // Consultas masivas optimizadas en paralelo por lotes de 30 cédulas
-        const snapNumeric = await db.collection('empleados').where('cedula', 'in', chunk.map(Number)).get();
-        snapNumeric.forEach(doc => mapFirestore.set(String(doc.data().cedula), { docId: doc.id, data: doc.data() }));
-
-        const snapString = await db.collection('empleados').where('cedula', 'in', chunk.map(String)).get();
-        snapString.forEach(doc => mapFirestore.set(String(doc.data().cedula), { docId: doc.id, data: doc.data() }));
-      }
-
-      // 💾 ESCRITURA EN BATCH EN BLOQUE (Una sola petición de red para guardar todo)
-      let batch = db.batch();
-      let opsEnBatch = 0;
-      let totalActualizados = 0;
-
-      for (const [cedula, { nota, aprobado, fecha }] of mejorNotaPorCedula) {
-        const registro = mapFirestore.get(cedula);
-        if (!registro) continue; // Si la cédula del Excel no existe en tu base de datos, se la salta
-
-        const { docId, data } = registro;
-        const hitos = { ...(data.hitos || {}) };
-        const up = {};
-
-        if (tipoOnboarding === 'safety') {
-          hitos.onboarding_safety_nota = nota;
-          hitos.onboarding_safety_fecha = fecha;
-          up.onboarding_dia1 = { estado: aprobado ? 'Completado' : 'Reprobado', fecha_completado: fecha };
-        } else {
-          hitos.onboarding_people_nota = nota;
-          hitos.onboarding_people_fecha = fecha;
-          up.onboarding_dia2 = { estado: aprobado ? 'Completado' : 'Reprobado', fecha_completado: fecha };
-        }
-
-        up.hitos = hitos;
-        
-        const docRef = db.collection('empleados').doc(docId);
-        batch.update(docRef, up);
-        opsEnBatch++;
-        totalActualizados++;
-
-        if (opsEnBatch >= 400) { // Límite de seguridad de Firebase Firestore (500 operaciones por batch)
-          await batch.commit();
-          batch = db.batch();
-          opsEnBatch = 0;
-        }
-      }
-
-      if (opsEnBatch > 0) await batch.commit();
-      if (btn) btn.innerHTML = textoOriginal;
-
-      // 🌟 ALERT 2: Cuadro de confirmación final detallado
-      if (totalActualizados > 0) {
-        alert(`✅ ¡Carga de Onboarding ${tipoOnboarding.toUpperCase()} Exitosa!\n\nSe procesaron las calificaciones de ${totalActualizados} colaboradores en milisegundos.`);
-        location.reload();
-      } else {
-        alert("⚠️ Proceso finalizado.\nNo se detectó ninguna coincidencia entre las cédulas del formulario y los empleados registrados actualmente.");
-      }
-      event.target.value = '';
-
-    } catch (err) {
-      if (btn) btn.innerHTML = textoOriginal;
-      console.error(err);
-      alert("❌ Ocurrió un error crítico al procesar la estructura del Microsoft Forms.");
+      };
+      reader.readAsArrayBuffer(file);
     }
-  };
-  reader.readAsArrayBuffer(file);
-}
 
     function logout() { localStorage.clear(); window.location.href = 'login.html'; }
     function poblarFiltrosEstrategicos() { }
