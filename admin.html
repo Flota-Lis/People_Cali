@@ -341,10 +341,11 @@
       }
     }
 
-    // ✏️ CARGA DE FORMULARIO DE EDICIÓN DE BENEFICIOS (CORREGIDO)
-    function cargarBeneficioForm(id, cargo, concepto, valor, indicador) {
+    // ✏️ CARGA DE FORMULARIO DE EDICIÓN DE BENEFICIOS (CORREGIDO CON REGIÓN GEOGRÁFICA)
+    function cargarBeneficioForm(id, cargo, region, concepto, valor, indicador) {
       idBeneficioEdicion = id;
       document.getElementById('benCargo').value = cargo;
+      document.getElementById('benRegion').value = region || ''; // 🌟 Agregado: Llena el input manual con la región correcta
       document.getElementById('benConcepto').value = concepto;
       document.getElementById('benValor').value = valor;
       document.getElementById('benIndicador').value = indicador;
@@ -425,13 +426,17 @@
           <span style="font-size: 18px;">🎁</span> GESTIÓN DE BENEFICIOS Y COMPENSACIÓN POR CARGO
         </div>
         <p style="font-size: 12px; color: #7a8f99; margin-bottom: 15px;">Configura y asigna paquetes de beneficios
-          específicos para cada cargo del sistema.</p>
+          específicos para cada cargo y región del sistema.</p>
 
         <div id="seccionFormBeneficios">
           <div
-            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 15px;">
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 15px;">
             <div><label>CARGO LABORAL</label><input type="text" id="benCargo"
                 placeholder="Ej: Conductor, Auxiliar bodega"></div>
+
+            <div><label>REGIÓN / CD</label><input type="text" id="benRegion"
+                placeholder="Ej: DC Cali, DC Yumbo, Pereira"></div>
+
             <div><label>CONCEPTO / BENEFICIO</label><input type="text" id="benConcepto"
                 placeholder="Ej: Compensación Variable, Bono"></div>
             <div><label>VALOR ECONÓMICO ($)</label><input type="number" id="benValor" placeholder="Ej: 400000"></div>
@@ -453,6 +458,7 @@
             <thead style="background: #f7fafb; color: #1e6e7e;">
               <tr>
                 <th style="padding: 10px;">Cargo</th>
+                <th style="padding: 10px;">Región / CD</th>
                 <th style="padding: 10px;">Concepto</th>
                 <th style="padding: 10px;">Valor</th>
                 <th style="padding: 10px;">Indicador Metas</th>
@@ -461,7 +467,7 @@
             </thead>
             <tbody id="tablaBeneficiosBody">
               <tr>
-                <td colspan="5" style="padding: 15px; text-align: center; color: #7a8f99;">Cargando lista de
+                <td colspan="6" style="padding: 15px; text-align: center; color: #7a8f99;">Cargando lista de
                   beneficios...</td>
               </tr>
             </tbody>
@@ -697,25 +703,56 @@
       } catch (error) { console.error(error); document.getElementById('adminName').textContent = "Administrador"; }
     }
 
-    // 💾 GUARDAR / ACTUALIZAR BENEFICIO CON MODAL COMPILADO EN CORRECCIÓN SECUENCIAL
+   // 💾 GUARDAR / ACTUALIZAR BENEFICIO CON ALERTAS DE ERROR DETALLADAS Y LIBERACIÓN DE BOTÓN
     async function guardarBeneficio() {
+      const btnGuardar = document.querySelector('[onclick="guardarBeneficio()"]');
+      
       const cargo = document.getElementById('benCargo').value.trim();
+      const region = document.getElementById('benRegion').value.trim();
       const concepto = document.getElementById('benConcepto').value.trim();
-      const valor = Number(document.getElementById('benValor').value);
+      
+      // 🌟 Corrección de lectura: Limpia puntos o comas que se digiten manualmente
+      const valorRaw = document.getElementById('benValor').value.toString().replace(/[^0-9]/g, '');
+      const valor = Number(valorRaw);
+
       const indicador = document.getElementById('benIndicador').value.trim();
 
-      if (!cargo || !concepto || !valor) return alert("Por favor llena los campos obligatorios.");
+      if (!cargo || !region || !concepto || !valor) {
+        return alert("Por favor llena los campos obligatorios. Asegúrate de escribir el valor numérico sin puntos.");
+      }
+
+      // 🛡️ Bloqueo inicial anti-doble clic
+      if (btnGuardar) btnGuardar.disabled = true;
 
       try {
         if (idBeneficioEdicion) {
-          await db.collection('beneficios').doc(idBeneficioEdicion).update({ cargo, concepto, valor, indicador });
+          // ✏️ MODO EDICIÓN: Actualiza directo sin pasar por el filtro de duplicados
+          await db.collection('beneficios').doc(idBeneficioEdicion).update({ cargo, region, concepto, valor, indicador });
           alert("¡Beneficio modificado con éxito!");
+          limpiarFormularioBeneficio();
         } else {
-          await db.collection('beneficios').add({ cargo, concepto, valor, indicador });
+          // ➕ MODO CREACIÓN: Valida que no se repita la combinación Cargo + Región
+          const consultaDuplicado = await db.collection('beneficios')
+            .where('cargo', '==', cargo)
+            .where('region', '==', region)
+            .get();
+
+          if (!consultaDuplicado.empty) {
+            alert(`⚠️ Ya existe un beneficio configurado para el cargo "${cargo}" en la región "${region}".`);
+            return; // El bloque finally se encargará de reactivar el botón
+          }
+
+          await db.collection('beneficios').add({ cargo, region, concepto, valor, indicador });
           alert("¡Beneficio creado con éxito!");
+          limpiarFormularioBeneficio();
         }
-        limpiarFormularioBeneficio();
-      } catch (err) { console.error(err); }
+      } catch (err) { 
+        console.error(err); 
+        alert("❌ Error de Firebase: " + err.message);
+      } finally {
+        // 🌟 SEGURO ABSOLUTO: Siempre, pase lo que pase, se vuelve a activar el botón aquí
+        if (btnGuardar) btnGuardar.disabled = false;
+      }
     }
 
     // 🗑️ ELIMINAR BENEFICIO DIRECTO DESDE FIRESTORE
@@ -733,24 +770,38 @@
     // Escuchador en tiempo real de beneficios en la base de datos
     db.collection('beneficios').onSnapshot((snapshot) => {
       const tbody = document.getElementById('tablaBeneficiosBody'); if (!tbody) return;
-      if (snapshot.empty) { tbody.innerHTML = `<tr><td colspan="5" style="padding:15px; text-align:center; color:#7a8f99;">No hay beneficios creados.</td></tr>`; return; }
+
+      // 🌟 Cambiado colspan a 6 por la nueva columna de región
+      if (snapshot.empty) { tbody.innerHTML = `<tr><td colspan="6" style="padding:15px; text-align:center; color:#7a8f99;">No hay beneficios creados.</td></tr>`; return; }
+
       let html = '';
       snapshot.forEach((doc) => {
         const b = doc.data();
         const idDoc = doc.id;
-        const valorFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(b.valor || 0);
+        // ✅ Fuerza al sistema a tratar el número como valor entero absoluto y le aplica los separadores de miles de pesos colombianos
+        const valorFormateado = new Intl.NumberFormat('es-CO', {
+          style: 'currency',
+          currency: 'COP',
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0
+        }).format(Number(b.valor) || 0);
+
+        // 🌟 Se añade '${b.region || ''}' al cargador del formulario de edición
         const celdaAcciones = localStorage.getItem('usuario_rol') === 'people' ? '' : `
       <td style="padding:10px; text-align:center; display: flex; gap: 6px; justify-content: center;">
-        <button onclick="cargarBeneficioForm('${idDoc}', '${b.cargo}', '${b.concepto}', ${b.valor}, '${b.indicador || ''}')" style="background:#fff8e1; color:#8a6e00; border:1px solid #c89b00; padding:4px 10px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700;">✏️ Editar</button>
+        <button onclick="cargarBeneficioForm('${idDoc}', '${b.cargo}', '${b.region || ''}', '${b.concepto}', ${b.valor}, '${b.indicador || ''}')" style="background:#fff8e1; color:#8a6e00; border:1px solid #c89b00; padding:4px 10px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700;">✏️ Editar</button>
         <button onclick="eliminarBeneficioReal('${idDoc}')" style="background:#fff5f5; color:#a32d2d; border:1px solid #f09595; padding:4px 10px; border-radius:6px; cursor:pointer; font-size:11px; font-weight:700;">🗑️ Eliminar</button>
       </td>`;
-        html += `<tr><td>${b.cargo}</td><td>${b.concepto}</td><td>${valorFormateado}</td><td><span>🎯 ${b.indicador || 'General'}</span></td>${celdaAcciones}</tr>`;
+
+        // 🌟 Se añade la celda de región <td>${b.region || 'General'}</td> en el orden correcto
+        html += `<tr><td>${b.cargo}</td><td>${b.region || 'General'}</td><td>${b.concepto}</td><td>${valorFormateado}</td><td><span>🎯 ${b.indicador || 'General'}</span></td>${celdaAcciones}</tr>`;
       });
       tbody.innerHTML = html;
     });
 
     function limpiarFormularioBeneficio() {
       document.getElementById('benCargo').value = '';
+      document.getElementById('benRegion').value = ''; // 🌟 Limpieza del campo región
       document.getElementById('benConcepto').value = '';
       document.getElementById('benValor').value = '';
       document.getElementById('benIndicador').value = '';
@@ -843,145 +894,145 @@
     });
 
     // 📂 CARGA MASIVA DE PERSONAL CORREGIDA (CERO DUPLICADOS, ALTA VELOCIDAD POR LOTES Y ALERTAS ASENTADAS)
-async function cargarExcel() {
-  const fileInput = document.getElementById('excelFile');
-  if (!fileInput || !fileInput.files.length) return alert("Por favor, selecciona un archivo de Excel primero.");
+    async function cargarExcel() {
+      const fileInput = document.getElementById('excelFile');
+      if (!fileInput || !fileInput.files.length) return alert("Por favor, selecciona un archivo de Excel primero.");
 
-  const file = fileInput.files[0];
-  const btn = document.querySelector('#bloqueCargaMasiva .btn-primary');
-  const textoOriginal = btn ? btn.innerHTML : '';
+      const file = fileInput.files[0];
+      const btn = document.querySelector('#bloqueCargaMasiva .btn-primary');
+      const textoOriginal = btn ? btn.innerHTML : '';
 
-  // 🌟 ALERT 1: Avisa visualmente que el motor inició la carga masiva y la validación anti-duplicados
-  alert("⏳ Iniciando sincronización masiva de personal y auditoría anti-duplicados.\n\nPor favor, haz clic en Aceptar para procesar el archivo Excel.");
-  if (btn) btn.innerHTML = '⏳ Importando Personal...';
+      // 🌟 ALERT 1: Avisa visualmente que el motor inició la carga masiva y la validación anti-duplicados
+      alert("⏳ Iniciando sincronización masiva de personal y auditoría anti-duplicados.\n\nPor favor, haz clic en Aceptar para procesar el archivo Excel.");
+      if (btn) btn.innerHTML = '⏳ Importando Personal...';
 
-  const reader = new FileReader();
-  reader.onload = async function (e) {
-    try {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
+      const reader = new FileReader();
+      reader.onload = async function (e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
 
-      const listaEmpleados = XLSX.utils.sheet_to_json(worksheet);
-      if (listaEmpleados.length === 0) {
-        if (btn) btn.innerHTML = textoOriginal;
-        return alert("❌ Error: El archivo de Excel seleccionado está vacío.");
-      }
-
-      // 🧠 FILTRADO PREVIO EN MEMORIA RAM: Mapeamos los datos del Excel para normalizarlos
-      const empleadosExcelMap = new Map();
-      for (const emp of listaEmpleados) {
-        const regNorm = {};
-        Object.keys(emp).forEach(k => { 
-          regNorm[k.toLowerCase().trim().replace(/[\s.\-,]/g, '_')] = emp[k]; 
-        });
-
-        const cedulaExcel = regNorm['cedula'] ? String(regNorm['cedula']).trim() : null;
-        if (!cedulaExcel) continue;
-
-        const rawFecha = regNorm['fecha_de_ingreso'] || regNorm['fecha_ingreso'] || null;
-        const fecha_ingreso = rawFecha instanceof Date
-          ? rawFecha.toISOString().split('T')[0]
-          : (rawFecha ? String(rawFecha).trim() : "");
-
-        empleadosExcelMap.set(cedulaExcel, {
-          cedula: cedulaExcel,
-          nombre: regNorm['nombre'] ? String(regNorm['nombre']).trim() : "Sin Nombre",
-          cargo: regNorm['cargo'] ? String(regNorm['cargo']).trim() : "Operativo",
-          region: regNorm['region'] ? String(regNorm['region']).trim() : "General",
-          grupo: regNorm['grupo'] ? String(regNorm['grupo']).trim() : "General",
-          rol: regNorm['rol'] ? String(regNorm['rol']).toLowerCase().trim() : "empleado",
-          fecha_ingreso: fecha_ingreso
-        });
-      }
-
-      // ⚡ EXTRACCIÓN EN RÁFAGA (CHUNKS): Traemos los perfiles existentes desde Firebase de un solo viaje
-      const cedulasArray = Array.from(empleadosExcelMap.keys());
-      const mapFirestore = new Map();
-      const chunkSize = 30;
-
-      for (let i = 0; i < cedulasArray.length; i += chunkSize) {
-        const chunk = cedulasArray.slice(i, i + chunkSize);
-        
-        const snapNumeric = await db.collection('empleados').where('cedula', 'in', chunk.map(Number)).get();
-        snapNumeric.forEach(doc => mapFirestore.set(String(doc.data().cedula), { docId: doc.id, data: doc.data() }));
-
-        const snapString = await db.collection('empleados').where('cedula', 'in', chunk.map(String)).get();
-        snapString.forEach(doc => mapFirestore.set(String(doc.data().cedula), { docId: doc.id, data: doc.data() }));
-      }
-
-      // 💾 ESCRITURA EN BATCH EM-BLOQUE (Cero sobrecarga de canales de red)
-      let batch = db.batch();
-      let opsEnBatch = 0;
-      let creados = 0;
-      let actualizados = 0;
-
-      for (const [cedula, datosExcel] of empleadosExcelMap) {
-        const registroExistente = mapFirestore.get(cedula);
-
-        if (registroExistente) {
-          // 🎯 SI YA EXISTE: Actualizamos campos base sin duplicar jamás el documento ni alterar hitos
-          const docRef = db.collection('empleados').doc(registroExistente.docId);
-          batch.update(docRef, datosExcel);
-          actualizados++;
-        } else {
-          // 🎯 SI ES NUEVO: Creamos el documento e inicializamos la estructura del Plan Padrino
-          if (datosExcel.rol === 'empleado') {
-            datosExcel.es_apadrinado = true;
-            datosExcel.estado_plan_padrino = "Activo";
-            datosExcel.etapa_actual = "Inducción";
-
-            const formatFecha = (d) => d.toISOString().split('T')[0];
-            const baseDate = datosExcel.fecha_ingreso ? new Date(datosExcel.fecha_ingreso + 'T00:00:00') : new Date();
-            const f7 = new Date(baseDate); f7.setDate(f7.getDate() + 7);
-            const f30 = new Date(baseDate); f30.setDate(f30.getDate() + 30);
-            const f90 = new Date(baseDate); f90.setDate(f90.getDate() + 90);
-
-            datosExcel.fechas_limite_evaluaciones = {
-                eval_7_dias: formatFecha(f7),
-                eval_30_dias: formatFecha(f30),
-                eval_90_dias: formatFecha(f90)
-            };
-
-            datosExcel.hitos = {
-              fecha_contratacion: datosExcel.fecha_ingreso,
-              onboarding_safety_nota: 0,
-              onboarding_people_nota: 0,
-              eval_tecnico_nota: 0,
-              eval_funcional_nota: 0,
-              eval_autonomo_nota: 0
-            };
+          const listaEmpleados = XLSX.utils.sheet_to_json(worksheet);
+          if (listaEmpleados.length === 0) {
+            if (btn) btn.innerHTML = textoOriginal;
+            return alert("❌ Error: El archivo de Excel seleccionado está vacío.");
           }
 
-          const nuevoDocRef = db.collection('empleados').doc(); // Genera ID único automático localmente
-          batch.set(nuevoDocRef, datosExcel);
-          creados++;
+          // 🧠 FILTRADO PREVIO EN MEMORIA RAM: Mapeamos los datos del Excel para normalizarlos
+          const empleadosExcelMap = new Map();
+          for (const emp of listaEmpleados) {
+            const regNorm = {};
+            Object.keys(emp).forEach(k => {
+              regNorm[k.toLowerCase().trim().replace(/[\s.\-,]/g, '_')] = emp[k];
+            });
+
+            const cedulaExcel = regNorm['cedula'] ? String(regNorm['cedula']).trim() : null;
+            if (!cedulaExcel) continue;
+
+            const rawFecha = regNorm['fecha_de_ingreso'] || regNorm['fecha_ingreso'] || null;
+            const fecha_ingreso = rawFecha instanceof Date
+              ? rawFecha.toISOString().split('T')[0]
+              : (rawFecha ? String(rawFecha).trim() : "");
+
+            empleadosExcelMap.set(cedulaExcel, {
+              cedula: cedulaExcel,
+              nombre: regNorm['nombre'] ? String(regNorm['nombre']).trim() : "Sin Nombre",
+              cargo: regNorm['cargo'] ? String(regNorm['cargo']).trim() : "Operativo",
+              region: regNorm['region'] ? String(regNorm['region']).trim() : "General",
+              grupo: regNorm['grupo'] ? String(regNorm['grupo']).trim() : "General",
+              rol: regNorm['rol'] ? String(regNorm['rol']).toLowerCase().trim() : "empleado",
+              fecha_ingreso: fecha_ingreso
+            });
+          }
+
+          // ⚡ EXTRACCIÓN EN RÁFAGA (CHUNKS): Traemos los perfiles existentes desde Firebase de un solo viaje
+          const cedulasArray = Array.from(empleadosExcelMap.keys());
+          const mapFirestore = new Map();
+          const chunkSize = 30;
+
+          for (let i = 0; i < cedulasArray.length; i += chunkSize) {
+            const chunk = cedulasArray.slice(i, i + chunkSize);
+
+            const snapNumeric = await db.collection('empleados').where('cedula', 'in', chunk.map(Number)).get();
+            snapNumeric.forEach(doc => mapFirestore.set(String(doc.data().cedula), { docId: doc.id, data: doc.data() }));
+
+            const snapString = await db.collection('empleados').where('cedula', 'in', chunk.map(String)).get();
+            snapString.forEach(doc => mapFirestore.set(String(doc.data().cedula), { docId: doc.id, data: doc.data() }));
+          }
+
+          // 💾 ESCRITURA EN BATCH EM-BLOQUE (Cero sobrecarga de canales de red)
+          let batch = db.batch();
+          let opsEnBatch = 0;
+          let creados = 0;
+          let actualizados = 0;
+
+          for (const [cedula, datosExcel] of empleadosExcelMap) {
+            const registroExistente = mapFirestore.get(cedula);
+
+            if (registroExistente) {
+              // 🎯 SI YA EXISTE: Actualizamos campos base sin duplicar jamás el documento ni alterar hitos
+              const docRef = db.collection('empleados').doc(registroExistente.docId);
+              batch.update(docRef, datosExcel);
+              actualizados++;
+            } else {
+              // 🎯 SI ES NUEVO: Creamos el documento e inicializamos la estructura del Plan Padrino
+              if (datosExcel.rol === 'empleado') {
+                datosExcel.es_apadrinado = true;
+                datosExcel.estado_plan_padrino = "Activo";
+                datosExcel.etapa_actual = "Inducción";
+
+                const formatFecha = (d) => d.toISOString().split('T')[0];
+                const baseDate = datosExcel.fecha_ingreso ? new Date(datosExcel.fecha_ingreso + 'T00:00:00') : new Date();
+                const f7 = new Date(baseDate); f7.setDate(f7.getDate() + 7);
+                const f30 = new Date(baseDate); f30.setDate(f30.getDate() + 30);
+                const f90 = new Date(baseDate); f90.setDate(f90.getDate() + 90);
+
+                datosExcel.fechas_limite_evaluaciones = {
+                  eval_7_dias: formatFecha(f7),
+                  eval_30_dias: formatFecha(f30),
+                  eval_90_dias: formatFecha(f90)
+                };
+
+                datosExcel.hitos = {
+                  fecha_contratacion: datosExcel.fecha_ingreso,
+                  onboarding_safety_nota: 0,
+                  onboarding_people_nota: 0,
+                  eval_tecnico_nota: 0,
+                  eval_funcional_nota: 0,
+                  eval_autonomo_nota: 0
+                };
+              }
+
+              const nuevoDocRef = db.collection('empleados').doc(); // Genera ID único automático localmente
+              batch.set(nuevoDocRef, datosExcel);
+              creados++;
+            }
+
+            opsEnBatch++;
+            if (opsEnBatch >= 400) {
+              await batch.commit();
+              batch = db.batch();
+              opsEnBatch = 0;
+            }
+          }
+
+          if (opsEnBatch > 0) await batch.commit();
+          if (btn) btn.innerHTML = textoOriginal;
+
+          // 🌟 ALERT 2: Mensaje de confirmación final definitivo
+          alert(`¡Sincronización Masiva Completa! 🚀\n\n· Registros Nuevos Creados: ${creados}\n· Registros Existentes Actualizados: ${actualizados}`);
+          fileInput.value = '';
+
+        } catch (error) {
+          if (btn) btn.innerHTML = textoOriginal;
+          console.error("Error en Carga Masiva:", error);
+          alert("❌ Ocurrió un error crítico al procesar el archivo Excel.");
         }
-
-        opsEnBatch++;
-        if (opsEnBatch >= 400) {
-          await batch.commit();
-          batch = db.batch();
-          opsEnBatch = 0;
-        }
-      }
-
-      if (opsEnBatch > 0) await batch.commit();
-      if (btn) btn.innerHTML = textoOriginal;
-
-      // 🌟 ALERT 2: Mensaje de confirmación final definitivo
-      alert(`¡Sincronización Masiva Completa! 🚀\n\n· Registros Nuevos Creados: ${creados}\n· Registros Existentes Actualizados: ${actualizados}`);
-      fileInput.value = '';
-
-    } catch (error) {
-      if (btn) btn.innerHTML = textoOriginal;
-      console.error("Error en Carga Masiva:", error);
-      alert("❌ Ocurrió un error crítico al procesar el archivo Excel.");
+      };
+      reader.readAsArrayBuffer(file);
     }
-  };
-  reader.readAsArrayBuffer(file);
-}
 
     async function buscarEmpleado() {
       const cc = document.getElementById('searchCedula').value.trim();

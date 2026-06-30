@@ -298,7 +298,7 @@
     cargarMensajesAlertaAutomaticas();
   });
 
-  // 🌟 ESCUCHADOR MAESTRO EN TIEMPO REAL CON INYECCIÓN DE FOTO Y CORREO DEL TUTOR
+  // 🌟 ESCUCHADOR MAESTRO EN TIEMPO REAL CON INYECCIÓN DE FOTO, CORREO DEL TUTOR Y CD DINÁMICO
   function inicializarEscuchadorEmpleadoRealtime() {
     db.collection('empleados')
       .where('cedula', '==', String(cedulaLogueada))
@@ -308,11 +308,12 @@
         const docSnap = snapshot.docs[0];
         const usuario = docSnap.data();
         const cargoEmpleado = usuario.cargo || "Operativo";
+        const regionEmpleado = usuario.region || "General"; // 🌟 Capturamos la región real del perfil del empleado
 
         // Llenamos el perfil básico de la cabecera
         document.getElementById('userName').textContent = usuario.nombre;
-        document.getElementById('userCargo').textContent = cargoEmpleado + " · Región " + (usuario.region || "General");
-        document.getElementById('headerRegion').textContent = "Región " + (usuario.region || "General");
+        document.getElementById('userCargo').textContent = cargoEmpleado + " · Región " + regionEmpleado;
+        document.getElementById('headerRegion').textContent = "Región " + regionEmpleado;
         document.getElementById('userAvatar').textContent = usuario.nombre.substring(0,2).toUpperCase();
 
         // =========================================================
@@ -323,7 +324,9 @@
 
           // Cálculo informativo de días transcurridos desde su ingreso real
           const fechaIngreso = new Date(usuario.fecha_ingreso + 'T00:00:00');
-          const hoy = new Date('2026-06-08T00:00:00'); 
+          
+          // ✅ AHORA: Sincronizado dinámicamente con el reloj en tiempo real del servidor
+          const hoy = new Date(); 
           const diferenciaMilisegundos = hoy - fechaIngreso;
           const diasTranscurridos = Math.floor(diferenciaMilisegundos / (1000 * 60 * 60 * 24));
 
@@ -332,7 +335,7 @@
           document.getElementById('padrinoFichaCargo').textContent = cargoEmpleado;
           document.getElementById('padrinoFichaEtapa').textContent = usuario.etapa_actual || "Etapa Técnico";
           document.getElementById('padrinoFichaEmpresaAnt').textContent = usuario.empresa_anterior || "Ninguna";
-          document.getElementById('padrinoFichaTiempoTranscurrido').textContent = diasTranscurridos + " días activos";
+          document.getElementById('padrinoFichaTiempoTranscurrido').textContent = (diasTranscurridos >= 0 ? diasTranscurridos : 0) + " días activos";
 
           // 🧮 INYECCIÓN DINÁMICA DE NOTAS PROCESADAS POR EL CONSOLIDADOR QR DEL FORMS
           if (usuario.hitos) {
@@ -355,7 +358,7 @@
               document.getElementById('padFichaEmpresa').textContent = tData.empresa_padrino || "Bavaria AB InBev";
               document.getElementById('padFichaTiempo').textContent = tData.tiempo_compania || "9 meses";
 
-              // 📧 NUEVO: Inyección dinámica del correo electrónico de alertas en la tarjeta
+              // 📧 Inyección dinámica del correo electrónico de alertas en la tarjeta
               if(document.getElementById('padFichaCorreo')) {
                 document.getElementById('padFichaCorreo').textContent = tData.correo || "Sin correo registrado";
               }
@@ -394,8 +397,15 @@
           }
         }
 
-        // 🎁 RECEPTOR DINÁMICO DE BENEFICIOS ASIGNADOS POR CARGO
-        const beneficioSnapshot = await db.collection('beneficios').where('cargo', '==', cargoEmpleado).get();
+        // =========================================================
+        // 🎁 RECEPTOR DINÁMICO DE BENEFICIOS ASIGNADOS POR CARGO Y REGION
+        // =========================================================
+        // ✅ CORRECCIÓN MÁXIMA: Aplica filtro compuesto estricto de Cargo + CD
+        const beneficioSnapshot = await db.collection('beneficios')
+          .where('cargo', '==', cargoEmpleado)
+          .where('region', '==', regionEmpleado)
+          .get();
+
         const listaContainer = document.getElementById('contenedor-beneficios-lista');
         if (listaContainer) {
           listaContainer.innerHTML = '';
@@ -409,7 +419,7 @@
                     <div class="card-icon yellow"><i class="ti ti-coin"></i></div>
                     <div>
                       <div class="card-title" style="color: #206987; font-weight: 700;">${bReal.concepto || "Compensación"}</div>
-                      <div class="card-sub">Cargo: ${cargoEmpleado}</div>
+                      <div class="card-sub">Cargo: ${cargoEmpleado} · Sede: ${regionEmpleado}</div>
                     </div>
                   </div>
                   <div class="benefit-row">
@@ -419,7 +429,7 @@
                 </div>`;
             });
           } else {
-            listaContainer.innerHTML = `<div style="text-align:center; padding:20px; color:#7a8f99;">No hay beneficios para este cargo.</div>`;
+            listaContainer.innerHTML = `<div style="text-align:center; padding:20px; color:#7a8f99; font-size:12px;">No registras beneficios configurados para el cargo de ${cargoEmpleado} en la sede de ${regionEmpleado}.</div>`;
           }
         }
       }, (error) => {

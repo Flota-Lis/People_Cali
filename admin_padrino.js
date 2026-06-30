@@ -145,8 +145,6 @@ db.collection('empleados').onSnapshot((snapshot) => {
 
     const padrinosTotales = [];
     const padrinosActivosDisponibles = [];
-    
-    // ✅ CORRECCIÓN SEMÁFOROS: Tiempo real del servidor para auditoría exacta
     const hoy = new Date();
     const setRegiones = new Set();
     const setMeses = new Set();
@@ -384,7 +382,7 @@ function renderizarMonitorColaboradores() {
 
     let todosLosEmpleados = [];
     let empleadosHistorico = [];
-    let totalEmpleadosFiltro = 0; // 🌟 Conteo dinámico y preciso por planta
+    let totalEmpleadosFiltro = 0;
 
     cacheSnapshotEmpleadosLocal.forEach((doc) => {
         const emp = doc.data();
@@ -394,7 +392,6 @@ function renderizarMonitorColaboradores() {
         if (regFiltro && emp.region !== regFiltro) return;
         if (mesFiltro && (!emp.fecha_ingreso || !emp.fecha_ingreso.startsWith(mesFiltro))) return;
 
-        // Si superó los filtros vigentes del CD, sumamos a la tarjeta
         if (emp.es_apadrinado === true) {
             totalEmpleadosFiltro++;
         }
@@ -406,7 +403,6 @@ function renderizarMonitorColaboradores() {
         }
     });
 
-    // 🌟 NUEVA TARJETA DINÁMICA: Refresca el conteo en pantalla al cambiar de CD
     if (document.getElementById('dashTotalEmpleados')) {
         document.getElementById('dashTotalEmpleados').textContent = totalEmpleadosFiltro;
     }
@@ -433,6 +429,7 @@ function renderizarMonitorColaboradores() {
         return d.toISOString().split('T')[0];
     };
 
+    // 🌟 CORRECCIÓN CRÍTICA DE AUDITORÍA: Forzar cumplimiento estricto del DÍA EXACTO LÍMITE
     const buildChipInteligente = (label, nota, fechaEjecucion, fechaBaseContratacion, diasDesfase, umbral) => {
         const limiteStr = (diasDesfase === 0 || diasDesfase === 1 || diasDesfase === 7)
             ? calcularFechaLimiteHabilesColombia(fechaBaseContratacion, diasDesfase)
@@ -444,7 +441,7 @@ function renderizarMonitorColaboradores() {
                 <div class="eval-chip ${esVencido ? 'chip-late-pending' : 'chip-pending'}">
                     <span class="chip-label">${label}</span>
                     <span class="chip-score">—</span>
-                    <span class="chip-date">${esVencido ? '⚠️ VENCIDO' : '⏳ Límite'}</span>
+                    <span class="chip-date">${esVencido ? '⚠️ VENCIDO' : '⏳ Día Exacto'}</span>
                     <span style="font-size:8.5px; opacity:0.8; font-weight:bold;">${limiteStr || '—'}</span>
                 </div>`;
         }
@@ -461,28 +458,30 @@ function renderizarMonitorColaboradores() {
                     <span class="chip-label">${label}</span>
                     <span class="chip-score">${nota}%</span>
                     <span class="chip-date">❌ Reprobado</span>
-                    <span style="font-size:8.5px; opacity:0.8;">Límite: ${limiteStr || '—'}</span>
+                    <span style="font-size:8.5px; opacity:0.8;">Requerido: ${limiteStr || '—'}</span>
                 </div>`;
         }
 
-        const ejecutoAPatirseDe = fechaEjecucion || fechaBaseContratacion;
-        const ejecutoATiempo = limiteStr ? (new Date(ejecutoAPatirseDe + 'T00:00:00') <= new Date(limiteStr + 'T00:00:00')) : true;
+        // 🌟 VALIDACIÓN DE DÍA EXACTO: La fecha de ejecución debe ser igual a la calculada
+        const ejecutoEnElDiaExacto = (fechaEjecucion === limiteStr);
 
-        if (ejecutoATiempo) {
+        if (ejecutoEnElDiaExacto) {
             return `
                 <div class="eval-chip chip-pass">
                     <span class="chip-label">${label}</span>
                     <span class="chip-score">${nota}%</span>
-                    <span class="chip-date">✓ A tiempo</span>
-                    <span style="font-size:8.5px; opacity:0.8;">Hecho: ${fechaEjecucion || '—'}</span>
+                    <span class="chip-date">✓ Hecho a Tiempo</span>
+                    <span style="font-size:8.5px; opacity:0.8;">Día exacto: ${fechaEjecucion || '—'}</span>
                 </div>`;
         } else {
+            // Se evalúa si lo hizo antes del tiempo reglamentario de maduración corporativa o si se pasó
+            const esAdelantado = limiteStr ? (new Date(fechaEjecucion + 'T00:00:00') < new Date(limiteStr + 'T00:00:00')) : false;
             return `
                 <div class="eval-chip chip-pass-late">
                     <span class="chip-label">${label}</span>
                     <span class="chip-score">${nota}%</span>
-                    <span class="chip-date">🎓 Fuera Plazo</span>
-                    <span style="font-size:8.5px; opacity:0.8;">Hecho: ${fechaEjecucion || '—'}</span>
+                    <span class="chip-date">${esAdelantado ? '⚠️ Hecho Antes' : '🎓 Fuera Plazo'}</span>
+                    <span style="font-size:8.5px; opacity:0.8;">Hecho: ${fechaEjecucion || '—'} (Debió ser: ${limiteStr})</span>
                 </div>`;
         }
     };
@@ -811,6 +810,7 @@ function poblarFiltrosEstrategicos(regiones, meses) {
         });
     }
 }
+
 // 📸 Procesa la foto del padrino en Base64 antes de guardar
 function procesarFotoPadrinoLocal(inputFile) {
     const file = inputFile.files[0];
@@ -865,7 +865,6 @@ async function convertirYConfigurarPadrino() {
         await db.collection('empleados').doc(snap.docs[0].id).update(datosPadrino);
         alert('🏅 Padrino certificado correctamente.');
 
-        // Limpiar formulario
         globalPadrinoFotoBase64 = '';
         ['padrePadrinoCedula','padrePadrinoEmpresa','padrePadrinoTiempo','padrePadrinoDesempeno','padrePadrinoCorreo','padrePadrinoTecnicas','padrePadrinoBlandas']
             .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
@@ -903,7 +902,6 @@ async function vincularPlanPadrinoNuevo() {
             return;
         }
 
-        // Mismos desfases (7 hábiles / 32 / 92 calendario) que usa el dashboard y los chips
         const calcularFechaLimiteCalendario = (fechaStr, dias) => {
             const d = new Date(fechaStr + 'T00:00:00');
             d.setDate(d.getDate() + dias);
@@ -962,3 +960,4 @@ window.renderizarMonitorColaboradores = renderizarMonitorColaboradores;
 window.procesarCargaMasivaExcel = procesarCargaMasivaExcel;
 window.imprimirCertificadoCompletoPDF = imprimirCertificadoCompletoPDF;
 window.toggleOnboardingEstado = toggleOnboardingEstado;
+window.procesarFotoPadrinoLocal = procesarFotoPadrinoLocal;
