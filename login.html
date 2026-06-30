@@ -80,18 +80,33 @@
       }
 
       try {
-        const snapshot = await db.collection('empleados')
+        // 🔍 PASO 1: Intento de búsqueda tratando la cédula como Texto
+        let snapshot = await db.collection('empleados')
           .where('cedula', '==', cedulaInput)
           .limit(1)
           .get();
+
+        // 🔍 PASO 2: Si no lo encuentra como texto y es un número, intenta buscarlo como tipo numérico
+        if (snapshot.empty && !isNaN(cedulaInput)) {
+          snapshot = await db.collection('empleados')
+            .where('cedula', '==', Number(cedulaInput))
+            .limit(1)
+            .get();
+        }
 
         if (!snapshot.empty) {
           const docSnap = snapshot.docs[0];
           const datosUsuario = docSnap.data();
           const rolUsuario = datosUsuario.rol ? String(datosUsuario.rol).toLowerCase().trim() : 'empleado';
           
+          // 💾 ALMACENAMIENTO DE CONTROL MAESTRO LOCAL
           localStorage.setItem('usuario_cedula', cedulaInput);
           localStorage.setItem('usuario_rol', rolUsuario);
+          
+          // 🌟 NUEVO: Deja guardada la región y el cargo exacto del usuario en su navegador
+          // Esto garantiza que al saltar a index.html, la consulta de beneficios sepa qué CD y tarifa traer
+          localStorage.setItem('usuario_region', datosUsuario.region || 'General');
+          localStorage.setItem('usuario_cargo', datosUsuario.cargo || 'Operativo');
           
           alert('¡Bienvenido al Portal, ' + datosUsuario.nombre + '!');
 
@@ -99,16 +114,10 @@
           // 🎯 ENRUTAMIENTO RE-CALIBRADO DE RUTAS OPERATIVAS (SEGMENTACIÓN DE ACCESOS)
           // =========================================================================
           if (rolUsuario === 'admin') {
-            // El administrador entra a la raíz del panel maestro general
             window.location.href = 'admin.html';
-            
           } else if (rolUsuario === 'people' || rolUsuario === 'lider' || rolUsuario === 'jefe' || rolUsuario === 'padrino') {
-            // 🚀 PERFIL OPERATIVO: El Auditor de People, el Líder, el Jefe y el Padrino 
-            // entran directamente a la suite de control del Plan Padrino (donde ejecutan su respectiva vista)
             window.location.href = 'admin_padrino.html';
-            
           } else {
-            // Únicamente el colaborador apadrinado o empleado común de a pie se va al index móvil de tareas
             window.location.href = 'index.html';
           }
 
@@ -118,7 +127,7 @@
         }
       } catch (error) {
         console.error("Error en el login:", error);
-        errorMsg.textContent = "Error de conexión.";
+        errorMsg.textContent = "Error de conexión con el servidor de People.";
         errorMsg.style.display = 'block';
       }
     });
