@@ -250,7 +250,7 @@ db.collection('empleados').onSnapshot((snapshot) => {
 
                 let cargoFallas = [];
                 if (nSafety > 0 && nSafety < 100) cargoFallas.push(`Safety (${nSafety}%)`);
-                if (nPeople > 0 && nPeople < 80)  cargoFallas.push(`People (${nPeople}%)`);
+                if (nPeople > 0 && nPeople < 80) cargoFallas.push(`People (${nPeople}%)`);
                 if (nSafety > 0 || nPeople > 0) totalEvaluadosOnboarding++;
 
                 if (cargoFallas.length > 0) {
@@ -268,7 +268,7 @@ db.collection('empleados').onSnapshot((snapshot) => {
 
                 if (emp.hitos.eval_tecnico_nota > 0) { sumaNota7 += emp.hitos.eval_tecnico_nota; examenesRealizados++; } else { examenesPendientes++; }
                 if (emp.hitos.eval_funcional_nota > 0) { sumaNota30 += emp.hitos.eval_funcional_nota; examenesRealizados++; } else { examenesPendientes++; }
-                
+
                 let n90Unificada = 0; let n90Arr = [];
                 if (emp.hitos.eval_autonomo_pre_nota) n90Arr.push(emp.hitos.eval_autonomo_pre_nota);
                 if (emp.hitos.eval_autonomo_nota) n90Arr.push(emp.hitos.eval_autonomo_nota);
@@ -288,7 +288,7 @@ db.collection('empleados').onSnapshot((snapshot) => {
         selectDinamico.innerHTML = padrinosActivosDisponibles.length === 0
             ? `<option value="">No hay padrinos activos</option>`
             : `<option value="">-- Selecciona un tutor calificado --</option>` +
-              padrinosActivosDisponibles.map(p => `<option value="${p.cedula}">${p.nombre} (${p.cargo || 'Líder'})</option>`).join('');
+            padrinosActivosDisponibles.map(p => `<option value="${p.cedula}">${p.nombre} (${p.cargo || 'Líder'})</option>`).join('');
     }
 
     if (containerLista) {
@@ -377,7 +377,8 @@ function renderizarMonitorColaboradores() {
     let paginaActual = window.paginaActualMonitor || 1;
 
     const regFiltro = document.getElementById('filter-region').value;
-    const mesFiltro = document.getElementById('filter-mes').value;
+    const mesDesde = document.getElementById('filter-mes-desde')?.value || '';
+    const mesHasta = document.getElementById('filter-mes-hasta')?.value || '';
     const textoBusqueda = document.getElementById('search-colaborador')?.value.toLowerCase().trim() || '';
 
     let todosLosEmpleados = [];
@@ -390,7 +391,12 @@ function renderizarMonitorColaboradores() {
 
         if (miRol === 'padrino' && String(emp.padrino_id) !== String(cedulaLogueada)) return;
         if (regFiltro && emp.region !== regFiltro) return;
-        if (mesFiltro && (!emp.fecha_ingreso || !emp.fecha_ingreso.startsWith(mesFiltro))) return;
+        if (mesDesde || mesHasta) {
+            const mesEmpleado = emp.fecha_ingreso ? emp.fecha_ingreso.substring(0, 7) : null;
+            if (!mesEmpleado) return;
+            if (mesDesde && mesEmpleado < mesDesde) return;
+            if (mesHasta && mesEmpleado > mesHasta) return;
+        }
 
         if (emp.es_apadrinado === true) {
             totalEmpleadosFiltro++;
@@ -724,7 +730,7 @@ async function cargarPerfilDetalladoPadrinoCompleto(cedulaPadrino) {
         const boxFoto = document.getElementById('contenedor-foto-padrino');
         if (boxFoto) {
             if (pData.foto_url) boxFoto.innerHTML = `<img src="${pData.foto_url}" style="width:85px; height:85px; object-fit:cover; border-radius:50%;">`;
-            else boxFoto.innerHTML = `<div>${pData.nombre.substring(0,2).toUpperCase()}</div>`;
+            else boxFoto.innerHTML = `<div>${pData.nombre.substring(0, 2).toUpperCase()}</div>`;
         }
 
         const containerTecnicas = document.getElementById('viewPadTagsTecnicas'); if (containerTecnicas) containerTecnicas.innerHTML = '';
@@ -762,7 +768,7 @@ async function imprimirCertificadoCompletoPDF(docId) {
 
         const certificadoHTML = `<div id="hoja-certificado-temporal" style="width:1000px; padding:60px; background:#fff; border:14px solid #206987;"><h2>CERTIFICADO DE FINALIZACIÓN</h2><h3>${emp.nombre}</h3><p>Padrino: ${nombrePadrino}</p><p>Fecha: ${fechaHoyFormateada}</p></div>`;
         const hojaTemporal = document.createElement('div'); hojaTemporal.innerHTML = certificadoHTML; document.body.appendChild(hojaTemporal);
-        await html2pdf().set({ margin:0, filename:`Certificado_${emp.nombre}.pdf`, html2canvas:{scale:2}, jsPDF:{format:'a4', orientation:'landscape'} }).from(hojaTemporal).save();
+        await html2pdf().set({ margin: 0, filename: `Certificado_${emp.nombre}.pdf`, html2canvas: { scale: 2 }, jsPDF: { format: 'a4', orientation: 'landscape' } }).from(hojaTemporal).save();
         document.body.removeChild(hojaTemporal);
 
         await db.collection('empleados').doc(docId).update({ certificado_descargado: true, fecha_certificado_descargado: new Date().toISOString().split('T')[0] });
@@ -777,7 +783,7 @@ function cambiarPestañaPadrino(targetPaneId, botonPresionado) {
     document.querySelectorAll('.nav-tab-btn').forEach(btn => {
         btn.classList.remove('active-tab');
     });
-    
+
     const seccionObjetivo = document.getElementById('padrino-pane-' + targetPaneId);
     if (seccionObjetivo) {
         seccionObjetivo.classList.add('pane-active');
@@ -785,7 +791,7 @@ function cambiarPestañaPadrino(targetPaneId, botonPresionado) {
     if (botonPresionado) {
         botonPresionado.classList.add('active-tab');
     }
-    
+
     if (targetPaneId === 'monitor' && typeof renderizarMonitorColaboradores === 'function') {
         renderizarMonitorColaboradores();
     }
@@ -793,22 +799,28 @@ function cambiarPestañaPadrino(targetPaneId, botonPresionado) {
 
 function poblarFiltrosEstrategicos(regiones, meses) {
     const selectReg = document.getElementById('filter-region');
-    const selectMes = document.getElementById('filter-mes');
-    
+    const selectDesde = document.getElementById('filter-mes-desde');
+    const selectHasta = document.getElementById('filter-mes-hasta');
+
     if (selectReg && selectReg.options.length <= 1) {
         regiones.forEach(r => {
-            if(r) selectReg.innerHTML += `<option value="${r}">${r}</option>`;
+            if (r) selectReg.innerHTML += `<option value="${r}">${r}</option>`;
         });
     }
-    if (selectMes && selectMes.options.length <= 1) {
-        meses.forEach(m => {
-            if(m) {
-                const [anio, mes] = m.split('-');
-                const l = new Date(+anio, +mes - 1, 1).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
-                selectMes.innerHTML += `<option value="${m}">${l.charAt(0).toUpperCase() + l.slice(1)}</option>`;
-            }
-        });
-    }
+
+    const formatearLabel = (m) => {
+        const [anio, mes] = m.split('-');
+        const l = new Date(+anio, +mes - 1, 1).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+        return l.charAt(0).toUpperCase() + l.slice(1);
+    };
+
+    [selectDesde, selectHasta].forEach(select => {
+        if (select && select.options.length <= 1) {
+            meses.forEach(m => {
+                if (m) select.innerHTML += `<option value="${m}">${formatearLabel(m)}</option>`;
+            });
+        }
+    });
 }
 
 // 📸 Procesa la foto del padrino en Base64 antes de guardar
@@ -866,7 +878,7 @@ async function convertirYConfigurarPadrino() {
         alert('🏅 Padrino certificado correctamente.');
 
         globalPadrinoFotoBase64 = '';
-        ['padrePadrinoCedula','padrePadrinoEmpresa','padrePadrinoTiempo','padrePadrinoDesempeno','padrePadrinoCorreo','padrePadrinoTecnicas','padrePadrinoBlandas']
+        ['padrePadrinoCedula', 'padrePadrinoEmpresa', 'padrePadrinoTiempo', 'padrePadrinoDesempeno', 'padrePadrinoCorreo', 'padrePadrinoTecnicas', 'padrePadrinoBlandas']
             .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
         const img = document.getElementById('padrinoImgPreview');
         const icon = document.getElementById('padrinoIconoDefault');
@@ -942,7 +954,7 @@ async function vincularPlanPadrinoNuevo() {
 
         alert('✅ Colaborador registrado y Plan Padrino activado.');
 
-        ['padreApadrinadoId','padreApadrinadoNombre','padreApadrinadoCargo','padreApadrinadoArea','padreApadrinadoRegion','padreApadrinadoFechaIngreso','padreApadrinadoJefe','padreApadrinadoCorreo']
+        ['padreApadrinadoId', 'padreApadrinadoNombre', 'padreApadrinadoCargo', 'padreApadrinadoArea', 'padreApadrinadoRegion', 'padreApadrinadoFechaIngreso', 'padreApadrinadoJefe', 'padreApadrinadoCorreo']
             .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
 
     } catch (error) {
