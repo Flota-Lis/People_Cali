@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Archivo Histórico — Personal Retirado</title>
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <style>
+    :root {
+      --primary: #206987;
+      --primary-dark: #1a4f66;
+      --bg: #f4f6f8;
+      --text: #1c2430;
+      --text-muted: #7a8f99;
+      --border: #dde3e7;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    .navbar {
+      background-color: #343a40; /* Tono gris carbón oscuro para indicar que es un módulo de archivo */
+      color: white;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-back {
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.2s;
+    }
+
+    .btn-back:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .container {
+      padding: 20px;
+      max-width: 1100px;
+      margin: 0 auto;
+      box-sizing: border-box;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      border: 0.5px solid var(--border);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.01);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .collab-card {
+      background: #fdfdfd;
+      border-left: 5px solid #6c757d;
+      padding: 16px;
+      border-radius: 8px;
+      border-top: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.01);
+    }
+
+    .status-badge {
+      background: #f1f3f5;
+      border: 1px solid #ced4da;
+      color: #6c757d;
+      font-weight: 700;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    .notes-row span {
+      background: #f8f9fa;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 0.5px solid #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="navbar">
+    <div class="navbar-brand">
+      <i class="ti ti-archive"></i> LOGÍSTICA — ARCHIVO HISTÓRICO DE RETIRADOS
+    </div>
+    <a href="admin_padrino.html" class="btn-back">
+      <i class="ti ti-arrow-left"></i> Volver al Monitor Activo
+    </a>
+  </div>
+
+  <div class="container">
+    
+    <div class="card">
+      <div style="font-weight: 700; font-size: 16px; color: #343a40; margin-bottom: 5px; display: flex; align-items: center; gap: 6px;">
+        <i class="ti ti-users-minus"></i> Historial de Personal Desvinculado
+      </div>
+      <p style="font-size: 12.5px; color: var(--text-muted); margin: 0 0 20px 0;">
+        Consulta la trazabilidad exigida por auditorías corporativas. Las tarjetas muestran el progreso exacto y las calificaciones guardadas al momento del retiro definitivo de la empresa.
+      </p>
+
+      <div id="lista-colaboradores-retirados">
+        <div style="text-align:center; padding:30px; color:var(--text-muted); font-size:13px;">
+          <i class="ti ti-refresh spin" style="font-size: 16px; vertical-align: middle;"></i> Conectando con el archivo histórico de People...
+        </div>
+      </div>
+    </div>
+
+  </div>
+<script src="config.js"></script>
+  <script>
+    // 🔗 CONFIGURACIÓN DE TU FIREBASE (Copia exactamente tus mismas credenciales aquí)
+   
+    
+    // Inicializar Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // 🛡️ CONTROL DE ACCESO BÁSICO POR ROL
+    document.addEventListener('DOMContentLoaded', () => {
+      const miRol = localStorage.getItem('usuario_rol');
+      if (miRol !== 'admin' && miRol !== 'people' && miRol !== 'lider' && miRol !== 'jefe') {
+         window.location.href = 'login.html';
+         return;
+      }
+      inicializarMonitorRetiradosRealtime();
+    });
+
+    // 📁 ESCUCHADOR EN TIEMPO REAL DEL PANEL DE RETIRADOS
+    function inicializarMonitorRetiradosRealtime() {
+        const container = document.getElementById('lista-colaboradores-retirados');
+        if (!container) return;
+
+        db.collection('empleados')
+            .where('estado_plan_padrino', '==', 'Retirado')
+            .onSnapshot((snapshot) => {
+                
+                if (snapshot.empty) {
+                    container.innerHTML = `
+                        <div style="text-align:center; padding:40px; color:var(--text-muted); font-size:13px; border: 1px dashed var(--border); border-radius: 8px; background: #f8fafb;">
+                            📁 No se registran novedades de retiro definitivo en este periodo.
+                        </div>`;
+                    return;
+                }
+
+                let htmlRetirados = '';
+                snapshot.forEach((doc) => {
+                    const emp = doc.data();
+                    const h = emp.hitos || {};
+                    const fechaBase = emp.fecha_ingreso || h.fecha_contratacion || "—";
+
+                    // Calibración matemática del progreso en el que quedó al irse (Cada hito son 20%)
+                    let etapasRealizadasConteo = 0;
+                    if (h.onboarding_safety_nota > 0) etapasRealizadasConteo++;
+                    if (h.onboarding_people_nota > 0) etapasRealizadasConteo++;
+                    if (h.eval_tecnico_nota > 0) etapasRealizadasConteo++;
+                    if (h.eval_funcional_nota > 0) etapasRealizadasConteo++;
+                    
+                    let notes90 = [];
+                    if (h.eval_autonomo_pre_nota) notes90.push(h.eval_autonomo_pre_nota);
+                    if (h.eval_autonomo_nota) notes90.push(h.eval_autonomo_nota);
+                    if (h.eval_autonomo_post_nota) notes90.push(h.eval_autonomo_post_nota);
+                    let n90 = notes90.length > 0 ? Math.round(notes90.reduce((a, b) => a + b, 0) / notes90.length) : 0;
+                    if (n90 > 0) etapasRealizadasConteo++;
+
+                    const porcentajeCongelado = etapasRealizadasConteo * 20;
+
+                    htmlRetirados += `
+                    <div class="collab-card">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <div style="color:#495057; font-weight:700; font-size:14px;">❌ ${emp.nombre}</div>
+                                <div style="font-size:11px; color:var(--text-muted); margin-top:3px; line-height: 1.5;">
+                                    CC <strong>${emp.cedula}</strong> &nbsp;·&nbsp; 
+                                    Cargo: <strong>${emp.cargo || 'Operativo'}</strong> &nbsp;·&nbsp; 
+                                    Sede: <strong>${emp.region || 'General'}</strong><br>
+                                    Ingreso: ${fechaBase} &nbsp;·&nbsp; 
+                                    <span style="color:#c5221f; font-weight:700;">Fecha Retiro: ${emp.fecha_retiro_operacion || '—'}</span>
+                                </div>
+                            </div>
+                            <div class="status-badge">
+                                🔒 Progreso Congelado (${porcentajeCongelado}%)
+                            </div>
+                        </div>
+                        
+                        <div class="notes-row" style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed #e2e8f0; display: flex; flex-wrap:wrap; gap: 8px; font-size: 11px; color: #495057;">
+                            <span>🛡️ Safety (D1): <strong>${h.onboarding_safety_nota || 0}%</strong></span>
+                            <span>🤝 People (D2): <strong>${h.onboarding_people_nota || 0}%</strong></span>
+                            <span>⚙️ Técnico (D7): <strong>${h.eval_tecnico_nota || 0}%</strong></span>
+                            <span>📈 Funcional (D30): <strong>${h.eval_funcional_nota || 0}%</strong></span>
+                            <span>🏆 Autónomo (D90): <strong>${n90}%</strong></span>
+                        </div>
+                    </div>`;
+                });
+
+                container.innerHTML = htmlRetirados;
+            });
+    }
+  </script>
+</body>
+</html>

@@ -580,38 +580,30 @@
       </div>
     </div>
 
-    <!-- PESTAÑA E: CAPACITACIONES Y AUDITORÍA -->
-    <div id="section-capacitaciones" class="admin-section-pane">
+  <div id="section-capacitaciones" class="admin-section-pane">
+      
       <div class="grid-layout">
         <div class="card" id="seccionFormCapacitaciones">
           <div class="card-title"><i class="ti ti-calendar-plus"></i> Programar Tarea de Capacitación</div>
-          <div class="form-group"><label>Cédula del Trabajador Asignado</label><input type="text" id="targetCedula"
-              placeholder="Asigna la cédula"></div>
-          <div class="form-group"><label>Título de la Capacitación</label><input type="text" id="capTitulo"
-              placeholder="Ej: Safety 360°, Manejo Seguro"></div>
-          <div class="form-group"><label>Enlace Completo de la Presentación</label><input type="url" id="capDriveId"
-              placeholder="Pega el enlace web completo de la presentación" required></div>
-          <div class="form-group"><label>Enlace Web de la Evaluación</label><input type="url" id="capQrUrl"
-              placeholder="Pega el enlace del formulario de evaluación"></div>
+          <div class="form-group"><label>Cédula del Trabajador Asignado</label><input type="text" id="targetCedula" placeholder="Asigna la cédula"></div>
+          <div class="form-group"><label>Título de la Capacitación</label><input type="text" id="capTitulo" placeholder="Ej: Safety 360°, Manejo Seguro"></div>
+          <div class="form-group"><label>Enlace Completo de la Presentación</label><input type="url" id="capDriveId" placeholder="Pega el enlace web completo de la presentación" required></div>
+          <div class="form-group"><label>Enlace Web de la Evaluación</label><input type="url" id="capQrUrl" placeholder="Pega el enlace del formulario de evaluación"></div>
           <div class="form-group"><label>Fecha Límite de Ejecución</label><input type="date" id="capFechaLimite"></div>
-          <button class="btn btn-primary" onclick="publicarCapacitacion()"><i class="ti ti-cloud-upload"></i> Publicar
-            en Cronograma</button>
+          <button class="btn btn-primary" onclick="publicarCapacitacion()"><i class="ti ti-cloud-upload"></i> Publicar en Cronograma</button>
         </div>
 
         <div class="card">
           <div class="card-title"><i class="ti ti-chart-bar"></i> Auditoría Detallada de Avance Real</div>
-          <div class="form-group"><label>Consultar Avance de Cédula</label><input type="text" id="auditCedula"
-              placeholder="Digita el documento a auditar"></div>
+          <div class="form-group"><label>Consultar Avance de Cédula</label><input type="text" id="auditCedula" placeholder="Digita el documento a auditar"></div>
           <div class="form-group" style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom: 15px;">
-            <div><label>Desde (Fecha límite)</label><input type="date" id="filterDesde" value="2026-01-01"></div>
-            <div><label>Hasta (Fecha límite)</label><input type="date" id="filterHasta" value="2026-12-31"></div>
+            <div><label>Desde (Fecha límite)</label><input type="date" id="auditDesde" value="2026-01-01"></div>
+            <div><label>Hasta (Fecha límite)</label><input type="date" id="auditHasta" value="2026-12-31"></div>
           </div>
-          <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="auditarAvanceReal()"><i
-              class="ti ti-eye"></i> Consultar Historial y Progreso</button>
+          <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="auditarAvanceReal()"><i class="ti ti-eye"></i> Consultar Historial y Progreso</button>
 
           <div id="auditResultPanel" style="margin-top: 20px; display: none;">
-            <div
-              style="display: flex; gap: 15px; margin-bottom: 15px; background: #f7fafb; padding: 12px; border-radius: 8px;">
+            <div style="display: flex; gap: 15px; margin-bottom: 15px; background: #f7fafb; padding: 12px; border-radius: 8px;">
               <div style="flex: 1; text-align: center;">
                 <div style="font-size: 11px; color: #7a8f99; font-weight: 600;">PORCENTAJE REAL</div>
                 <div id="auditPctText" style="font-size: 24px; font-weight: 700; color: #1e6e7e;">0%</div>
@@ -637,8 +629,56 @@
             </div>
           </div>
         </div>
+      </div> <div class="card" style="margin-top: 20px; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); background: #fff;">
+          <div style="font-weight: bold; font-size: 16px; margin-bottom: 15px; color: #206987; display: flex; align-items: center; gap: 8px;">
+              <i class="ti ti-users-group" style="font-size: 20px;"></i> Control de Padrinos, Alumnos y Evaluaciones
+          </div>
+          <p style="font-size: 13px; color: #7a8f99; margin-top: 0; margin-bottom: 15px;">Selecciona un padrino para auditar sus alumnos asociados y definir los enlaces de Forms para ambos roles.</p>
+
+          <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+              
+              <div style="border-right: 1px solid #edf2f7; padding-right: 15px;">
+                  <label style="font-weight: 700; font-size: 11px; color: #206987; text-transform: uppercase; letter-spacing: 0.5px;">1. Selecciona el Padrino</label>
+                  <div id="listaPadrinosClick" style="margin-top: 10px; max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+                      <div style="text-align: center; color: #7a8f99; padding: 20px; font-size: 13px;">Cargando tutores...</div>
+                  </div>
+              </div>
+
+              <div>
+                  <label style="font-weight: 700; font-size: 11px; color: #206987; text-transform: uppercase; letter-spacing: 0.5px;">2. Alumnos a Cargo y Configuración de Links</label>
+                  <div id="contenedorDetalleAlumnos" style="margin-top: 10px; padding: 15px; background: #f7fafb; border-radius: 6px; min-height: 200px; border: 1px solid #dde3e7;">
+                      <div style="text-align: center; color: #7a8f99; padding: 40px; font-size: 13px;">
+                          <i class="ti ti-arrow-bar-left" style="font-size: 24px; display: block; margin-bottom: 8px; color: #206987;"></i>
+                          Haz clic en un padrino de la izquierda para desplegar sus alumnos y gestionar las evaluaciones.
+                      </div>
+                  </div>
+              </div>
+          </div>
       </div>
+
+    </div> <div id="modalAsignarLinks" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center; font-family: sans-serif;">
+        <div style="background: white; padding: 22px; border-radius: 12px; width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 1px solid #dde3e7;">
+            <h4 style="margin-top: 0; color: #206987; font-size: 16px; font-weight: 700; border-bottom: 1px solid #eef1f3; padding-bottom: 10px;" id="modalTituloAlumno">Asignar Enlaces de Evaluación</h4>
+            <input type="hidden" id="modalCedulaAlumno">
+            
+            <div style="margin-top: 14px;">
+                <label style="font-size: 12px; font-weight: bold; color: #1c2430;">Link de Evaluación para el APADRINADO (Alumno)</label>
+                <input type="text" id="modalInputLinkApadrinado" style="width: 100%; padding: 10px; margin-top: 6px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;" placeholder="Pega el Forms del alumno">
+            </div>
+
+            <div style="margin-top: 14px;">
+                <label style="font-size: 12px; font-weight: bold; color: #1c2430;">Link de Evaluación para el PADRINO (Tutor)</label>
+                <input type="text" id="modalInputLinkPadrino" style="width: 100%; padding: 10px; margin-top: 6px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;" placeholder="Pega el Forms del padrino">
+            </div>
+
+            <div style="margin-top: 22px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #eef1f3; padding-top: 14px;">
+                <button onclick="cerrarModalLinks()" style="background: #edf1f4; color: #206987; border: 1px solid #cdd5db; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 700;">Cancelar</button>
+                <button onclick="procesarGuardadoLinksConTrazabilidad()" style="background: #206987; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 700;">💾 Guardar Cambios</button>
+            </div>
+        </div>
     </div>
+
+
 
     <!-- Pie de página -->
     <div style="text-align: center; padding: 25px 15px 40px 15px; margin-top: 30px; grid-column: 1 / -1; width: 100%;">
@@ -670,7 +710,7 @@
       cargarPerfilAdmin(cedulaAdminLogueado);
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
+   window.addEventListener('DOMContentLoaded', () => {
       if (localStorage.getItem('usuario_rol') === 'people') {
         if (document.getElementById('seccionFormBeneficios')) document.getElementById('seccionFormBeneficios').style.display = 'none';
         if (document.getElementById('bloqueCargaMasiva')) document.getElementById('bloqueCargaMasiva').style.display = 'none';
@@ -689,6 +729,13 @@
 
         if (document.getElementById('thAccionesBeneficios')) document.getElementById('thAccionesBeneficios').style.display = 'none';
       }
+
+      // 🌟 LÍNEAS A AGREGAR AQUÍ:
+      setTimeout(() => {
+        if (typeof inicializarModuloGestionPadrinos === 'function') {
+          inicializarModuloGestionPadrinos();
+        }
+      }, 500);
     });
 
     async function cargarPerfilAdmin(cedulaAdminLogueado) {
@@ -736,6 +783,7 @@
             .where('cargo', '==', cargo)
             .where('region', '==', region)
             .get();
+
 
           if (!consultaDuplicado.empty) {
             alert(`⚠️ Ya existe un beneficio configurado para el cargo "${cargo}" en la región "${region}".`);
@@ -1131,22 +1179,61 @@
       } catch (e) { console.error(e); }
     }
 
-    async function auditarAvanceReal() {
+  async function auditarAvanceReal() {
       const cc = document.getElementById('auditCedula').value.trim();
-      if (!cc) return;
-      db.collection('items_cronograma').where('empleado_id', '==', cc).onSnapshot((snap) => {
-        const tbody = document.getElementById('auditTableBody'); if (!tbody) return; tbody.innerHTML = '';
+      if (!cc) return alert("⚠️ Digita la cédula a consultar.");
+
+      // 🎯 LECTURA DIRECTA POR ID REAL: Rápido, exacto y sin adivinar
+      const inputDesdeReal = document.getElementById('auditDesde').value;
+      const inputHastaReal = document.getElementById('auditHasta').value;
+
+      // Validación estricta
+      if (!inputDesdeReal || !inputHastaReal) {
+        return alert("⚠️ Por favor selecciona el rango Desde / Hasta para la auditoría.");
+      }
+
+      try {
+        const snap = await db.collection('items_cronograma').where('empleado_id', '==', cc).get();
+        const tbody = document.getElementById('auditTableBody'); 
+        if (!tbody) return; 
+        
+        tbody.innerHTML = '';
         let asig = 0, hechas = 0;
+        let htmlFilas = '';
+
         snap.forEach(doc => {
           const item = doc.data();
-          asig++; if (item.completado) hechas++;
-          tbody.innerHTML += `<tr><td><strong>${item.titulo}</strong></td><td>${item.fecha_limite}</td><td>${item.visto_ppt ? '✓ Sí' : '✗ No'}</td><td>${item.completado ? '✓ Hecho' : '✗ Pendiente'}</td></tr>`;
+          const limiteTarea = item.fecha_limite; 
+
+          // 🌟 FILTRO DE CONTROL DE RANGO ESTRICTO
+          if (limiteTarea >= inputDesdeReal && limiteTarea <= inputHastaReal) {
+            asig++; 
+            if (item.completado) hechas++;
+            
+            htmlFilas += `<tr>
+              <td><strong>${item.titulo}</strong></td>
+              <td>${item.fecha_limite}</td>
+              <td>${item.visto_ppt ? '✓ Sí' : '✗ No'}</td>
+              <td>${item.completado ? '✓ Hecho' : '✗ Pendiente'}</td>
+            </tr>`;
+          }
         });
+
+        if (asig === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#7a8f99; padding: 15px;">No se registran capacitaciones asignadas en el rango de fechas seleccionado.</td></tr>`;
+        } else {
+          tbody.innerHTML = htmlFilas;
+        }
+
         const pct = asig > 0 ? Math.round((hechas / asig) * 100) : 0;
         document.getElementById('auditPctText').textContent = pct + "%";
         document.getElementById('auditCountText').textContent = `${hechas} / ${asig}`;
         document.getElementById('auditResultPanel').style.display = 'block';
-      });
+
+      } catch (error) {
+        console.error("Error en auditoría:", error);
+        alert("❌ Error al procesar el historial de capacitación.");
+      }
     }
 
     // 📋 IMPORTADOR MAESTRO DE RESPUESTAS MICROSOFT FORMS CON MENSAJES DE NOTIFICACIÓN
@@ -1275,8 +1362,174 @@
       reader.readAsArrayBuffer(file);
     }
 
+    // 🔄 Ejecutar al cargar la sección de administración del Plan Padrino
+async function inicializarModuloGestionPadrinos() {
+    const contenedorLista = document.getElementById('listaPadrinosClick');
+    if (!contenedorLista) return;
+
+    try {
+        // 1. Buscamos todos los empleados que estén marcados con rol de Padrino o Tutor Certificado
+        // (Ajusta la condición 'es_padrino' según cómo almacenes esa bandera)
+        const snap = await db.collection('empleados').where('es_padrino', '==', true).get();
+        
+        if (snap.empty) {
+            contenedorLista.innerHTML = `<div style="text-align:center;color:#7f8c8d;padding:10px;">No hay padrinos registrados.</div>`;
+            return;
+        }
+
+        contenedorLista.innerHTML = '';
+        snap.forEach(doc => {
+            const padrino = doc.data();
+            contenedorLista.innerHTML += `
+                <button onclick="verApadrinadosAsociados('${padrino.cedula}', '${padrino.nombre}')" 
+                        style="width: 100%; text-align: left; padding: 10px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; transition: 0.2s; font-size: 13px; font-weight: 600; color: #334155;"
+                        onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                    👨‍🏫 ${padrino.nombre} <br>
+                    <span style="font-size:11px; color:#64748b; font-weight:normal;">CC ${padrino.cedula}</span>
+                </button>
+            `;
+        });
+
+    } catch (error) {
+        console.error("Error cargando lista de padrinos:", error);
+    }
+}
+
+// 🎯 PRIMER CLICK: Ver apadrinados del tutor seleccionado
+async function verApadrinadosAsociados(cedulaPadrino, nombrePadrino) {
+    const detalleDiv = document.getElementById('contenedorDetalleAlumnos');
+    detalleDiv.innerHTML = `<div style="text-align:center; padding:30px; color:#7f8c8d;">Buscando alumnos asignados...</div>`;
+
+    try {
+        const snap = await db.collection('empleados')
+                            .where('padrino_id', '==', cedulaPadrino)
+                            .where('es_apadrinado', '==', true)
+                            .get();
+
+        if (snap.empty) {
+            detalleDiv.innerHTML = `
+                <div style="padding: 20px; text-align: center; color: #e11d48; background: #fff1f2; border-radius: 6px; font-size: 13px;">
+                    El padrino <strong>${nombrePadrino}</strong> no tiene alumnos asociados actualmente.
+                </div>`;
+            return;
+        }
+
+        let htmlTabla = `
+            <div style="font-size:13px; margin-bottom:10px; color:#475569;">Alumnos a cargo de: <strong>${nombrePadrino}</strong></div>
+            <table style="width:100%; border-collapse:collapse; background:white; border-radius:6px; overflow:hidden; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
+                <thead>
+                    <tr style="background:#edf2f7; text-align:left; font-size:12px;">
+                        <th style="padding:10px;">Nombre Apadrinado</th>
+                        <th style="padding:10px;">Link Alumno</th>
+                        <th style="padding:10px;">Link Padrino</th>
+                        <th style="padding:10px; text-align:center;">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        snap.forEach(doc => {
+            const alumno = doc.data();
+            
+            // 🌟 CORRECCIÓN AQUÍ: Convertir el texto en un enlace dinámico clickable
+            const linkAp = alumno.link_evaluacion_apadrinado 
+                ? `<a href="${alumno.link_evaluacion_apadrinado}" target="_blank" style="color: #16a34a; text-decoration: underline; font-weight: bold;">✅ Configurado</a>` 
+                : '<span style="color: #dc2626;">❌ Pendiente</span>';
+                
+            const linkPad = alumno.link_evaluacion_padrino 
+                ? `<a href="${alumno.link_evaluacion_padrino}" target="_blank" style="color: #16a34a; text-decoration: underline; font-weight: bold;">✅ Configurado</a>` 
+                : '<span style="color: #dc2626;">❌ Pendiente</span>';
+
+            // Convertimos los datos a string seguro para pasarlos al modal
+            htmlTabla += `
+                <tr style="border-bottom:1px solid #f1f5f9; font-size:12px;">
+                    <td style="padding:10px;"><strong>${alumno.nombre}</strong><br><span style="color:#64748b;font-size:11px;">CC ${alumno.cedula}</span></td>
+                    <td style="padding:10px; color:${alumno.link_evaluacion_apadrinado ? '#16a34a':'#dc2626'}">${linkAp}</td>
+                    <td style="padding:10px; color:${alumno.link_evaluacion_padrino ? '#16a34a':'#dc2626'}">${linkPad}</td>
+                    <td style="padding:10px; text-align:center;">
+                        <button onclick="abrirModalAsignacion('${alumno.cedula}', '${alumno.nombre}', '${alumno.link_evaluacion_apadrinado || ''}', '${alumno.link_evaluacion_padrino || ''}')" 
+                                style="background:#206987; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:11px;">
+                            🔗 Configurar Links
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        htmlTabla += `</tbody></table>`;
+        detalleDiv.innerHTML = htmlTabla;
+
+    } catch (error) {
+        console.error("Error al traer apadrinados:", error);
+    }
+}
+
+// 🛠️ Control del Modal Interactivo
+function abrirModalAsignacion(cedula, nombre, linkAp, linkPad) {
+    document.getElementById('modalCedulaAlumno').value = cedula;
+    document.getElementById('modalTituloAlumno').innerText = `Asignar Evaluaciones para: ${nombre}`;
+    document.getElementById('modalInputLinkApadrinado').value = linkAp;
+    document.getElementById('modalInputLinkPadrino').value = linkPad;
+    document.getElementById('modalAsignarLinks').style.display = 'flex';
+}
+
+function cerrarModalLinks() {
+    document.getElementById('modalAsignarLinks').style.display = 'none';
+}
+
+// 💾 GUARDAR DATOS EN FIRESTORE CON HISTORIAL DE TRAZABILIDAD AUTOMÁTICO
+async function procesarGuardadoLinksConTrazabilidad() {
+    const cedulaAlumno = document.getElementById('modalCedulaAlumno').value;
+    const linkApadrinado = document.getElementById('modalInputLinkApadrinado').value.trim();
+    const linkPadrino = document.getElementById('modalInputLinkPadrino').value.trim();
+
+    try {
+        let snap = await db.collection('empleados').where('cedula', '==', cedulaAlumno).limit(1).get();
+        if (snap.empty) return alert("Error: El alumno no existe.");
+
+        const docRef = snap.docs[0].ref;
+        const datosActuales = snap.docs[0].data();
+
+        let actualizaciones = {
+            link_evaluacion_apadrinado: linkApadrinado,
+            link_evaluacion_padrino: linkPadrino
+        };
+
+        // 🔄 Si se cambia el link y ya existía uno previo, guardamos traza en el historial del alumno
+        if (datosActuales.link_evaluacion_padrino && datosActuales.link_evaluacion_padrino !== linkPadrino) {
+            const registroHistorico = {
+                padrino_id_historico: datosActuales.padrino_id || "Desconocido",
+                link_padrino_anterior: datosActuales.link_evaluacion_padrino,
+                fecha_modificacion: new Date().toISOString().split('T')[0],
+                motivo: "Actualización manual de enlace de evaluación por el administrador"
+            };
+            // Agregamos al arreglo sin machacar los anteriores
+            actualizaciones.historial_padrinos = firebase.firestore.FieldValue.arrayUnion(registroHistorico);
+        }
+
+        await docRef.update(actualizaciones);
+        
+        alert("✅ Enlaces de evaluación asignados correctamente.");
+        cerrarModalLinks();
+        
+        // Refrescamos la vista de la tabla para ver los cambios aplicados en tiempo real
+        verApadrinadosAsociados(datosActuales.padrino_id, "Padrino Actual");
+
+    } catch (error) {
+        console.error("Error actualizando enlaces:", error);
+        alert("Hubo un error al guardar en Firestore.");
+    }
+}
+
     function logout() { localStorage.clear(); window.location.href = 'login.html'; }
     function poblarFiltrosEstrategicos() { }
+
+    // Añade esto al final de tu archivo admin_padrino.js junto a las demás exportaciones
+window.inicializarModuloGestionPadrinos = inicializarModuloGestionPadrinos;
+window.verApadrinadosAsociados = verApadrinadosAsociados;
+window.abrirModalAsignacion = abrirModalAsignacion;
+window.cerrarModalLinks = cerrarModalLinks;
+window.procesarGuardadoLinksConTrazabilidad = procesarGuardadoLinksConTrazabilidad;
   </script>
 </body>
 

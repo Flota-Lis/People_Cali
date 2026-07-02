@@ -61,7 +61,7 @@
   <script src="config.js"></script>
 
   <script>
-    const app = firebase.initializeApp(firebaseConfig);
+   const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -86,7 +86,7 @@
           .limit(1)
           .get();
 
-        // 🔍 PASO 2: Si no lo encuentra como texto y es un número, intenta buscarlo como tipo numérico
+        // 🔍 PASO 2: Búsqueda como Tipo Numérico
         if (snapshot.empty && !isNaN(cedulaInput)) {
           snapshot = await db.collection('empleados')
             .where('cedula', '==', Number(cedulaInput))
@@ -99,26 +99,31 @@
           const datosUsuario = docSnap.data();
           const rolUsuario = datosUsuario.rol ? String(datosUsuario.rol).toLowerCase().trim() : 'empleado';
           
+          // 🛡️ IDENTIFICACIÓN INTELIGENTE DE PADRINOS
+          // Evaluamos si tiene la bandera de es_padrino activa (ya sea en booleano o string)
+          const esPadrinoReal = (datosUsuario.es_padrino === true || datosUsuario.es_padrino === "true");
+
           // 💾 ALMACENAMIENTO DE CONTROL MAESTRO LOCAL
           localStorage.setItem('usuario_cedula', cedulaInput);
           localStorage.setItem('usuario_rol', rolUsuario);
+          localStorage.setItem('es_padrino', esPadrinoReal ? 'true' : 'false'); // Guardamos bandera explícita
           
-          // 🌟 NUEVO: Deja guardada la región y el cargo exacto del usuario en su navegador
-          // Esto garantiza que al saltar a index.html, la consulta de beneficios sepa qué CD y tarifa traer
           localStorage.setItem('usuario_region', datosUsuario.region || 'General');
           localStorage.setItem('usuario_cargo', datosUsuario.cargo || 'Operativo');
           
           alert('¡Bienvenido al Portal, ' + datosUsuario.nombre + '!');
 
           // =========================================================================
-          // 🎯 ENRUTAMIENTO RE-CALIBRADO DE RUTAS OPERATIVAS (SEGMENTACIÓN DE ACCESOS)
+          // 🎯 ENRUTAMIENTO CONTROLADO Y SEGMENTACIÓN DE ACCESOS
           // =========================================================================
           if (rolUsuario === 'admin') {
             window.location.href = 'admin.html';
-          } else if (rolUsuario === 'people' || rolUsuario === 'lider' || rolUsuario === 'jefe' || rolUsuario === 'padrino') {
-            window.location.href = 'admin_padrino.html';
+          } else if (rolUsuario === 'people' || rolUsuario === 'lider' || rolUsuario === 'jefe') {
+            window.location.href = 'admin_padrino.html'; // Panel Administrativo / Estratégico
+          } else if (esPadrinoReal) {
+            window.location.href = 'portal_padrino.html'; // 👨‍🏫 ¡Su nuevo portal exclusivo de tutoría!
           } else {
-            window.location.href = 'index.html';
+            window.location.href = 'index.html'; // Portal Móvil del Empleado
           }
 
         } else {

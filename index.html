@@ -102,6 +102,59 @@
     .tag-skill { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 10.5px; font-weight: 600; }
     .tag-tecnica { background: #e1f5ee; color: #0f6e56; border: 1px solid #3cbcae; }
     .tag-blanda { background: #fff8e1; color: #8a6e00; border: 1px solid #ffc404; }
+
+    /* 🌟 Estilos propios del nuevo bloque de progreso de hitos del empleado */
+    .hito-progreso-wrap {
+      padding: 22px 18px;
+      border-radius: 18px;
+      background: linear-gradient(165deg, #ffffff 0%, #f7fafc 100%);
+      border: 0.5px solid #dde3e7;
+      box-shadow: 0 6px 22px rgba(32, 105, 135, 0.05);
+    }
+    .hito-fecha-contrato-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding-bottom: 16px;
+      border-bottom: 1px dashed #dde3e7;
+    }
+    .hito-fecha-icon {
+      width: 38px; height: 38px; border-radius: 11px;
+      background: #e1f0f5; color: #206987;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .hito-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+    }
+    .hito-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.025);
+      transition: transform 0.15s ease;
+    }
+    .hito-card:hover { transform: translateY(-2px); }
+    .hito-card-head { display: flex; align-items: center; gap: 8px; }
+    .hito-card-icon {
+      width: 30px; height: 30px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+    .hito-card-label { font-size: 10.5px; font-weight: 700; color: #1c2430; line-height: 1.2; }
+    .hito-card-score { font-size: 19px; font-weight: 800; }
+    .hito-card-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 9.5px; font-weight: 700; padding: 3px 9px;
+      border-radius: 20px; width: fit-content;
+    }
+    .hito-card-meta { font-size: 8.5px; color: #7a8f99; line-height: 1.4; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -190,54 +243,36 @@
       </div>
     </div>
 
-    <div class="section-title">📋 Información Básica de Ingreso</div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px;">
-      <div class="card" style="padding: 10px; margin: 0;">
-        <div style="font-size: 9px; color: #7a8f99; font-weight: 700;">EMPRESA ANTERIOR</div>
-        <div style="font-size: 12px; font-weight: 600;" id="padrinoFichaEmpresaAnt">---</div>
+    <div class="section-title" style="display: flex; align-items: center; gap: 6px; margin-top: 14px;">
+      <i class="ti ti-info-circle" style="font-size: 14px; color: #206987;"></i> Información Básica de Ingreso
+    </div>
+    <div class="card" style="padding: 12px 16px; margin-bottom: 15px; background: #fff; border-radius: 14px; border: 0.5px solid #dde3e7; display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        <div style="font-size: 9px; color: #7a8f99; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Tiempo Activo en la Compañía</div>
+        <div style="font-size: 13px; font-weight: 700; color: #206987; margin-top: 2px;" id="padrinoFichaTiempoTranscurrido">Calculando...</div>
       </div>
-      <div class="card" style="padding: 10px; margin: 0;">
-        <div style="font-size: 9px; color: #7a8f99; font-weight: 700;">TIEMPO EN LA COMPAÑÍA</div>
-        <div style="font-size: 12px; font-weight: 600;" id="padrinoFichaTiempoTranscurrido">Calculando...</div>
+      <div style="width: 34px; height: 34px; border-radius: 10px; background: #e1f0f5; display: flex; align-items: center; justify-content: center; color: #206987;">
+        <i class="ti ti-clock" style="font-size: 20px;"></i>
       </div>
     </div>
 
-    <div class="section-title">🚀 Progreso y Calificaciones de Maduración</div>
-    <div class="card" style="padding: 15px;">
-      
-      <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px dashed #eef1f3;">
-        <div style="width: 28px; height: 28px; border-radius: 50%; background: #206987; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px;">📅</div>
+    <div class="section-title" style="display: flex; align-items: center; gap: 6px; margin-top: 20px;">
+      <i class="ti ti-timeline" style="font-size: 14px; color: #206987;"></i> Mi Progreso de Onboarding
+    </div>
+
+    <!-- 🌟 NUEVO BLOQUE: Tarjetas de progreso de hitos en tiempo real -->
+    <div class="hito-progreso-wrap">
+      <div class="hito-fecha-contrato-row">
+        <div class="hito-fecha-icon">
+          <i class="ti ti-calendar-event" style="font-size:19px;"></i>
+        </div>
         <div>
-          <div style="font-size: 12px; font-weight: 700; color: #1c2430;">Fecha de Contratación</div>
-          <div style="font-size: 10px; color: #7a8f99;" id="hitoFechaContrato">---</div>
+          <div style="font-size: 9px; color: #7a8f99; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Fecha de Contratación</div>
+          <div style="font-size: 14px; font-weight: 700; color: #1c2430;" id="hitoFechaContrato">---</div>
         </div>
       </div>
-
-      <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px dashed #eef1f3;">
-        <div style="width: 28px; height: 28px; border-radius: 50%; background: #ffc404; color: #1c2430; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;">Día 7</div>
-        <div style="flex: 1;">
-          <div style="font-size: 12px; font-weight: 700; color: #1c2430;">Evaluación Técnico</div>
-          <div style="font-size: 10px; color: #7a8f99;">Fase de Inducción Inicial</div>
-        </div>
-        <div style="width: 52px; height: 32px; border-radius: 20px; border: 2px solid #ffc404; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: #8a6e00; background:#fff8e1;" id="hitoNotaTecnico">0/100</div>
-      </div>
-
-      <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px dashed #eef1f3;">
-        <div style="width: 28px; height: 28px; border-radius: 50%; background: #3cbcae; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">Día 30</div>
-        <div style="flex: 1;">
-          <div style="font-size: 12px; font-weight: 700; color: #1c2430;">Evaluación Funcional</div>
-          <div style="font-size: 10px; color: #7a8f99;">Prácticas en la Operación Logística</div>
-        </div>
-        <div style="width: 52px; height: 32px; border-radius: 20px; border: 2px solid #3cbcae; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: #0f6e56; background:#e1f5ee;" id="hitoNotaFuncional">0/100</div>
-      </div>
-
-      <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0;">
-        <div style="width: 28px; height: 28px; border-radius: 50%; background: #206987; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">Día 90</div>
-        <div style="flex: 1;">
-          <div style="font-size: 12px; font-weight: 700; color: #1c2430;">Evaluación Autónomo</div>
-          <div style="font-size: 10px; color: #7a8f99;">Monitoreo y Desempeño Libre</div>
-        </div>
-        <div style="width: 52px; height: 32px; border-radius: 20px; border: 2px solid #206987; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; color: #206987; background:#e1f0f5;" id="hitoNotaAutonomo">0/100</div>
+      <div id="gridHitosEmpleado" class="hito-grid">
+        <div style="text-align:center; padding:15px; color:#7a8f99; font-size:11px; grid-column: 1 / -1;">Cargando tu progreso...</div>
       </div>
     </div>
 
@@ -268,6 +303,7 @@
           <span style="color:#7a8f99; display:block; font-size:8.5px; font-weight:700; margin-bottom: 4px;">HABILIDADES BLANDAS</span>
           <div id="padFichaBlandas" style="display:flex; flex-wrap:wrap; gap:4px;">---</div>
         </div>
+        <div id="historialPadrinosAnteriores"></div>
       </div>
     </div>
   </div>
@@ -292,13 +328,100 @@
     window.location.href = 'login.html';
   }
 
+  // 🇨🇴 Matriz Oficial Unificada de Días Festivos en Colombia (2026 - 2027)
+  const FESTIVOS_COLOMBIA = [
+      "2026-01-01", "2026-01-12", "2026-03-23", "2026-04-02", "2026-04-03",
+      "2026-05-01", "2026-05-18", "2026-06-08", "2026-06-15", "2026-06-29",
+      "2026-07-20", "2026-08-07", "2026-08-17", "2026-10-12", "2026-11-02",
+      "2026-11-16", "2026-12-08", "2026-12-25",
+      "2027-01-01", "2027-01-11", "2027-03-22", "2027-03-25", "2027-03-26",
+      "2027-05-01", "2027-05-10", "2027-05-31", "2027-06-07", "2027-07-05",
+      "2027-07-20", "2027-08-07", "2027-08-16", "2027-10-18", "2027-11-01",
+      "2027-11-15", "2027-12-08", "2027-12-25"
+  ];
+
+  function esDiaInhabilColombia(fechaObjeto) {
+      if (fechaObjeto.getDay() === 0) return true; // Domingo
+      const formatoISO = fechaObjeto.toISOString().split('T')[0];
+      return FESTIVOS_COLOMBIA.includes(formatoISO);
+  }
+
+  function calcularFechaLimiteHabilesColombia(fechaIngresoStr, diasHabilesAsumidos) {
+      if (!fechaIngresoStr || fechaIngresoStr === "—") return null;
+      let fechaActual = new Date(fechaIngresoStr + 'T00:00:00');
+      let diasContados = 0;
+      while (diasContados < diasHabilesAsumidos) {
+          fechaActual.setDate(fechaActual.getDate() + 1);
+          if (!esDiaInhabilColombia(fechaActual)) {
+              diasContados++;
+          }
+      }
+      return fechaActual.toISOString().split('T')[0];
+  }
+
+  function calcularFechaLimiteCalendarioISO(fechaIngresoStr, dias) {
+      if (!fechaIngresoStr || fechaIngresoStr === "—") return null;
+      const d = new Date(fechaIngresoStr + 'T00:00:00');
+      d.setDate(d.getDate() + dias);
+      return d.toISOString().split('T')[0];
+  }
+
+  // 🎨 Construye una tarjeta de hito con diseño propio y elegante para el empleado
+  function buildHitoEmpleadoCard(label, icono, nota, fechaEjecucion, fechaBase, diasDesfase, umbralAprobacion) {
+      const limiteStr = (diasDesfase === 0 || diasDesfase === 1 || diasDesfase === 7)
+          ? calcularFechaLimiteHabilesColombia(fechaBase, diasDesfase)
+          : calcularFechaLimiteCalendarioISO(fechaBase, diasDesfase);
+
+      const hoy = new Date(); hoy.setHours(0,0,0,0);
+      const limiteFecha = limiteStr ? new Date(limiteStr + 'T00:00:00') : null;
+      const notaNum = Number(nota) || 0;
+
+      let estadoTexto = '', estadoColor = '', estadoBg = '', estadoBorder = '', estadoIcono = '';
+
+      if (notaNum === 0) {
+          const vencido = limiteFecha ? hoy > limiteFecha : false;
+          if (vencido) {
+              estadoTexto = 'Vencido'; estadoColor = '#a32d2d'; estadoBg = '#fff5f5'; estadoBorder = '#f09595'; estadoIcono = '⚠️';
+          } else {
+              estadoTexto = 'Pendiente'; estadoColor = '#8a6e00'; estadoBg = '#fff8e1'; estadoBorder = '#ffc404'; estadoIcono = '⏳';
+          }
+      } else {
+          const aprobo = notaNum >= umbralAprobacion;
+          if (!aprobo) {
+              estadoTexto = 'Reprobado'; estadoColor = '#a32d2d'; estadoBg = '#fff5f5'; estadoBorder = '#f09595'; estadoIcono = '❌';
+          } else {
+              const ejecutoATiempo = limiteFecha ? (new Date((fechaEjecucion || fechaBase) + 'T00:00:00') <= limiteFecha) : true;
+              if (ejecutoATiempo) {
+                  estadoTexto = 'A tiempo'; estadoColor = '#0f6e56'; estadoBg = '#e1f5ee'; estadoBorder = '#3cbcae'; estadoIcono = '✓';
+              } else {
+                  estadoTexto = 'Fuera de plazo'; estadoColor = '#206987'; estadoBg = '#e8f3f6'; estadoBorder = '#8fc4d6'; estadoIcono = '🎓';
+              }
+          }
+      }
+
+      return `
+          <div class="hito-card" style="border:1.5px solid ${estadoBorder};">
+              <div class="hito-card-head">
+                  <div class="hito-card-icon" style="background:${estadoBg};">${icono}</div>
+                  <div class="hito-card-label">${label}</div>
+              </div>
+              <div class="hito-card-score" style="color:${estadoColor};">${notaNum > 0 ? notaNum + '%' : '—'}</div>
+              <div class="hito-card-badge" style="background:${estadoBg}; color:${estadoColor};">
+                  ${estadoIcono} ${estadoTexto}
+              </div>
+              <div class="hito-card-meta">
+                  ${notaNum > 0 ? `Hecho: ${fechaEjecucion || '—'}` : `Límite: ${limiteStr || '—'}`}
+              </div>
+          </div>`;
+  }
+
   window.addEventListener('DOMContentLoaded', () => {
     inicializarEscuchadorEmpleadoRealtime();
     cargarCronogramaYProgreso();
     cargarMensajesAlertaAutomaticas();
   });
 
-  // 🌟 ESCUCHADOR MAESTRO EN TIEMPO REAL CON INYECCIÓN DE FOTO, CORREO DEL TUTOR Y CD DINÁMICO
+ // 🌟 ESCUCHADOR MAESTRO EN TIEMPO REAL CON DETECCIÓN DE FECHA EXACTA Y SEGMENTACIÓN POR CD
   function inicializarEscuchadorEmpleadoRealtime() {
     db.collection('empleados')
       .where('cedula', '==', String(cedulaLogueada))
@@ -308,7 +431,10 @@
         const docSnap = snapshot.docs[0];
         const usuario = docSnap.data();
         const cargoEmpleado = usuario.cargo || "Operativo";
-        const regionEmpleado = usuario.region || "General"; // 🌟 Capturamos la región real del perfil del empleado
+        const regionEmpleado = usuario.region || "General";
+
+        // 🌟 CORRECCIÓN DE ORIGEN: Detecta la fecha real de contratación guardada en el perfil
+        const fechaBaseReal = usuario.fecha_ingreso || (usuario.hitos && usuario.hitos.fecha_contratacion) || "";
 
         // Llenamos el perfil básico de la cabecera
         document.getElementById('userName').textContent = usuario.nombre;
@@ -322,27 +448,42 @@
         if (usuario.es_apadrinado === true || usuario.padrino_id) {
           if(document.getElementById('tab-padrino')) document.getElementById('tab-padrino').style.display = 'flex';
 
-          // Cálculo informativo de días transcurridos desde su ingreso real
-          const fechaIngreso = new Date(usuario.fecha_ingreso + 'T00:00:00');
+          // Cálculo informativo de días transcurridos usando el reloj del equipo en tiempo real
+          let diasTranscurridos = 0;
+          if (fechaBaseReal) {
+            const fechaIngresoObj = new Date(fechaBaseReal + 'T00:00:00');
+            const hoy = new Date();
+            fechaIngresoObj.setHours(0,0,0,0);
+            hoy.setHours(0,0,0,0);
+            const diferenciaMilisegundos = hoy - fechaIngresoObj;
+            diasTranscurridos = Math.floor(diferenciaMilisegundos / (1000 * 60 * 60 * 24));
+          }
           
-          // ✅ AHORA: Sincronizado dinámicamente con el reloj en tiempo real del servidor
-          const hoy = new Date(); 
-          const diferenciaMilisegundos = hoy - fechaIngreso;
-          const diasTranscurridos = Math.floor(diferenciaMilisegundos / (1000 * 60 * 60 * 24));
-
           // Pintamos los datos consolidados en la pantalla
           document.getElementById('padrinoFichaNombre').textContent = usuario.nombre;
           document.getElementById('padrinoFichaCargo').textContent = cargoEmpleado;
           document.getElementById('padrinoFichaEtapa').textContent = usuario.etapa_actual || "Etapa Técnico";
-          document.getElementById('padrinoFichaEmpresaAnt').textContent = usuario.empresa_anterior || "Ninguna";
+          
+          // ✅ Sincronización del contador de días superior
           document.getElementById('padrinoFichaTiempoTranscurrido').textContent = (diasTranscurridos >= 0 ? diasTranscurridos : 0) + " días activos";
 
-          // 🧮 INYECCIÓN DINÁMICA DE NOTAS PROCESADAS POR EL CONSOLIDADOR QR DEL FORMS
-          if (usuario.hitos) {
-            document.getElementById('hitoFechaContrato').textContent = usuario.fecha_income || usuario.fecha_ingreso || "---";
-            document.getElementById('hitoNotaTecnico').textContent = (usuario.hitos.eval_tecnico_nota !== undefined ? usuario.hitos.eval_tecnico_nota : 0) + "/100";
-            document.getElementById('hitoNotaFuncional').textContent = (usuario.hitos.eval_funcional_nota !== undefined ? usuario.hitos.eval_funcional_nota : 0) + "/100";
-            document.getElementById('hitoNotaAutonomo').textContent = (usuario.hitos.eval_autonomo_nota !== undefined ? usuario.hitos.eval_autonomo_nota : 0) + "/100";
+          // 🧮 INYECCIÓN DINÁMICA DE TARJETAS DE PROGRESO POR HITO (Safety, People, 7d, 30d, 90d)
+          document.getElementById('hitoFechaContrato').textContent = fechaBaseReal || "---";
+
+          const h = usuario.hitos || {};
+          const gridHitos = document.getElementById('gridHitosEmpleado');
+
+          if (gridHitos) {
+            if (fechaBaseReal) {
+              gridHitos.innerHTML =
+                  buildHitoEmpleadoCard("Safety (D1)", "🛡️", h.onboarding_safety_nota, h.onboarding_safety_fecha, fechaBaseReal, 0, 100) +
+                  buildHitoEmpleadoCard("People (D2)", "🤝", h.onboarding_people_nota, h.onboarding_people_fecha, fechaBaseReal, 1, 80) +
+                  buildHitoEmpleadoCard("Técnico (D7)", "⚙️", h.eval_tecnico_nota, h.eval_tecnico_fecha, fechaBaseReal, 7, 60) +
+                  buildHitoEmpleadoCard("Funcional (D30)", "📈", h.eval_funcional_nota, h.eval_funcional_fecha, fechaBaseReal, 32, 60) +
+                  buildHitoEmpleadoCard("Autónomo (D90)", "🏆", h.eval_autonomo_nota, h.eval_autonomo_fecha, fechaBaseReal, 92, 60);
+            } else {
+              gridHitos.innerHTML = '<div style="text-align:center; padding:15px; color:#7a8f99; font-size:11px; grid-column: 1 / -1;">Fecha de contratación no registrada aún.</div>';
+            }
           }
 
           // 🔍 BÚSQUEDA CRUZADA: Hoja de vida extendida del Padrino (CON FOTO BASE64 Y CORREO)
@@ -358,12 +499,10 @@
               document.getElementById('padFichaEmpresa').textContent = tData.empresa_padrino || "Bavaria AB InBev";
               document.getElementById('padFichaTiempo').textContent = tData.tiempo_compania || "9 meses";
 
-              // 📧 Inyección dinámica del correo electrónico de alertas en la tarjeta
               if(document.getElementById('padFichaCorreo')) {
                 document.getElementById('padFichaCorreo').textContent = tData.correo || "Sin correo registrado";
               }
 
-              // 📸 RE-CALIBRACIÓN DE FOTO: Renderiza Base64 guardado dinámicamente, conserva compatibilidad con michel.png
               if (boxAvatar) {
                 if (tData.foto_url && tData.foto_url.trim() !== "") {
                   boxAvatar.innerHTML = `<img src="${tData.foto_url}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
@@ -374,7 +513,6 @@
                 }
               }
 
-              // Inyectamos habilidades técnicas en burbujas esmeralda
               const boxTecnicas = document.getElementById('padFichaTecnicas');
               if (boxTecnicas) {
                 boxTecnicas.innerHTML = '';
@@ -383,7 +521,6 @@
                 } else { boxTecnicas.innerHTML = '<span style="color:#7a8f99;">Ninguna</span>'; }
               }
 
-              // Inyectamos habilidades blandas en burbujas amarillas
               const boxBlandas = document.getElementById('padFichaBlandas');
               if (boxBlandas) {
                 boxBlandas.innerHTML = '';
@@ -398,45 +535,73 @@
         }
 
         // =========================================================
-        // 🎁 RECEPTOR DINÁMICO DE BENEFICIOS ASIGNADOS POR CARGO Y REGION
-        // =========================================================
-        // ✅ CORRECCIÓN MÁXIMA: Aplica filtro compuesto estricto de Cargo + CD
-        const beneficioSnapshot = await db.collection('beneficios')
-          .where('cargo', '==', cargoEmpleado)
-          .where('region', '==', regionEmpleado)
-          .get();
+            // 📜 🌟 NUEVA INYECCIÓN: LÍNEA DE TIEMPO DE PADRINOS ANTERIORES
+            // =========================================================
+            const contenedorHistorial = document.getElementById('historialPadrinosAnteriores');
+            if (contenedorHistorial) {
+                contenedorHistorial.innerHTML = ''; // Limpiamos residuos
+                
+                if (usuario.historial_padrinos && usuario.historial_padrinos.length > 0) {
+                    let htmlHistorial = `<div style="margin-top: 15px; border-top: 1px dashed #ced4da; padding-top: 12px;">
+                        <h5 style="margin: 0 0 8px 0; color: #495057; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                            <i class="ti ti-history"></i> Historial de Acompañamiento:
+                        </h5>`;
+                        
+                    usuario.historial_padrinos.forEach(reg => {
+                        htmlHistorial += `
+                            <div style="background: #f8f9fa; border-left: 3px solid #6c757d; padding: 6px 10px; border-radius: 0 4px 4px 0; margin-bottom: 6px; font-size: 11px; color: #6c757d;">
+                                👥 <strong>${reg.padrino_nombre_anterior}</strong><br>
+                                📅 Relevo: ${reg.fecha_relevo} · <span style="font-style: italic;">${reg.motivo || 'Cambio operativo'}</span>
+                            </div>`;
+                    });
+                    
+                   htmlHistorial += `</div>`;
+                    contenedorHistorial.innerHTML = htmlHistorial;
+                }
+            }
 
-        const listaContainer = document.getElementById('contenedor-beneficios-lista');
-        if (listaContainer) {
-          listaContainer.innerHTML = '';
-          if (!beneficioSnapshot.empty) {
-            beneficioSnapshot.forEach((doc) => {
-              const bReal = doc.data();
-              const valorFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(bReal.valor || 0);
-              listaContainer.innerHTML += `
-                <div class="card" style="margin-bottom: 15px;">
-                  <div class="card-header">
-                    <div class="card-icon yellow"><i class="ti ti-coin"></i></div>
-                    <div>
-                      <div class="card-title" style="color: #206987; font-weight: 700;">${bReal.concepto || "Compensación"}</div>
-                      <div class="card-sub">Cargo: ${cargoEmpleado} · Sede: ${regionEmpleado}</div>
-                    </div>
-                  </div>
-                  <div class="benefit-row">
-                    <span class="benefit-label">Monto asignado para tu perfil:</span>
-                    <span class="benefit-amount" style="color: #206987; font-weight: 700;">${valorFormateado}</span>
-                  </div>
-                </div>`;
-            });
-          } else {
-            listaContainer.innerHTML = `<div style="text-align:center; padding:20px; color:#7a8f99; font-size:12px;">No registras beneficios configurados para el cargo de ${cargoEmpleado} en la sede de ${regionEmpleado}.</div>`;
-          }
-        }
-      }, (error) => {
-        console.error("Error en el canal en tiempo real del colaborador:", error);
-      });
-  }
+            // =========================================================
+            // 🎁 RECEPTOR DINÁMICO DE BENEFICIOS ASIGNADOS POR CARGO Y REGION
+            // =========================================================
+            const beneficioSnapshot = await db.collection('beneficios')
+              .where('cargo', '==', cargoEmpleado)
+              .where('region', '==', regionEmpleado)
+              .get();
 
+            const listaContainer = document.getElementById('contenedor-beneficios-lista');
+            if (listaContainer) {
+              listaContainer.innerHTML = '';
+              if (!beneficioSnapshot.empty) {
+                beneficioSnapshot.forEach((doc) => {
+                  const bReal = doc.data();
+                  const valorFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(bReal.valor || 0);
+                  listaContainer.innerHTML += `
+                    <div class="card" style="margin-bottom: 15px;">
+                      <div class="card-header">
+                        <div class="card-icon yellow"><i class="ti ti-coin"></i></div>
+                        <div>
+                          <div class="card-title" style="color: #206987; font-weight: 700;">${bReal.concepto || "Compensación"}</div>
+                          <div class="card-sub">Cargo: ${cargoEmpleado} · Sede: ${regionEmpleado}</div>
+                        </div>
+                      </div>
+                      <div class="benefit-row">
+                        <span class="benefit-label">Monto asignado para tu perfil:</span>
+                        <span class="benefit-amount" style="color: #206987; font-weight: 700;">${valorFormateado}</span>
+                      </div>
+                    </div>`;
+                });
+              } else {
+                listaContainer.innerHTML = `<div style="text-align:center; padding:20px; color:#7a8f99; font-size:12px;">No registras beneficios configurados para el cargo de ${cargoEmpleado} en la sede de ${regionEmpleado}.</div>`;
+              }
+            }
+            
+        }, (error) => { // ✅ AHROA SÍ: Todos los procesos asíncronos cierran juntos de forma segura
+            console.error("Error en el canal en tiempo real del colaborador:", error);
+        });
+    }
+  
+
+  
   function cargarCronogramaYProgreso() {
     db.collection('items_cronograma').where('empleado_id', '==', cedulaLogueada).onSnapshot((snapshot) => {
       const listContainer = document.getElementById('cap-list');
