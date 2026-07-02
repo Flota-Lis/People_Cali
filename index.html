@@ -303,6 +303,7 @@
           <span style="color:#7a8f99; display:block; font-size:8.5px; font-weight:700; margin-bottom: 4px;">HABILIDADES BLANDAS</span>
           <div id="padFichaBlandas" style="display:flex; flex-wrap:wrap; gap:4px;">---</div>
         </div>
+        <div id="historialPadrinosAnteriores"></div>
       </div>
     </div>
   </div>
@@ -534,43 +535,71 @@
         }
 
         // =========================================================
-        // 🎁 RECEPTOR DINÁMICO DE BENEFICIOS ASIGNADOS POR CARGO Y REGION
-        // =========================================================
-        const beneficioSnapshot = await db.collection('beneficios')
-          .where('cargo', '==', cargoEmpleado)
-          .where('region', '==', regionEmpleado)
-          .get();
+            // 📜 🌟 NUEVA INYECCIÓN: LÍNEA DE TIEMPO DE PADRINOS ANTERIORES
+            // =========================================================
+            const contenedorHistorial = document.getElementById('historialPadrinosAnteriores');
+            if (contenedorHistorial) {
+                contenedorHistorial.innerHTML = ''; // Limpiamos residuos
+                
+                if (usuario.historial_padrinos && usuario.historial_padrinos.length > 0) {
+                    let htmlHistorial = `<div style="margin-top: 15px; border-top: 1px dashed #ced4da; padding-top: 12px;">
+                        <h5 style="margin: 0 0 8px 0; color: #495057; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                            <i class="ti ti-history"></i> Historial de Acompañamiento:
+                        </h5>`;
+                        
+                    usuario.historial_padrinos.forEach(reg => {
+                        htmlHistorial += `
+                            <div style="background: #f8f9fa; border-left: 3px solid #6c757d; padding: 6px 10px; border-radius: 0 4px 4px 0; margin-bottom: 6px; font-size: 11px; color: #6c757d;">
+                                👥 <strong>${reg.padrino_nombre_anterior}</strong><br>
+                                📅 Relevo: ${reg.fecha_relevo} · <span style="font-style: italic;">${reg.motivo || 'Cambio operativo'}</span>
+                            </div>`;
+                    });
+                    
+                   htmlHistorial += `</div>`;
+                    contenedorHistorial.innerHTML = htmlHistorial;
+                }
+            }
 
-        const listaContainer = document.getElementById('contenedor-beneficios-lista');
-        if (listaContainer) {
-          listaContainer.innerHTML = '';
-          if (!beneficioSnapshot.empty) {
-            beneficioSnapshot.forEach((doc) => {
-              const bReal = doc.data();
-              const valorFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(bReal.valor || 0);
-              listaContainer.innerHTML += `
-                <div class="card" style="margin-bottom: 15px;">
-                  <div class="card-header">
-                    <div class="card-icon yellow"><i class="ti ti-coin"></i></div>
-                    <div>
-                      <div class="card-title" style="color: #206987; font-weight: 700;">${bReal.concepto || "Compensación"}</div>
-                      <div class="card-sub">Cargo: ${cargoEmpleado} · Sede: ${regionEmpleado}</div>
-                    </div>
-                  </div>
-                  <div class="benefit-row">
-                    <span class="benefit-label">Monto asignado para tu perfil:</span>
-                    <span class="benefit-amount" style="color: #206987; font-weight: 700;">${valorFormateado}</span>
-                  </div>
-                </div>`;
-            });
-          } else {
-            listaContainer.innerHTML = `<div style="text-align:center; padding:20px; color:#7a8f99; font-size:12px;">No registras beneficios configurados para el cargo de ${cargoEmpleado} en la sede de ${regionEmpleado}.</div>`;
-          }
-        }
-      }, (error) => {
-        console.error("Error en el canal en tiempo real del colaborador:", error);
-      });
-  }
+            // =========================================================
+            // 🎁 RECEPTOR DINÁMICO DE BENEFICIOS ASIGNADOS POR CARGO Y REGION
+            // =========================================================
+            const beneficioSnapshot = await db.collection('beneficios')
+              .where('cargo', '==', cargoEmpleado)
+              .where('region', '==', regionEmpleado)
+              .get();
+
+            const listaContainer = document.getElementById('contenedor-beneficios-lista');
+            if (listaContainer) {
+              listaContainer.innerHTML = '';
+              if (!beneficioSnapshot.empty) {
+                beneficioSnapshot.forEach((doc) => {
+                  const bReal = doc.data();
+                  const valorFormateado = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(bReal.valor || 0);
+                  listaContainer.innerHTML += `
+                    <div class="card" style="margin-bottom: 15px;">
+                      <div class="card-header">
+                        <div class="card-icon yellow"><i class="ti ti-coin"></i></div>
+                        <div>
+                          <div class="card-title" style="color: #206987; font-weight: 700;">${bReal.concepto || "Compensación"}</div>
+                          <div class="card-sub">Cargo: ${cargoEmpleado} · Sede: ${regionEmpleado}</div>
+                        </div>
+                      </div>
+                      <div class="benefit-row">
+                        <span class="benefit-label">Monto asignado para tu perfil:</span>
+                        <span class="benefit-amount" style="color: #206987; font-weight: 700;">${valorFormateado}</span>
+                      </div>
+                    </div>`;
+                });
+              } else {
+                listaContainer.innerHTML = `<div style="text-align:center; padding:20px; color:#7a8f99; font-size:12px;">No registras beneficios configurados para el cargo de ${cargoEmpleado} en la sede de ${regionEmpleado}.</div>`;
+              }
+            }
+            
+        }, (error) => { // ✅ AHROA SÍ: Todos los procesos asíncronos cierran juntos de forma segura
+            console.error("Error en el canal en tiempo real del colaborador:", error);
+        });
+    }
+  
 
   
   function cargarCronogramaYProgreso() {

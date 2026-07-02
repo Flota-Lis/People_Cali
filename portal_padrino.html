@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Padrino — Logística</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        :root {
+            --primary: #206987;
+            --primary-dark: #1a4f66;
+            --bg: #f4f6f8;
+            --text: #1c2430;
+            --text-muted: #7a8f99;
+            --border: #dde3e7;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+        }
+
+        /* BARRA SUPERIOR / NAVBAR */
+        .navbar {
+            background-color: var(--primary-dark);
+            color: white;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: background 0.2s;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* CONTENEDOR PRINCIPAL */
+        .container {
+            padding: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
+
+        /* TARJETAS / CARDS */
+        .card {
+            background: white;
+            border-radius: 12px;
+            border: 0.5px solid var(--border);
+            box-shadow: 0 4px 18px rgba(32, 105, 135, 0.02);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-welcome {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: white;
+            border: none;
+        }
+
+        /* TABLAS RESPONSIVAS */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #edf2f7;
+            color: #4a5568;
+            padding: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* BOTONES */
+        .btn-eval {
+            background-color: var(--primary);
+            color: white;
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 6px rgba(32, 105, 135, 0.15);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-eval:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .badge-pending {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            background: #f1f5f9;
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        /* ESTADOS DE AVANCE PARA EL APADRINADO */
+        .badge-done {
+            background-color: #e6f4ea;
+            color: #137333;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-alert {
+            background-color: #fce8e6;
+            color: #c5221f;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            border: 0.5px solid #fad2cf;
+        }
+
+        .badge-process {
+            background-color: #ffeac2;
+            color: #b06000;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <div class="navbar-brand">
+            <i class="ti ti-truck-delivery"></i> LOGÍSTICA — PANEL PADRINO
+        </div>
+        <button class="btn-logout" onclick="logout()">
+            <i class="ti ti-logout"></i> Cerrar Sesión
+        </button>
+    </div>
+
+    <div class="container">
+
+        <div class="card card-welcome">
+            <h2 style="margin: 0; font-size: 22px; font-weight: 700;">¡Hola, <span
+                    id="padrino-nombre-bienvenida">Tutor</span>! 👋</h2>
+            <p style="margin: 6px 0 0 0; font-size: 13.5px; opacity: 0.9;">Bienvenido a tu panel operativo. Aquí puedes
+                consultar la lista de los colaboradores asignados bajo tu mentoría y realizar sus evaluaciones.</p>
+        </div>
+
+        <div class="card">
+            <div
+                style="font-weight: 700; font-size: 15px; color: var(--primary-dark); margin-bottom: 5px; display: flex; align-items: center; gap: 6px;">
+                <i class="ti ti-users"></i> Mis Alumnos Apadrinados Asociados
+            </div>
+            <p style="font-size: 12.5px; color: var(--text-muted); margin: 0 0 15px 0;">Lista en tiempo real de
+                conductores o auxiliares asignados a tu nombre:</p>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Colaborador</th>
+                            <th>Cargo / Regional</th>
+                            <th>Hitos Plan Padrino</th>
+                            <th style="text-align: center; width: 140px;">Evaluación (Forms)</th>
+                            <th style="text-align: center; width: 100px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-alumnos-padrino">
+                        <tr>
+                            <td colspan="3" style="text-align: center; padding: 30px; color: var(--text-muted);">
+                                <i class="ti ti-refresh spin" style="font-size: 18px; vertical-align: middle;"></i>
+                                Sincronizando alumnos de la operación...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+    <script src="config.js"></script>
+
+    <script>
+
+
+        // Inicializar Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // 🛡️ 2. CONTROL DE ACCESO ESTRICTO DESDE EL DOM
+        document.addEventListener('DOMContentLoaded', () => {
+            const esPadrino = localStorage.getItem('es_padrino');
+            const rol = localStorage.getItem('usuario_rol');
+
+            // Si no es un padrino y tampoco un rol administrativo, lo saca al login
+            if (esPadrino !== 'true' && rol !== 'admin' && rol !== 'people') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            inicializarPortalPadrino();
+        });
+
+        async function inicializarPortalPadrino() {
+    const cedulaPadrino = localStorage.getItem('usuario_cedula');
+    const tbody = document.getElementById('tbody-alumnos-padrino');
+
+    if (!cedulaPadrino || !tbody) return;
+
+    try {
+        // Consultar el nombre del padrino logueado para personalizar el banner
+        const snapPadrino = await db.collection('empleados').where('cedula', '==', cedulaPadrino).limit(1).get();
+        if (!snapPadrino.empty) {
+            document.getElementById('padrino-nombre-bienvenida').textContent = snapPadrino.docs[0].data().nombre;
+        }
+
+        // Escuchar cambios en la colección de empleados en tiempo real
+        db.collection('empleados')
+            .where('padrino_id', '==', cedulaPadrino)
+            .where('es_apadrinado', '==', true)
+            .onSnapshot((snapshot) => {
+
+                if (snapshot.empty) {
+                    tbody.innerHTML = `
+                        <tr>
+                          <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                            😎 Actualmente no tienes alumnos asignados bajo tu tutoría en este ciclo.
+                          </td>
+                        </tr>`;
+                    return;
+                }
+                
+                let htmlFilas = '';
+                snapshot.forEach((doc) => {
+                    const alumno = doc.data();
+
+                    // 🧠 EXTRACCIÓN DE NOTAS DEL PLAN PADRINO (7, 30 y 90 Días)
+                    const h = alumno.hitos || {};
+                    const n7 = h.eval_tecnico_nota || 0;
+                    const n30 = h.eval_funcional_nota || 0;
+
+                    // Calculamos la nota de 90 Días unificando pre, normal o post como lo tienes en tu backend
+                    let notes90 = [];
+                    if (h.eval_autonomo_pre_nota) notes90.push(h.eval_autonomo_pre_nota);
+                    if (h.eval_autonomo_nota) notes90.push(h.eval_autonomo_nota);
+                    if (h.eval_autonomo_post_nota) notes90.push(h.eval_autonomo_post_nota);
+                    const n90 = notes90.length > 0 ? Math.round(notes90.reduce((a, b) => a + b, 0) / notes90.length) : 0;
+
+                    // 📊 CONTEO DE ETAPAS REALIZADAS (Basado en tu indicador de progreso de 5 fases totales)
+                    let etapasRealizadasConteo = 0;
+                    if (h.onboarding_safety_nota > 0) etapasRealizadasConteo++;
+                    if (h.onboarding_people_nota > 0) etapasRealizadasConteo++;
+                    if (n7 > 0) etapasRealizadasConteo++;
+                    if (n30 > 0) etapasRealizadasConteo++;
+                    if (n90 > 0) etapasRealizadasConteo++;
+                    const porcentajeAvanceReal = etapasRealizadasConteo * 20; // 60% en el caso de Vladimir
+
+                    // 🎨 BADGES EXCLUSIVOS DEL PLAN PADRINO (Umbral de aprobación: 60%)
+                    let badgeD7 = n7 >= 60
+                        ? '<span class="badge-done">✓ 7 Días (Téc)</span>'
+                        : (n7 > 0 ? '<span class="badge-alert">❌ Reprobado</span>' : '<span class="badge-alert">⚠️ 7 Días Vencido</span>');
+
+                    let badgeD30 = n30 >= 60
+                        ? '<span class="badge-done">✓ 30 Días (Fun)</span>'
+                        : (n30 > 0 ? '<span class="badge-alert">❌ Reprobado</span>' : '<span class="badge-alert">⚠️ 30 Días Vencido</span>');
+
+                    let badgeD90 = n90 >= 60
+                        ? '<span class="badge-done">✓ 90 Días (Aut)</span>'
+                        : (n90 > 0 ? '<span class="badge-alert">❌ Reprobado</span>' : '<span class="badge-alert">⏳ 90 Días Pendiente</span>');
+
+                    // Enlace de evaluación para el Padrino
+                    let botonAccion = '';
+                    if (alumno.link_evaluacion_padrino) {
+                        botonAccion = `
+                        <a href="${alumno.link_evaluacion_padrino}" target="_blank" class="btn-eval">
+                          <i class="ti ti-clipboard-check"></i> Evaluar Alumno
+                        </a>`;
+                    } else {
+                        botonAccion = `<span class="badge-pending">⏳ Sin link asignado</span>`;
+                    }
+
+                    // 🚀 RENDERIZADO COMPLETADO SIN PLACEHOLDERS
+                    htmlFilas += `
+                      <tr>
+                        <td>
+                          <strong>${alumno.nombre}</strong><br>
+                          <span style="font-size: 11px; color: var(--text-muted);">CC ${alumno.cedula}</span>
+                        </td>
+                        <td>
+                          <strong>${alumno.cargo || 'Operativo'}</strong><br>
+                          <span style="font-size: 11.5px; color: var(--primary); font-weight: 500;">${alumno.region || 'General'}</span>
+                        </td>
+                        <td>
+                          <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; margin-bottom: 6px;">
+                            ${badgeD7}
+                            ${badgeD30}
+                            ${badgeD90}
+                          </div>
+                          <span style="font-size: 11.5px; color: var(--text-muted); display:block;">Fases en Progreso: <strong style="color: var(--primary);">${porcentajeAvanceReal}%</strong></span>
+                        </td>
+                        <td style="text-align: center;">
+                          ${botonAccion}
+                        </td>
+                        <td style="text-align: center;">
+                          <button onclick="eliminarPlanPadrinoMantenerEmpleado('${alumno.cedula}', '${alumno.nombre}')" 
+                                  style="background: #fff5f5; color: #a32d2d; border: 1px solid #f09595; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;"
+                                  onmouseover="this.style.background='#ffebeb'" onmouseout="this.style.background='#fff5f5'">
+                            <i class="ti ti-trash" style="font-size: 13px;"></i> Quitar Plan
+                          </button>
+                        </td>
+                      </tr>`;
+                });
+
+                tbody.innerHTML = htmlFilas;
+            });
+
+    } catch (error) {
+        console.error("Error cargando el portal del padrino:", error);
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#dc2626; padding:20px;">❌ Error de conexión al sincronizar la base de datos.</td></tr>`;
+    }
+}
+
+// 🛡️ LÓGICA DE DETONACIÓN Y LIMPIEZA EN FIRESTORE
+async function eliminarPlanPadrinoMantenerEmpleado(cedula, nombre) {
+    if (!cedula) return;
+    
+    const confirmacion = confirm(`⚠️ ¿Estás seguro de que deseas eliminar el Plan Padrino de ${nombre}?\n\nEl colaborador NO se borrará del sistema, pero finalizará su plan actual y dejará de aparecerle a este padrino.`);
+    if (!confirmacion) return;
+
+    try {
+        // Buscamos el documento por el campo cédula (String o Number)
+        let snap = await db.collection('empleados').where('cedula', '==', cedula).limit(1).get();
+        if (snap.empty && !isNaN(cedula)) {
+            snap = await db.collection('empleados').where('cedula', '==', Number(cedula)).limit(1).get();
+        }
+
+        if (snap.empty) {
+            alert("❌ Error: No se encontró al colaborador.");
+            return;
+        }
+
+        const docRef = snap.docs[0].ref;
+
+        // Limpiamos los campos del Plan Padrino conservando al empleado intacto
+        await docRef.update({
+            es_apadrinado: false,
+            padrino_id: "",
+            estado_plan_padrino: "Sin Plan",
+            etapa_actual: "Ninguna",
+            link_evaluacion_apadrinado: "",
+            link_evaluacion_padrino: "",
+            fechas_limite_evaluaciones: firebase.firestore.FieldValue.delete()
+        });
+
+        alert(`✅ El Plan Padrino de ${nombre} ha sido removido con éxito.`);
+
+    } catch (error) {
+        console.error("Error al desvincular el plan:", error);
+        alert("❌ Error en la base de datos al remover el plan.");
+    }
+}
+
+// Asegurar disponibilidad global de la función del botón
+window.eliminarPlanPadrinoMantenerEmpleado = eliminarPlanPadrinoMantenerEmpleado;
+
+        // 🚪 CERRAR SESIÓN
+        function logout() {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+
+</html>
