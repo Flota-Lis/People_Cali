@@ -376,10 +376,10 @@ db.collection('empleados').onSnapshot((snapshot) => {
             : arrayReprobadosHTML.join('');
     }
     if (document.getElementById('lista-desplegable-vencidos')) {
-    document.getElementById('lista-desplegable-vencidos').innerHTML = arrayVencidosHTML.length === 0
-        ? `<div style="text-align:center; padding:15px; color:#0f6e56; font-size:11.5px; font-weight:600; background:#e1f5ee; border-radius:6px;">✅ No hay planes vencidos actualmente.</div>`
-        : arrayVencidosHTML.join('');
-}
+        document.getElementById('lista-desplegable-vencidos').innerHTML = arrayVencidosHTML.length === 0
+            ? `<div style="text-align:center; padding:15px; color:#0f6e56; font-size:11.5px; font-weight:600; background:#e1f5ee; border-radius:6px;">✅ No hay planes vencidos actualmente.</div>`
+            : arrayVencidosHTML.join('');
+    }
 
     if (document.getElementById('dashIngresosMes')) document.getElementById('dashIngresosMes').textContent = ingresosMes;
     if (document.getElementById('dashIngresosAnio')) document.getElementById('dashIngresosAnio').textContent = ingresosAnio;
@@ -1130,8 +1130,10 @@ function abrirModalNovedad(cedula, nombre) {
     document.getElementById('nov-alumno-cedula').value = cedula;
     document.getElementById('nov-alumno-nombre').textContent = nombre;
     document.getElementById('nov-tipo').value = "";
-    document.getElementById('nov-dias').value = "";
-    document.getElementById('nov-wrapper-incapacidad').style.display = "none";
+    document.getElementById('nov-fecha-inicio').value = "";
+    document.getElementById('nov-fecha-fin').value = "";
+    document.getElementById('nov-dias-preview').textContent = "";
+    document.getElementById('nov-wrapper-fechas').style.display = "none";
     document.getElementById('modal-novedad-padrino').style.display = "flex";
 }
 
@@ -1139,19 +1141,56 @@ function cerrarModalNovedad() {
     document.getElementById('modal-novedad-padrino').style.display = "none";
 }
 
+
 function conmutarInputsNovedad() {
     const tipo = document.getElementById('nov-tipo').value;
-    document.getElementById('nov-wrapper-incapacidad').style.display = (tipo === "incapacidad") ? "block" : "none";
+    const requiereFechas = (tipo === "incapacidad" || tipo === "general");
+    document.getElementById('nov-wrapper-fechas').style.display = requiereFechas ? "block" : "none";
+}
+
+function calcularDiasEntreFechas(fechaInicioStr, fechaFinStr) {
+    if (!fechaInicioStr || !fechaFinStr) return 0;
+    const dInicio = new Date(fechaInicioStr + 'T00:00:00');
+    const dFin = new Date(fechaFinStr + 'T00:00:00');
+    const diffMs = dFin - dInicio;
+    const diffDias = Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1;
+    return diffDias > 0 ? diffDias : 0;
+}
+
+function calcularDiasNovedadPreview() {
+    const fi = document.getElementById('nov-fecha-inicio').value;
+    const ff = document.getElementById('nov-fecha-fin').value;
+    const preview = document.getElementById('nov-dias-preview');
+    const dias = calcularDiasEntreFechas(fi, ff);
+    preview.textContent = dias > 0 ? `📅 Total: ${dias} día(s) que se aplazarán los plazos.` : "";
+}
+
+// 👁️ Muestra en vivo cuántos días se van a aplazar mientras el admin elige las fechas
+function calcularDiasNovedadPreview() {
+    const fi = document.getElementById('nov-fecha-inicio').value;
+    const ff = document.getElementById('nov-fecha-fin').value;
+    const preview = document.getElementById('nov-dias-preview');
+    const dias = calcularDiasEntreFechas(fi, ff);
+    preview.textContent = dias > 0 ? `📅 Total: ${dias} día(s) que se aplazarán los plazos.` : "";
 }
 
 // 🧠 PROCESADOR DE NOVEDADES OPERATIVAS CON RECALCULO MATEMÁTICO DE HITOS
 async function guardarNovedadOperativaFirebase() {
     const cedula = document.getElementById('nov-alumno-cedula').value;
     const tipoNovedad = document.getElementById('nov-tipo').value;
-    const diasIncapacidad = parseInt(document.getElementById('nov-dias').value) || 0;
+    const fechaInicio = document.getElementById('nov-fecha-inicio').value;
+    const fechaFin = document.getElementById('nov-fecha-fin').value;
 
     if (!tipoNovedad) return alert("⚠️ Selecciona el tipo de novedad.");
-    if (tipoNovedad === "incapacidad" && diasIncapacidad <= 0) return alert("⚠️ Ingresa un número de días válido.");
+
+    const esNovedadConFechas = (tipoNovedad === "incapacidad" || tipoNovedad === "general");
+    let diasNovedad = 0;
+
+    if (esNovedadConFechas) {
+        if (!fechaInicio || !fechaFin) return alert("⚠️ Selecciona la fecha de inicio y la fecha final.");
+        diasNovedad = calcularDiasEntreFechas(fechaInicio, fechaFin);
+        if (diasNovedad <= 0) return alert("⚠️ La fecha final debe ser igual o posterior a la fecha de inicio.");
+    }
 
     try {
         let snap = await db.collection('empleados').where('cedula', '==', cedula).limit(1).get();
@@ -1171,39 +1210,53 @@ async function guardarNovedadOperativaFirebase() {
 
         let updateData = {};
 
-        if (tipoNovedad === "incapacidad") {
-            // 🤒 ACUMULADOR DE DÍAS DE PRÓRROGA (No toca la fecha de ingreso real)
+        if (esNovedadConFechas) {
+            // 🤒🚫 ACUMULADOR DE DÍAS DE PRÓRROGA (aplica tanto a Incapacidad como a Novedad General)
             const diasActualesAcumulados = parseInt(empData.dias_incapacidad_acumulados) || 0;
-            const nuevoTotalDiasExtension = diasActualesAcumulados + diasIncapacidad;
+            const nuevoTotalDiasExtension = diasActualesAcumulados + diasNovedad;
 
             // Tomamos la fecha de ingreso original para recalcular los plazos reales movidos por la novedad
             const fIngresoOriginal = empData.fecha_ingreso || empData.hitos?.fecha_contratacion;
             if (!fIngresoOriginal) return alert("❌ El empleado no tiene una fecha base registrada.");
 
-            // Calculamos una fecha virtual de referencia (Fecha ingreso original + días acumulados) para mover los plazos
+            // Fecha virtual de referencia (ingreso original + días acumulados de TODAS las novedades)
             let fechaVirtualReferencia = new Date(fIngresoOriginal + 'T00:00:00');
             fechaVirtualReferencia.setDate(fechaVirtualReferencia.getDate() + nuevoTotalDiasExtension);
             const fechaVirtualStr = fechaVirtualReferencia.toISOString().split('T')[0];
 
-            // Re-calculamos las fechas límite oficiales movidas por la incapacidad
+            // Re-calculamos las fechas límite oficiales movidas por la novedad
             const nuevasFechasLimite = {
                 eval_7_dias: calcularFechaLimiteHabilesColombia(fechaVirtualStr, 7),
                 eval_30_dias: calcularFechaLimiteCalendarioISO(fechaVirtualStr, 32),
                 eval_90_dias: calcularFechaLimiteCalendarioISO(fechaVirtualStr, 92)
             };
 
+            const etiquetaTipo = tipoNovedad === "incapacidad" ? "Incapacidad Temporal" : "Novedad General (Dotación/Otro)";
+            const hoyStr = new Date().toISOString().split('T')[0];
+
+            // 📋 Registro histórico con trazabilidad completa de la novedad
+            const registroHistorico = {
+                tipo: tipoNovedad,
+                etiqueta: etiquetaTipo,
+                fecha_inicio: fechaInicio,
+                fecha_fin: fechaFin,
+                dias: diasNovedad,
+                fecha_registro: hoyStr
+            };
+
             updateData = {
                 dias_incapacidad_acumulados: nuevoTotalDiasExtension,
                 fechas_limite_evaluaciones: nuevasFechasLimite,
-                estado_plan_padrino: "Empleado con Novedad", // 🌟 Bandera de estado para la etiqueta
-                novedad_ultima_aplicada: `Incapacidad de ${diasIncapacidad} días registrada el ${new Date().toISOString().split('T')[0]}`
+                estado_plan_padrino: "Empleado con Novedad",
+                novedad_ultima_aplicada: `${etiquetaTipo} de ${diasNovedad} día(s) (${fechaInicio} a ${fechaFin}), registrada el ${hoyStr}`,
+                historial_novedades: firebase.firestore.FieldValue.arrayUnion(registroHistorico)
             };
 
         } else if (tipoNovedad === "retirado" || tipoNovedad === "Retiro Definitivo de la Empresa") {
             // ❌ LÓGICA DE RETIRO: Rompe los interruptores activos y congela para auditorías
             updateData = {
-                es_apadrinado: false,            // 🌟 NUEVA LÍNEA: Crucial para removerlo de las listas activas de inmediato
-                estado_plan_padrino: "Retirado", // Base para que se liste en retirados.html
+                es_apadrinado: false,
+                estado_plan_padrino: "Retirado",
                 fecha_retiro_operacion: new Date().toISOString().split('T')[0],
                 novedad_ultima_aplicada: `Retiro definitivo de la empresa aplicado el ${new Date().toISOString().split('T')[0]}`
             };
@@ -1214,7 +1267,6 @@ async function guardarNovedadOperativaFirebase() {
 
         cerrarModalNovedad();
 
-        // 🔄 Forzar actualización del monitor activo para que la tarjeta desaparezca al milisegundo
         if (typeof renderizarMonitorColaboradores === 'function') {
             renderizarMonitorColaboradores();
         }
@@ -1344,6 +1396,9 @@ function exportarVencidosYReprobadosExcel() {
     const fechaHoyStr = hoy.toISOString().split('T')[0];
     XLSX.writeFile(wb, `Plan_Padrino_Vencidos_Reprobados_${fechaHoyStr}.xlsx`);
 }
+
+window.calcularDiasEntreFechas = calcularDiasEntreFechas;
+window.calcularDiasNovedadPreview = calcularDiasNovedadPreview;
 
 // Exportar al ámbito global
 window.exportarVencidosYReprobadosExcel = exportarVencidosYReprobadosExcel;
